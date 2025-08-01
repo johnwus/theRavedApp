@@ -1,0 +1,7 @@
+# Development configuration
+spring:
+  profiles:
+    active: development
+logging:
+  level:
+    root: DEBUG

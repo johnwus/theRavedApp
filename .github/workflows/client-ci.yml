@@ -1,0 +1,81 @@
+name: Client CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+    paths: ['client/**']
+  pull_request:
+    branches: [main, develop]
+    paths: ['client/**']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'yarn'
+        cache-dependency-path: client/yarn.lock
+
+    - name: Install dependencies
+      working-directory: ./client
+      run: yarn install --frozen-lockfile
+
+    - name: Run linting
+      working-directory: ./client
+      run: yarn lint
+
+    - name: Run type checking
+      working-directory: ./client
+      run: yarn type-check
+
+    - name: Run tests
+      working-directory: ./client
+      run: yarn test --coverage --watchAll=false
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./client/coverage/lcov.info
+        flags: client
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'yarn'
+        cache-dependency-path: client/yarn.lock
+
+    - name: Setup Expo CLI
+      run: yarn global add @expo/cli
+
+    - name: Install dependencies
+      working-directory: ./client
+      run: yarn install --frozen-lockfile
+
+    - name: Build for production
+      working-directory: ./client
+      run: yarn build:all
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: client-build
+        path: client/dist/

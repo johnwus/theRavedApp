@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  api-gateway:
+    image: raved/api-gateway:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    depends_on:
+      - eureka-server
+      - config-server
+
+  user-service:
+    image: raved/user-service:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: raved_prod_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_prod_data:

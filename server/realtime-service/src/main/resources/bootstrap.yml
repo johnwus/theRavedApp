@@ -1,0 +1,7 @@
+# Bootstrap configuration for realtime-service
+spring:
+  application:
+    name: realtime-service
+  cloud:
+    config:
+      uri: http://localhost:8888

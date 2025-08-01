@@ -1,0 +1,7 @@
+# Production configuration for ecommerce-service
+spring:
+  profiles:
+    active: production
+logging:
+  level:
+    com.raved: INFO

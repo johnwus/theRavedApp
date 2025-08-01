@@ -1,0 +1,7 @@
+# Bootstrap configuration for content-service
+spring:
+  application:
+    name: content-service
+  cloud:
+    config:
+      uri: http://localhost:8888

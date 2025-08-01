@@ -1,0 +1,7 @@
+# Bootstrap configuration for config-server
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      uri: http://localhost:8888

@@ -1,0 +1,7 @@
+# Bootstrap configuration for ecommerce-service
+spring:
+  application:
+    name: ecommerce-service
+  cloud:
+    config:
+      uri: http://localhost:8888

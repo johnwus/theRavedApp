@@ -1,0 +1,106 @@
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_users
+    username: ${DB_USERNAME:raved_user}
+    password: ${DB_PASSWORD:raved_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+server:
+  port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.raved.user: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/user-service.log
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKey}
+  expiration: 86400000 # 24 hours
+  refresh-expiration: 604800000 # 7 days
+
+# File Upload Configuration
+file:
+  upload:
+    max-size: 10MB
+    allowed-types: jpg,jpeg,png,gif,webp
+    storage-path: ${FILE_STORAGE_PATH:/uploads/users}
+
+# Email Configuration
+email:
+  verification:
+    enabled: true
+    expiration: 24 # hours
+  templates:
+    welcome: welcome-template
+    verification: verification-template
+    password-reset: password-reset-template
+
+# Rate Limiting
+rate-limit:
+  auth:
+    requests: 10
+    window: 60 # seconds
+  api:
+    requests: 100
+    window: 60 # seconds
+
+# University Verification
+university:
+  verification:
+    auto-approve: false
+    admin-review: true
+    document-required: true

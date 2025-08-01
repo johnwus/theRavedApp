@@ -1,0 +1,7 @@
+# Development configuration for social-service
+spring:
+  profiles:
+    active: development
+logging:
+  level:
+    com.raved: DEBUG

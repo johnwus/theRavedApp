@@ -1,0 +1,124 @@
+spring:
+  application:
+    name: content-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_content
+    username: ${DB_USERNAME:raved_user}
+    password: ${DB_PASSWORD:raved_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: content-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: 8082
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.raved.content: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/content-service.log
+
+# Content Configuration
+content:
+  moderation:
+    enabled: true
+    auto-approve: false
+    ai-moderation: true
+    profanity-filter: true
+  media:
+    max-file-size: 100MB
+    allowed-image-types: jpg,jpeg,png,gif,webp
+    allowed-video-types: mp4,avi,mov,wmv
+    storage-path: ${MEDIA_STORAGE_PATH:/uploads/content}
+    cdn-url: ${CDN_URL:http://localhost:8080/media}
+  feed:
+    page-size: 20
+    cache-ttl: 300 # seconds
+    trending-algorithm: engagement-score
+
+# Content Types Configuration
+content-types:
+  text:
+    max-length: 5000
+    allow-html: false
+  image:
+    max-count: 10
+    compression: true
+    thumbnail-generation: true
+  video:
+    max-duration: 600 # seconds
+    transcoding: true
+    thumbnail-generation: true
+  poll:
+    max-options: 10
+    max-duration: 7 # days
+
+# Analytics Integration
+analytics:
+  enabled: true
+  track-views: true
+  track-engagement: true
+  batch-size: 100
+
+# Notification Integration
+notifications:
+  enabled: true
+  like-threshold: 10
+  comment-notifications: true
+  mention-notifications: true

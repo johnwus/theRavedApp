@@ -1,0 +1,42 @@
+{
+  "name": "raved-app",
+  "version": "1.0.0",
+  "description": "Raved - Student Fashion Social Platform",
+  "private": true,
+  "scripts": {
+    "dev": "docker-compose up -d",
+    "dev:client": "cd client && yarn start",
+    "dev:services": "docker-compose -f docker-compose.services.yml up",
+    "build": "./scripts/build/build-all.sh",
+    "build:client": "./scripts/build/build-client.sh",
+    "build:services": "./scripts/build/build-services.sh",
+    "test": "./scripts/testing/run-unit-tests.sh",
+    "test:integration": "./scripts/testing/run-integration-tests.sh",
+    "test:e2e": "./scripts/testing/run-e2e-tests.sh",
+    "test:performance": "./scripts/testing/performance-tests.sh",
+    "deploy:dev": "./scripts/deploy/deploy-dev.sh",
+    "deploy:staging": "./scripts/deploy/deploy-staging.sh",
+    "deploy:prod": "./scripts/deploy/deploy-prod.sh",
+    "setup": "./scripts/setup/setup-development.sh",
+    "setup:db": "./scripts/setup/setup-database.sh",
+    "setup:monitoring": "./scripts/setup/setup-monitoring.sh",
+    "logs": "./scripts/monitoring/logs.sh",
+    "health": "./scripts/monitoring/health-check.sh",
+    "backup": "./scripts/database/backup.sh",
+    "restore": "./scripts/database/restore.sh"
+  },
+  "keywords": [
+    "social-media",
+    "fashion",
+    "student",
+    "microservices",
+    "react-native",
+    "spring-boot"
+  ],
+  "author": "Raved Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "yarn": ">=1.22.0"
+  }
+}

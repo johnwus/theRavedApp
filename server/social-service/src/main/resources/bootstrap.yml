@@ -1,0 +1,7 @@
+# Bootstrap configuration for social-service
+spring:
+  application:
+    name: social-service
+  cloud:
+    config:
+      uri: http://localhost:8888

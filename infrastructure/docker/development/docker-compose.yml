@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: raved-postgres-dev
+    environment:
+      POSTGRES_DB: raved_db
+      POSTGRES_USER: raved_user
+      POSTGRES_PASSWORD: raved_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - raved-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: raved-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - raved-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: raved-zookeeper-dev
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - raved-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: raved-kafka-dev
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    ports:
+      - "9092:9092"
+    networks:
+      - raved-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: raved-rabbitmq-dev
+    environment:
+      RABBITMQ_DEFAULT_USER: raved
+      RABBITMQ_DEFAULT_PASS: raved123
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    networks:
+      - raved-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: raved-nginx-dev
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - api-gateway
+    networks:
+      - raved-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  raved-network:
+    driver: bridge

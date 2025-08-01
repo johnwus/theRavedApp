@@ -1,0 +1,7 @@
+# Production configuration
+spring:
+  profiles:
+    active: production
+logging:
+  level:
+    root: INFO

@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  # Databases
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: raved_db
+      POSTGRES_USER: raved_user
+      POSTGRES_PASSWORD: raved_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - raved-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - raved-network
+
+  # Message Queues
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - raved-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - raved-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: raved
+      RABBITMQ_DEFAULT_PASS: raved123
+    networks:
+      - raved-network
+
+  # Service Discovery
+  eureka-server:
+    build: ./server/eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - raved-network
+
+  # Configuration Server
+  config-server:
+    build: ./server/config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka-server
+    networks:
+      - raved-network
+
+  # API Gateway
+  api-gateway:
+    build: ./server/api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - config-server
+    networks:
+      - raved-network
+
+  # Microservices
+  user-service:
+    build: ./server/user-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    networks:
+      - raved-network
+
+  content-service:
+    build: ./server/content-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    networks:
+      - raved-network
+
+  social-service:
+    build: ./server/social-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    networks:
+      - raved-network
+
+  realtime-service:
+    build: ./server/realtime-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - eureka-server
+    networks:
+      - raved-network
+
+  ecommerce-service:
+    build: ./server/ecommerce-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+      - eureka-server
+    networks:
+      - raved-network
+
+  notification-service:
+    build: ./server/notification-service
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - kafka
+      - eureka-server
+    networks:
+      - raved-network
+
+  analytics-service:
+    build: ./server/analytics-service
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+      - redis
+      - eureka-server
+    networks:
+      - raved-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  raved-network:
+    driver: bridge

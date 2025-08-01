@@ -1,0 +1,143 @@
+spring:
+  application:
+    name: ecommerce-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_ecommerce
+    username: ${DB_USERNAME:raved_user}
+    password: ${DB_PASSWORD:raved_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ecommerce-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: 8085
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  level:
+    com.raved.ecommerce: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/ecommerce-service.log
+
+# E-commerce Configuration
+ecommerce:
+  products:
+    max-images: 10
+    image-compression: true
+    auto-approve: false
+    moderation-required: true
+  orders:
+    timeout-minutes: 30
+    auto-cancel-hours: 24
+    max-items: 50
+  cart:
+    session-timeout: 60 # minutes
+    max-items: 50
+    save-for-later: true
+  inventory:
+    track-stock: true
+    low-stock-threshold: 10
+    auto-reorder: false
+
+# Payment Configuration
+payment:
+  providers:
+    stripe:
+      enabled: true
+      public-key: ${STRIPE_PUBLIC_KEY:}
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    paypal:
+      enabled: true
+      client-id: ${PAYPAL_CLIENT_ID:}
+      client-secret: ${PAYPAL_CLIENT_SECRET:}
+      sandbox: true
+  currencies:
+    default: USD
+    supported: USD,EUR,GBP,CAD
+  fees:
+    processing-fee: 0.029 # 2.9%
+    fixed-fee: 0.30 # $0.30
+
+# Shipping Configuration
+shipping:
+  providers:
+    - name: standard
+      cost: 5.99
+      days: 5-7
+    - name: express
+      cost: 12.99
+      days: 2-3
+    - name: overnight
+      cost: 24.99
+      days: 1
+  free-shipping-threshold: 50.00
+  international: false
+
+# Tax Configuration
+tax:
+  enabled: true
+  default-rate: 0.08 # 8%
+  calculate-by-location: true
+
+# Analytics Integration
+analytics:
+  enabled: true
+  track-purchases: true
+  track-cart-abandonment: true
+  track-product-views: true

@@ -1,0 +1,7 @@
+# Production configuration for realtime-service
+spring:
+  profiles:
+    active: production
+logging:
+  level:
+    com.raved: INFO
