@@ -1,0 +1,155 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: johnwus/theraved-app
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.changes.outputs.client }}
+      server: ${{ steps.changes.outputs.server }}
+      infrastructure: ${{ steps.changes.outputs.infrastructure }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Check for changes
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          client:
+            - 'client/**'
+          server:
+            - 'server/**'
+          infrastructure:
+            - 'infrastructure/**'
+            - 'docker-compose*.yml'
+            - 'Dockerfile*'
+
+  client-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.client == 'true' }}
+    uses: ./.github/workflows/client-ci.yml
+    secrets: inherit
+
+  server-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.server == 'true' }}
+    uses: ./.github/workflows/server-ci.yml
+    secrets: inherit
+
+  infrastructure-ci:
+    needs: changes
+    if: ${{ needs.changes.outputs.infrastructure == 'true' }}
+    uses: ./.github/workflows/infrastructure-ci.yml
+    secrets: inherit
+
+  security-scan:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  performance-test:
+    needs: [client-ci, server-ci]
+    if: |
+      always() && 
+      (needs.client-ci.result == 'success' || needs.client-ci.result == 'skipped') &&
+      (needs.server-ci.result == 'success' || needs.server-ci.result == 'skipped') &&
+      github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/performance-test.yml
+    secrets: inherit
+
+  deploy-staging:
+    needs: [client-ci, server-ci, infrastructure-ci]
+    if: |
+      always() && 
+      (needs.client-ci.result == 'success' || needs.client-ci.result == 'skipped') &&
+      (needs.server-ci.result == 'success' || needs.server-ci.result == 'skipped') &&
+      (needs.infrastructure-ci.result == 'success' || needs.infrastructure-ci.result == 'skipped') &&
+      github.ref == 'refs/heads/develop'
+    
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment commands here
+    
+    - name: Run smoke tests
+      run: |
+        echo "Running smoke tests on staging..."
+        # Add your smoke test commands here
+
+  deploy-production:
+    needs: [client-ci, server-ci, infrastructure-ci, performance-test]
+    if: |
+      always() && 
+      (needs.client-ci.result == 'success' || needs.client-ci.result == 'skipped') &&
+      (needs.server-ci.result == 'success' || needs.server-ci.result == 'skipped') &&
+      (needs.infrastructure-ci.result == 'success' || needs.infrastructure-ci.result == 'skipped') &&
+      (needs.performance-test.result == 'success' || needs.performance-test.result == 'skipped') &&
+      github.ref == 'refs/heads/main'
+    
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment commands here
+    
+    - name: Run health checks
+      run: |
+        echo "Running health checks on production..."
+        # Add your health check commands here
+    
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "Production deployment successful!"
+        # Add notification logic (Slack, email, etc.)
+
+  cleanup:
+    needs: [deploy-staging, deploy-production]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Cleanup artifacts
+      run: |
+        echo "Cleaning up temporary artifacts..."
+        # Add cleanup commands here
