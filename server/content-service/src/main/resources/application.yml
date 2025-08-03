@@ -5,33 +5,162 @@ spring:
   application:
     name: content-service
   profiles:
-    active: development
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+# =============================================================================
+# RAVED CONFIGURATION
+# =============================================================================
+raved:
+  service:
+    name: content-service
+  database:
+    environment: ${SPRING_PROFILES_ACTIVE:local}
+
+# =============================================================================
+# PROFILE-SPECIFIC CONFIGURATIONS
+# =============================================================================
+
+---
+# LOCAL DEVELOPMENT PROFILE
+spring:
+  profiles: local
   datasource:
-    url: jdbc:postgresql://localhost:5432/raved_content_db
-    username: raved_user
-    password: raved_password
+    url: ${CONTENT_SERVICE_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/raved_content_service_db}
+    username: ${DATABASE_USERNAME:raved_user}
+    password: ${DATABASE_PASSWORD:raved_password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+      pool-name: RavedHikariPool-Contentservice-Local
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
   flyway:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    validate-on-migrate: true
 
+---
+# STAGING PROFILE (Neon Cloud)
+spring:
+  profiles: staging
+  datasource:
+    url: ${CONTENT_SERVICE_SERVICE_DB_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 600000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+      pool-name: RavedHikariPool-Contentservice-Staging
+      connection-init-sql: SELECT 1
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+        connection:
+          provider_disables_autocommit: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+---
+# PRODUCTION PROFILE (Neon Cloud)
+spring:
+  profiles: production
+  datasource:
+    url: ${CONTENT_SERVICE_SERVICE_DB_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      idle-timeout: 600000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+      pool-name: RavedHikariPool-Contentservice-Production
+      connection-init-sql: SELECT 1
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 30
+        order_inserts: true
+        order_updates: true
+        connection:
+          provider_disables_autocommit: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+# =============================================================================
+# COMMON MICROSERVICE CONFIGURATION
+# =============================================================================
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
     prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 management:
   endpoints:
@@ -44,18 +173,6 @@ management:
 
 logging:
   level:
-    com.raved.content: DEBUG
+    com.raved: ${LOG_LEVEL:DEBUG}
   file:
-    name: logs/content-service.log
-
----
-spring:
-  profiles: production
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-
-logging:
-  level:
-    com.raved.content: INFO
+    name: ${LOG_FILE_PATH:./logs}/${spring.application.name}.log

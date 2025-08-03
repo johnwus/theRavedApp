@@ -85,6 +85,12 @@ public class Notification {
     @Column(name = "metadata", columnDefinition = "TEXT")
     private String metadata; // JSON string for additional data
 
+    @Column(name = "channels")
+    private String channels; // Comma-separated list of delivery channels (EMAIL,PUSH,SMS)
+
+    @Column(name = "html_content", columnDefinition = "TEXT")
+    private String htmlContent; // HTML version of content for emails
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -97,7 +103,7 @@ public class Notification {
     }
 
     public enum DeliveryStatus {
-        PENDING, SENT, DELIVERED, FAILED, CANCELLED
+        PENDING, SCHEDULED, PROCESSING, SENT, DELIVERED, FAILED, CANCELLED
     }
 
     public enum Priority {
@@ -277,6 +283,22 @@ public class Notification {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getChannels() {
+        return channels;
+    }
+
+    public void setChannels(String channels) {
+        this.channels = channels;
+    }
+
+    public String getHtmlContent() {
+        return htmlContent;
+    }
+
+    public void setHtmlContent(String htmlContent) {
+        this.htmlContent = htmlContent;
     }
 
     @PrePersist

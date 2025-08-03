@@ -75,6 +75,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> searchUsers(@Param("searchTerm") String searchTerm, Pageable pageable);
 
     /**
+     * Search users by multiple fields containing the search terms
+     */
+    Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+            String username, String email, String firstName, String lastName, Pageable pageable);
+
+    /**
      * Find active users
      */
     @Query("SELECT u FROM User u WHERE u.status = 'ACTIVE'")

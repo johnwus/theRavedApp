@@ -13,16 +13,64 @@ public class AuthResponse {
     private String refreshToken;
     private String tokenType = "Bearer";
     private Long expiresIn;
-    private UserInfo user;
+    private UserResponse user;
 
     // Constructors
     public AuthResponse() {}
 
-    public AuthResponse(String accessToken, String refreshToken, Long expiresIn, UserInfo user) {
+    public AuthResponse(String accessToken, String refreshToken, Long expiresIn, UserResponse user) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.expiresIn = expiresIn;
         this.user = user;
+    }
+
+    // Builder pattern
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private String accessToken;
+        private String refreshToken;
+        private String tokenType = "Bearer";
+        private Long expiresIn;
+        private UserResponse user;
+
+        public Builder accessToken(String accessToken) {
+            this.accessToken = accessToken;
+            return this;
+        }
+
+        public Builder refreshToken(String refreshToken) {
+            this.refreshToken = refreshToken;
+            return this;
+        }
+
+        public Builder tokenType(String tokenType) {
+            this.tokenType = tokenType;
+            return this;
+        }
+
+        public Builder expiresIn(Long expiresIn) {
+            this.expiresIn = expiresIn;
+            return this;
+        }
+
+        public Builder user(UserResponse user) {
+            this.user = user;
+            return this;
+        }
+
+        public AuthResponse build() {
+            AuthResponse response = new AuthResponse();
+            response.accessToken = this.accessToken;
+            response.refreshToken = this.refreshToken;
+            response.tokenType = this.tokenType;
+            response.expiresIn = this.expiresIn;
+            response.user = this.user;
+            return response;
+        }
     }
 
     // Getters and Setters
@@ -38,52 +86,6 @@ public class AuthResponse {
     public Long getExpiresIn() { return expiresIn; }
     public void setExpiresIn(Long expiresIn) { this.expiresIn = expiresIn; }
 
-    public UserInfo getUser() { return user; }
-    public void setUser(UserInfo user) { this.user = user; }
-
-    /**
-     * Nested class for user information in auth response
-     */
-    public static class UserInfo {
-        private Long id;
-        private String username;
-        private String email;
-        private String firstName;
-        private String lastName;
-        private String profilePictureUrl;
-        private Set<Role> roles;
-        private Boolean emailVerified;
-        private LocalDateTime lastLogin;
-
-        // Constructors
-        public UserInfo() {}
-
-        // Getters and Setters
-        public Long getId() { return id; }
-        public void setId(Long id) { this.id = id; }
-
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-
-        public String getProfilePictureUrl() { return profilePictureUrl; }
-        public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }
-
-        public Set<Role> getRoles() { return roles; }
-        public void setRoles(Set<Role> roles) { this.roles = roles; }
-
-        public Boolean getEmailVerified() { return emailVerified; }
-        public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
-
-        public LocalDateTime getLastLogin() { return lastLogin; }
-        public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
-    }
+    public UserResponse getUser() { return user; }
+    public void setUser(UserResponse user) { this.user = user; }
 }
