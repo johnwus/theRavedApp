@@ -4,16 +4,12 @@ FROM maven:3.9.11-eclipse-temurin-21 AS build
 # Set working directory
 WORKDIR /app
 
-# Copy parent pom and shared modules first for better caching
-COPY pom.xml .
-COPY shared/ shared/
-
 # Copy eureka-server specific files
-COPY eureka-server/pom.xml eureka-server/
-COPY eureka-server/src eureka-server/src
+COPY pom.xml .
+COPY src src
 
 # Build the application
-RUN mvn clean package -pl eureka-server -am -DskipTests
+RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
@@ -31,7 +27,7 @@ RUN addgroup -g 1001 -S appgroup && \
 WORKDIR /app
 
 # Copy the built jar
-COPY --from=build /app/eureka-server/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Create logs directory
 RUN mkdir -p logs && chown -R appuser:appgroup /app

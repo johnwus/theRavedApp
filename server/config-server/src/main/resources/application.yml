@@ -5,14 +5,10 @@ spring:
   application:
     name: config-server
   profiles:
-    active: development
+    active: native
   cloud:
     config:
       server:
-        git:
-          uri: https://github.com/your-org/raved-config-repo
-          default-label: main
-          clone-on-start: true
         native:
           search-locations: classpath:/config
 
