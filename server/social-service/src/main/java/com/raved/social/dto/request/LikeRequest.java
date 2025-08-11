@@ -1,42 +1,46 @@
 package com.raved.social.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 /**
- * Request DTO for liking/unliking content
+ * DTO for like requests
  */
 public class LikeRequest {
-
-    @NotNull(message = "Entity ID is required")
-    private Long entityId;
-
-    @NotBlank(message = "Entity type is required")
-    private String entityType; // "post" or "comment"
-
-    // Constructors
+    private Long userId;
+    private Long targetId;
+    private String targetType; // "POST", "COMMENT", or "PRODUCT"
+    
+    // Default constructor
     public LikeRequest() {
     }
-
-    public LikeRequest(Long entityId, String entityType) {
-        this.entityId = entityId;
-        this.entityType = entityType;
+    
+    // Constructor with all fields
+    public LikeRequest(Long userId, Long targetId, String targetType) {
+        this.userId = userId;
+        this.targetId = targetId;
+        this.targetType = targetType;
     }
-
+    
     // Getters and Setters
-    public Long getEntityId() {
-        return entityId;
+    public Long getUserId() {
+        return userId;
     }
-
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
+    
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
-
-    public String getEntityType() {
-        return entityType;
+    
+    public Long getTargetId() {
+        return targetId;
     }
-
-    public void setEntityType(String entityType) {
-        this.entityType = entityType;
+    
+    public void setTargetId(Long targetId) {
+        this.targetId = targetId;
+    }
+    
+    public String getTargetType() {
+        return targetType;
+    }
+    
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
     }
 }

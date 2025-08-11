@@ -1,0 +1,15 @@
+media:
+  storage:
+    type: ${MEDIA_STORAGE_TYPE:s3}
+    s3:
+      bucket: ${MEDIA_S3_BUCKET}
+      region: ${AWS_REGION}
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+  cdn:
+    enabled: true
+    base-url: ${CDN_BASE_URL}
+
+logging:
+  level:
+    com.raved.media: INFO

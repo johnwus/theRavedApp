@@ -58,7 +58,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         
         try {
             AnalyticsEvent event = eventMapper.toAnalyticsEvent(request);
-            event.setTimestamp(LocalDateTime.now());
+            event.setEventTimestamp(LocalDateTime.now());
             event.setCreatedAt(LocalDateTime.now());
             
             AnalyticsEvent savedEvent = eventRepository.save(event);

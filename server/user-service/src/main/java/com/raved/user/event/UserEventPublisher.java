@@ -157,6 +157,71 @@ public class UserEventPublisher {
         publishEvent(event, userId.toString());
     }
 
+    /**
+     * Publish student verification submitted event
+     */
+    public void publishStudentVerificationSubmittedEvent(Long userId, Long verificationId) {
+        logger.info("Publishing student verification submitted event for user: {}", userId);
+        
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "USER_ACTIVITY");
+        event.put("userId", userId);
+        event.put("activityType", "STUDENT_VERIFICATION_SUBMITTED");
+        event.put("verificationId", verificationId);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(event, userId.toString());
+    }
+
+    /**
+     * Publish student verification approved event
+     */
+    public void publishStudentVerificationApprovedEvent(Long userId, Long verificationId) {
+        logger.info("Publishing student verification approved event for user: {}", userId);
+        
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "USER_ACTIVITY");
+        event.put("userId", userId);
+        event.put("activityType", "STUDENT_VERIFICATION_APPROVED");
+        event.put("verificationId", verificationId);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(event, userId.toString());
+    }
+
+    /**
+     * Publish student verification rejected event
+     */
+    public void publishStudentVerificationRejectedEvent(Long userId, Long verificationId, String reason) {
+        logger.info("Publishing student verification rejected event for user: {}", userId);
+        
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "USER_ACTIVITY");
+        event.put("userId", userId);
+        event.put("activityType", "STUDENT_VERIFICATION_REJECTED");
+        event.put("verificationId", verificationId);
+        event.put("reason", reason);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(event, userId.toString());
+    }
+
+    /**
+     * Publish verification email resend event
+     */
+    public void publishVerificationEmailResendEvent(Long userId, String verificationToken) {
+        logger.info("Publishing verification email resend event for user: {}", userId);
+        
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "USER_ACTIVITY");
+        event.put("userId", userId);
+        event.put("activityType", "VERIFICATION_EMAIL_RESEND");
+        event.put("verificationToken", verificationToken);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(event, userId.toString());
+    }
+
     private void publishEvent(Map<String, Object> event, String key) {
         try {
             String eventJson = objectMapper.writeValueAsString(event);

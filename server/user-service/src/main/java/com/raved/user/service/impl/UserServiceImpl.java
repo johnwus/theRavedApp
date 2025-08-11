@@ -15,7 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -103,7 +103,7 @@ public class UserServiceImpl implements UserService {
         
         User user = userOpt.get();
         user.setStatus(status);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("User status updated successfully for ID: {}", id);
@@ -132,7 +132,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            user.setLastLogin(LocalDateTime.now());
+            user.setLastLoginAt(Instant.now());
             userRepository.save(user);
             logger.debug("Last login updated for user ID: {}", userId);
         } else {
@@ -163,9 +163,9 @@ public class UserServiceImpl implements UserService {
     public User saveUser(User user) {
         logger.debug("Saving user entity: {}", user.getUsername());
         
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         if (user.getCreatedAt() == null) {
-            user.setCreatedAt(LocalDateTime.now());
+            user.setCreatedAt(Instant.now());
         }
         
         User savedUser = userRepository.save(user);

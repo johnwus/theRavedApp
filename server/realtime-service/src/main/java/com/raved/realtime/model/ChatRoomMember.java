@@ -11,12 +11,11 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "chat_room_members", indexes = {
-    @Index(name = "idx_chat_room_members_room", columnList = "chat_room_id"),
-    @Index(name = "idx_chat_room_members_user", columnList = "user_id"),
-    @Index(name = "idx_chat_room_members_role", columnList = "member_role"),
-    @Index(name = "idx_chat_room_members_active", columnList = "is_active")
+    @Index(name = "idx_chat_members_room", columnList = "room_id"),
+    @Index(name = "idx_chat_members_user", columnList = "user_id"),
+    @Index(name = "idx_chat_members_active", columnList = "is_active")
 }, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_chat_room_member", columnNames = {"chat_room_id", "user_id"})
+    @UniqueConstraint(name = "idx_chat_members_room_user", columnNames = {"room_id", "user_id"})
 })
 public class ChatRoomMember {
 
@@ -24,48 +23,37 @@ public class ChatRoomMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_room_id", nullable = false)
-    private ChatRoom chatRoom;
+    @Column(name = "room_id", nullable = false)
+    private Long roomId; // Reference to chat_rooms(id)
 
     @Column(name = "user_id", nullable = false)
     private Long userId; // Reference to user service
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "member_role", nullable = false)
-    private MemberRole memberRole = MemberRole.MEMBER;
+    @Column(length = 20)
+    private String role = "MEMBER"; // ADMIN, MODERATOR, MEMBER
 
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(name = "is_muted", nullable = false)
-    private Boolean isMuted = false;
-
-    @Column(name = "joined_at", nullable = false, updatable = false)
+    @Column(name = "joined_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime joinedAt;
 
     @Column(name = "last_read_at")
     private LocalDateTime lastReadAt;
 
-    @Column(name = "left_at")
-    private LocalDateTime leftAt;
+    @Column(name = "is_muted")
+    private Boolean isMuted = false;
 
-    // Enums
-    public enum MemberRole {
-        ADMIN, MODERATOR, MEMBER
-    }
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 
     // Constructors
     public ChatRoomMember() {
         this.joinedAt = LocalDateTime.now();
-        this.lastReadAt = LocalDateTime.now();
     }
 
-    public ChatRoomMember(ChatRoom chatRoom, Long userId, MemberRole memberRole) {
+    public ChatRoomMember(Long roomId, Long userId, String role) {
         this();
-        this.chatRoom = chatRoom;
+        this.roomId = roomId;
         this.userId = userId;
-        this.memberRole = memberRole;
+        this.role = role;
     }
 
     // Getters and Setters
@@ -77,12 +65,12 @@ public class ChatRoomMember {
         this.id = id;
     }
 
-    public ChatRoom getChatRoom() {
-        return chatRoom;
+    public Long getRoomId() {
+        return roomId;
     }
 
-    public void setChatRoom(ChatRoom chatRoom) {
-        this.chatRoom = chatRoom;
+    public void setRoomId(Long roomId) {
+        this.roomId = roomId;
     }
 
     public Long getUserId() {
@@ -93,28 +81,12 @@ public class ChatRoomMember {
         this.userId = userId;
     }
 
-    public MemberRole getMemberRole() {
-        return memberRole;
+    public String getRole() {
+        return role;
     }
 
-    public void setMemberRole(MemberRole memberRole) {
-        this.memberRole = memberRole;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public Boolean getIsMuted() {
-        return isMuted;
-    }
-
-    public void setIsMuted(Boolean isMuted) {
-        this.isMuted = isMuted;
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public LocalDateTime getJoinedAt() {
@@ -133,26 +105,23 @@ public class ChatRoomMember {
         this.lastReadAt = lastReadAt;
     }
 
-    public LocalDateTime getLeftAt() {
-        return leftAt;
+    public Boolean getIsMuted() {
+        return isMuted;
     }
 
-    public void setLeftAt(LocalDateTime leftAt) {
-        this.leftAt = leftAt;
+    public void setIsMuted(Boolean isMuted) {
+        this.isMuted = isMuted;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.joinedAt = LocalDateTime.now();
-        this.lastReadAt = LocalDateTime.now();
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     // Utility methods
-    public void leave() {
-        this.isActive = false;
-        this.leftAt = LocalDateTime.now();
-    }
-
     public void updateLastRead() {
         this.lastReadAt = LocalDateTime.now();
     }
@@ -166,11 +135,11 @@ public class ChatRoomMember {
     }
 
     public boolean isAdmin() {
-        return memberRole == MemberRole.ADMIN;
+        return "ADMIN".equals(role);
     }
 
     public boolean isModerator() {
-        return memberRole == MemberRole.MODERATOR || memberRole == MemberRole.ADMIN;
+        return "MODERATOR".equals(role) || "ADMIN".equals(role);
     }
 
     public boolean canModerate() {
@@ -181,9 +150,9 @@ public class ChatRoomMember {
     public String toString() {
         return "ChatRoomMember{" +
                 "id=" + id +
-                ", chatRoomId=" + (chatRoom != null ? chatRoom.getId() : null) +
+                ", roomId=" + roomId +
                 ", userId=" + userId +
-                ", memberRole=" + memberRole +
+                ", role='" + role + '\'' +
                 ", isActive=" + isActive +
                 ", joinedAt=" + joinedAt +
                 '}';

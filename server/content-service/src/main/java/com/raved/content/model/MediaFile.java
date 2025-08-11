@@ -203,7 +203,9 @@ public class MediaFile {
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 
     @Override
@@ -212,9 +214,7 @@ public class MediaFile {
                 "id=" + id +
                 ", fileName='" + fileName + '\'' +
                 ", mediaType=" + mediaType +
-                ", fileSize=" + fileSize +
-                ", displayOrder=" + displayOrder +
-                ", createdAt=" + createdAt +
+                ", fileUrl='" + fileUrl + '\'' +
                 '}';
     }
 }

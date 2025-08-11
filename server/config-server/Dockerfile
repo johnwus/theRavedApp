@@ -21,6 +21,6 @@ COPY --from=build /app/target/*.jar app.jar
 RUN mkdir -p logs && chown -R appuser:appgroup /app
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8888
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

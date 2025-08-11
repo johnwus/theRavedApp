@@ -57,24 +57,4 @@ public interface FollowService {
      * Get recent followers
      */
     List<FollowResponse> getRecentFollowers(Long userId, int limit);
-
-    /**
-     * Block a user
-     */
-    void blockUser(Long blockerId, Long blockedId);
-
-    /**
-     * Unblock a user
-     */
-    void unblockUser(Long blockerId, Long blockedId);
-
-    /**
-     * Check if user is blocked
-     */
-    boolean isBlocked(Long blockerId, Long blockedId);
-
-    /**
-     * Get blocked users
-     */
-    Page<FollowResponse> getBlockedUsers(Long userId, Pageable pageable);
 }

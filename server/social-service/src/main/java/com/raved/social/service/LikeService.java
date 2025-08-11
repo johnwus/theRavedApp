@@ -13,24 +13,24 @@ import java.util.List;
 public interface LikeService {
 
     /**
-     * Like a post
+     * Like a target (post, comment, or product)
      */
-    LikeResponse likePost(LikeRequest request);
+    LikeResponse likeTarget(LikeRequest request);
 
     /**
-     * Unlike a post
+     * Unlike a target
      */
-    void unlikePost(Long userId, Long postId);
+    void unlikeTarget(Long userId, Long targetId, String targetType);
 
     /**
-     * Check if user liked a post
+     * Check if user liked a target
      */
-    boolean hasUserLikedPost(Long userId, Long postId);
+    boolean hasUserLikedTarget(Long userId, Long targetId, String targetType);
 
     /**
-     * Get likes for a post
+     * Get likes for a target
      */
-    Page<LikeResponse> getPostLikes(Long postId, Pageable pageable);
+    Page<LikeResponse> getTargetLikes(Long targetId, String targetType, Pageable pageable);
 
     /**
      * Get user's likes
@@ -38,12 +38,28 @@ public interface LikeService {
     Page<LikeResponse> getUserLikes(Long userId, Pageable pageable);
 
     /**
-     * Get like count for post
+     * Get like count for target
      */
-    long getLikeCount(Long postId);
+    long getLikeCount(Long targetId, String targetType);
 
     /**
      * Get recent likes for user's posts
      */
     List<LikeResponse> getRecentLikesForUser(Long userId, int limit);
+
+    // Legacy methods for backward compatibility (deprecated)
+    @Deprecated
+    LikeResponse likePost(LikeRequest request);
+
+    @Deprecated
+    void unlikePost(Long userId, Long postId);
+
+    @Deprecated
+    boolean hasUserLikedPost(Long userId, Long postId);
+
+    @Deprecated
+    Page<LikeResponse> getPostLikes(Long postId, Pageable pageable);
+
+    @Deprecated
+    long getLikeCount(Long postId);
 }

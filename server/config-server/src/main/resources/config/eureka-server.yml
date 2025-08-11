@@ -1,0 +1,83 @@
+# Eureka Server Configuration
+spring:
+  application:
+    name: eureka-server
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
+
+# Eureka server configuration
+eureka:
+  instance:
+    hostname: ${EUREKA_HOSTNAME:localhost}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: ${EUREKA_LEASE_RENEWAL:30}
+    lease-expiration-duration-in-seconds: ${EUREKA_LEASE_EXPIRATION:90}
+  
+  server:
+    enable-self-preservation: ${EUREKA_SELF_PRESERVATION:true}
+    renewal-percent-threshold: ${EUREKA_RENEWAL_THRESHOLD:0.85}
+    eviction-interval-timer-in-ms: ${EUREKA_EVICTION_INTERVAL:1000}
+    response-cache-update-interval-ms: ${EUREKA_RESPONSE_CACHE_UPDATE:3000}
+    peer-eureka-nodes-update-interval-ms: ${EUREKA_PEER_UPDATE:60000}
+    
+    # Peer node configuration for HA
+    peer-nodes: ${EUREKA_PEER_NODES:}
+    
+    # Response cache configuration
+    response-cache-auto-expiration-in-seconds: ${EUREKA_RESPONSE_CACHE_EXPIRATION:180}
+  
+  client:
+    register-with-eureka: ${EUREKA_REGISTER_WITH_EUREKA:false}
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:false}
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://localhost:8761/eureka/}
+    
+    # Health check configuration
+    healthcheck:
+      enabled: ${EUREKA_HEALTHCHECK_ENABLED:true}
+    
+    # Registry fetch configuration
+    registry-fetch-interval-seconds: ${EUREKA_REGISTRY_FETCH_INTERVAL:30}
+    
+    # Instance info configuration
+    instance-info-replication-interval-seconds: ${EUREKA_INSTANCE_INFO_REPLICATION:300}
+    initial-instance-info-replication-interval-seconds: ${EUREKA_INITIAL_INSTANCE_INFO_REPLICATION:40}
+
+# Server configuration
+server:
+  port: ${EUREKA_SERVER_PORT:8761}
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+    min-response-size: 1024
+
+# Security configuration (if enabled)
+security:
+  basic:
+    enabled: ${EUREKA_SECURITY_ENABLED:false}
+  user:
+    name: ${EUREKA_USERNAME:admin}
+    password: ${EUREKA_PASSWORD:admin}
+
+# Metrics and monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+# Logging configuration
+logging:
+  level:
+    com.netflix.eureka: ${EUREKA_LOG_LEVEL:INFO}
+    com.netflix.discovery: ${DISCOVERY_LOG_LEVEL:INFO}
+    org.springframework.cloud.netflix.eureka: ${SPRING_EUREKA_LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,12 +1,10 @@
 package com.raved.notification.dto.request;
 
-import com.raved.notification.model.NotificationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,119 +12,99 @@ import java.util.Map;
  */
 public class CreateNotificationRequest {
 
-    @NotNull(message = "Recipient user ID is required")
-    private Long recipientUserId;
+    @NotNull(message = "User ID is required")
+    private Long userId;
 
-    @NotNull(message = "Notification type is required")
-    private NotificationType notificationType;
+    @NotBlank(message = "Notification type is required")
+    @Size(max = 50, message = "Notification type must not exceed 50 characters")
+    private String notificationType;
 
-    @NotBlank(message = "Subject is required")
-    @Size(max = 500, message = "Subject must not exceed 500 characters")
-    private String subject;
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must not exceed 255 characters")
+    private String title;
 
-    @NotBlank(message = "Content is required")
-    private String content;
+    @NotBlank(message = "Body is required")
+    private String body;
 
-    private String smsContent;
+    private String data; // Additional notification data as JSON string
 
-    private String pushContent;
+    private String actionUrl; // Deep link URL
 
-    private String htmlContent;
-
-    private List<String> channels; // EMAIL, PUSH, SMS
-
-    private String priority = "NORMAL"; // LOW, NORMAL, HIGH, URGENT
+    private String imageUrl;
 
     private LocalDateTime scheduledAt;
+
+    private LocalDateTime expiresAt;
 
     private Long templateId;
 
     private Map<String, Object> templateData;
 
-    private Map<String, Object> metadata;
-
     // Constructors
     public CreateNotificationRequest() {}
 
-    public CreateNotificationRequest(Long recipientUserId, NotificationType notificationType, 
-                                   String subject, String content) {
-        this.recipientUserId = recipientUserId;
+    public CreateNotificationRequest(Long userId, String notificationType, String title, String body) {
+        this.userId = userId;
         this.notificationType = notificationType;
-        this.subject = subject;
-        this.content = content;
+        this.title = title;
+        this.body = body;
     }
 
     // Getters and Setters
-    public Long getRecipientUserId() {
-        return recipientUserId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setRecipientUserId(Long recipientUserId) {
-        this.recipientUserId = recipientUserId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public NotificationType getNotificationType() {
+    public String getNotificationType() {
         return notificationType;
     }
 
-    public void setNotificationType(NotificationType notificationType) {
+    public void setNotificationType(String notificationType) {
         this.notificationType = notificationType;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getTitle() {
+        return title;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public String getBody() {
+        return body;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setBody(String body) {
+        this.body = body;
     }
 
-    public String getSmsContent() {
-        return smsContent;
+    public String getData() {
+        return data;
     }
 
-    public void setSmsContent(String smsContent) {
-        this.smsContent = smsContent;
+    public void setData(String data) {
+        this.data = data;
     }
 
-    public String getPushContent() {
-        return pushContent;
+    public String getActionUrl() {
+        return actionUrl;
     }
 
-    public void setPushContent(String pushContent) {
-        this.pushContent = pushContent;
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
     }
 
-    public String getHtmlContent() {
-        return htmlContent;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setHtmlContent(String htmlContent) {
-        this.htmlContent = htmlContent;
-    }
-
-    public List<String> getChannels() {
-        return channels;
-    }
-
-    public void setChannels(List<String> channels) {
-        this.channels = channels;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public LocalDateTime getScheduledAt() {
@@ -135,6 +113,14 @@ public class CreateNotificationRequest {
 
     public void setScheduledAt(LocalDateTime scheduledAt) {
         this.scheduledAt = scheduledAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 
     public Long getTemplateId() {
@@ -153,11 +139,15 @@ public class CreateNotificationRequest {
         this.templateData = templateData;
     }
 
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
+    @Override
+    public String toString() {
+        return "CreateNotificationRequest{" +
+                "userId=" + userId +
+                ", notificationType='" + notificationType + '\'' +
+                ", title='" + title + '\'' +
+                ", body='" + body + '\'' +
+                ", scheduledAt=" + scheduledAt +
+                ", templateId=" + templateId +
+                '}';
     }
 }

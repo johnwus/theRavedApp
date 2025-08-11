@@ -37,8 +37,8 @@ public class ProductCategory {
     @JoinColumn(name = "parent_category_id")
     private ProductCategory parentCategory;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
+    @Column(name = "icon_url", columnDefinition = "TEXT")
+    private String iconUrl;
 
     @Column(name = "display_order")
     private Integer displayOrder = 0;
@@ -109,12 +109,12 @@ public class ProductCategory {
         this.parentCategory = parentCategory;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getIconUrl() {
+        return iconUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
     }
 
     public Integer getDisplayOrder() {

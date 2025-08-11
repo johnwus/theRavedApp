@@ -93,6 +93,34 @@ public class UserMetrics {
     @Column(name = "influence_score", precision = 5, scale = 2)
     private BigDecimal influenceScore = BigDecimal.ZERO;
 
+    // Additional fields for MetricsServiceImpl compatibility
+    @Column(name = "total_posts")
+    private Long totalPosts = 0L;
+
+    @Column(name = "total_likes")
+    private Long totalLikes = 0L;
+
+    @Column(name = "total_comments")
+    private Long totalComments = 0L;
+
+    @Column(name = "total_shares")
+    private Long totalShares = 0L;
+
+    @Column(name = "total_views")
+    private Long totalViews = 0L;
+
+    @Column(name = "total_followers")
+    private Long totalFollowers = 0L;
+
+    @Column(name = "total_following")
+    private Long totalFollowing = 0L;
+
+    @Column(name = "engagement_rate", precision = 5, scale = 2)
+    private Double engagementRate = 0.0;
+
+    @Column(name = "last_active_at")
+    private LocalDateTime lastActiveAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -302,6 +330,79 @@ public class UserMetrics {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // Getters and setters for additional fields
+    public Long getTotalPosts() {
+        return totalPosts;
+    }
+
+    public void setTotalPosts(Long totalPosts) {
+        this.totalPosts = totalPosts;
+    }
+
+    public Long getTotalLikes() {
+        return totalLikes;
+    }
+
+    public void setTotalLikes(Long totalLikes) {
+        this.totalLikes = totalLikes;
+    }
+
+    public Long getTotalComments() {
+        return totalComments;
+    }
+
+    public void setTotalComments(Long totalComments) {
+        this.totalComments = totalComments;
+    }
+
+    public Long getTotalShares() {
+        return totalShares;
+    }
+
+    public void setTotalShares(Long totalShares) {
+        this.totalShares = totalShares;
+    }
+
+    public Long getTotalViews() {
+        return totalViews;
+    }
+
+    public void setTotalViews(Long totalViews) {
+        this.totalViews = totalViews;
+    }
+
+    public Long getTotalFollowers() {
+        return totalFollowers;
+    }
+
+    public void setTotalFollowers(Long totalFollowers) {
+        this.totalFollowers = totalFollowers;
+    }
+
+    public Long getTotalFollowing() {
+        return totalFollowing;
+    }
+
+    public void setTotalFollowing(Long totalFollowing) {
+        this.totalFollowing = totalFollowing;
+    }
+
+    public Double getEngagementRate() {
+        return engagementRate;
+    }
+
+    public void setEngagementRate(Double engagementRate) {
+        this.engagementRate = engagementRate;
+    }
+
+    public LocalDateTime getLastActiveAt() {
+        return lastActiveAt;
+    }
+
+    public void setLastActiveAt(LocalDateTime lastActiveAt) {
+        this.lastActiveAt = lastActiveAt;
     }
 
     @PrePersist

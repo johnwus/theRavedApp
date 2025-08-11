@@ -3,6 +3,7 @@ package com.raved.user.service;
 import com.raved.user.dto.response.UserResponse;
 import com.raved.user.model.User;
 import com.raved.user.model.UserStatus;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

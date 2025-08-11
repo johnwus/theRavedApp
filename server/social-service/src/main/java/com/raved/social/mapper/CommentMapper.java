@@ -26,13 +26,31 @@ public class CommentMapper {
         response.setParentCommentId(comment.getParentCommentId());
         response.setContent(comment.getContent());
         response.setLikesCount(comment.getLikesCount());
-        response.setIsEdited(comment.getIsEdited());
+        response.setRepliesCount(comment.getRepliesCount());
         response.setIsFlagged(comment.getIsFlagged());
-        response.setFlaggedReason(comment.getFlaggedReason());
+        response.setModerationStatus(comment.getModerationStatus());
+        response.setIsDeleted(comment.getIsDeleted());
         response.setCreatedAt(comment.getCreatedAt());
         response.setUpdatedAt(comment.getUpdatedAt());
-        response.setEditedAt(comment.getEditedAt());
+        
+        // Set default values for additional fields
+        // These would typically be populated by the service layer
+        response.setUserName(null); // To be set by service
+        response.setUserAvatar(null); // To be set by service
+        response.setIsLikedByCurrentUser(false); // To be set by service
+        response.setFlaggedReason(null); // Not stored in database, to be set by service if needed
 
+        return response;
+    }
+
+    public CommentResponse toCommentResponse(Comment comment, String userName, String userAvatar, Boolean isLikedByCurrentUser) {
+        CommentResponse response = toCommentResponse(comment);
+        if (response != null) {
+            response.setUserName(userName);
+            response.setUserAvatar(userAvatar);
+            response.setIsLikedByCurrentUser(isLikedByCurrentUser != null ? isLikedByCurrentUser : false);
+            // flaggedReason is not stored in database, so it remains null unless set by service
+        }
         return response;
     }
 
@@ -49,8 +67,9 @@ public class CommentMapper {
         
         // Initialize flags and counters
         comment.setLikesCount(0);
-        comment.setIsEdited(false);
+        comment.setRepliesCount(0);
         comment.setIsFlagged(false);
+        comment.setModerationStatus("APPROVED");
         comment.setIsDeleted(false);
 
         return comment;
@@ -63,8 +82,6 @@ public class CommentMapper {
 
         if (request.getContent() != null) {
             comment.setContent(request.getContent());
-            comment.setIsEdited(true);
-            comment.setEditedAt(LocalDateTime.now());
         }
     }
 }

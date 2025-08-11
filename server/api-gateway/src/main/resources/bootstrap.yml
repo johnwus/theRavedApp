@@ -1,7 +1,15 @@
 # Bootstrap configuration
 spring:
   application:
-    name: ${spring.application.name}
+    name: api-gateway
   cloud:
     config:
-      uri: http://localhost:8888
+      enabled: true
+      fail-fast: true
+      uri: ${SPRING_CONFIG_URI:http://localhost:8888}
+      label: ${SPRING_CONFIG_LABEL:main}
+      retry:
+        initial-interval: 1000
+        max-attempts: 5
+        max-interval: 5000
+        multiplier: 1.5

@@ -1,22 +1,21 @@
 package com.raved.user.security;
 
-import com.raved.user.config.JwtConfig;
-import com.raved.user.model.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
+import com.raved.user.config.JwtConfig;
+import com.raved.user.model.User;
+
+import io.jsonwebtoken.Claims;
+import com.raved.security.jwt.JwtUtils;
 
 /**
  * JWT Token Provider
@@ -54,11 +53,7 @@ public class JwtTokenProvider {
 
     private Claims extractAllClaims(String token) {
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getSignInKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            return JwtUtils.parseClaimsWithRawSecret(token, jwtConfig.getSecret());
         } catch (Exception e) {
             logger.error("Error parsing JWT token: {}", e.getMessage());
             throw e;
@@ -105,13 +100,12 @@ public class JwtTokenProvider {
     }
 
     private String generateToken(Map<String, Object> claims, String subject, long validity) {
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + validity))
-                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
-                .compact();
+        return JwtUtils.generateTokenWithRawSecret(
+                subject,
+                claims,
+                jwtConfig.getSecret(),
+                validity
+        );
     }
 
     public Boolean isTokenValid(String token, UserDetails userDetails) {
@@ -127,8 +121,5 @@ public class JwtTokenProvider {
         return REFRESH_TOKEN_VALIDITY / 1000;
     }
 
-    private Key getSignInKey() {
-        byte[] keyBytes = jwtConfig.getSecret().getBytes();
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+    // Signing key now handled by shared JwtUtils
 }

@@ -1,0 +1,32 @@
+# API Gateway Configuration (shared defaults)
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: ${GATEWAY_DISCOVERY_ENABLED:true}
+          lower-case-service-id: true
+      httpclient:
+        connect-timeout: ${GATEWAY_CONNECT_TIMEOUT:3000}
+        response-timeout: ${GATEWAY_RESPONSE_TIMEOUT:5s}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:INFO}
+    org.springframework.web: ${WEB_LOG_LEVEL:WARN}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

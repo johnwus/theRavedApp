@@ -109,8 +109,8 @@ public class FollowServiceImpl implements FollowService {
         
         UserFollowStatsResponse stats = new UserFollowStatsResponse();
         stats.setUserId(userId);
-        stats.setFollowersCount(followersCount);
-        stats.setFollowingCount(followingCount);
+        stats.setFollowersCount((int) followersCount);
+        stats.setFollowingCount((int) followingCount);
         
         return stats;
     }
@@ -120,7 +120,15 @@ public class FollowServiceImpl implements FollowService {
     public List<FollowResponse> getMutualFollowers(Long userId1, Long userId2) {
         logger.debug("Getting mutual followers between users: {} and {}", userId1, userId2);
         
-        List<Follow> mutualFollows = followRepository.findMutualFollowers(userId1, userId2);
+        List<Long> mutualIds = followRepository.findMutualFollows(userId1, userId2);
+        List<Follow> mutualFollows = mutualIds.stream()
+                .map(id -> {
+                    Follow follow = new Follow();
+                    follow.setId(id);
+                    return follow;
+                })
+                .collect(Collectors.toList());
+        
         return mutualFollows.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
@@ -131,9 +139,8 @@ public class FollowServiceImpl implements FollowService {
     public List<FollowResponse> getSuggestedFollows(Long userId, int limit) {
         logger.debug("Getting suggested follows for user: {} with limit: {}", userId, limit);
         
-        // Simple suggestion algorithm: users followed by people you follow
-        List<Follow> suggestions = followRepository.findSuggestedFollows(userId, limit);
-        return suggestions.stream()
+        List<Follow> suggestedFollows = followRepository.findSuggestedFollows(userId, limit);
+        return suggestedFollows.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
     }
@@ -147,53 +154,5 @@ public class FollowServiceImpl implements FollowService {
         return recentFollowers.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public void blockUser(Long blockerId, Long blockedId) {
-        logger.info("User {} blocking user {}", blockerId, blockedId);
-        
-        // Remove existing follow relationships
-        followRepository.deleteByFollowerIdAndFollowingId(blockerId, blockedId);
-        followRepository.deleteByFollowerIdAndFollowingId(blockedId, blockerId);
-        
-        // Create block relationship (could be a separate Block entity)
-        // For now, we'll use a special Follow record with a flag
-        Follow block = new Follow();
-        block.setFollowerId(blockerId);
-        block.setFollowingId(blockedId);
-        block.setIsBlocked(true);
-        block.setCreatedAt(LocalDateTime.now());
-        
-        followRepository.save(block);
-        logger.info("User blocked successfully");
-    }
-
-    @Override
-    public void unblockUser(Long blockerId, Long blockedId) {
-        logger.info("User {} unblocking user {}", blockerId, blockedId);
-        
-        Optional<Follow> blockOpt = followRepository.findByFollowerIdAndFollowingIdAndIsBlockedTrue(blockerId, blockedId);
-        if (blockOpt.isPresent()) {
-            followRepository.delete(blockOpt.get());
-            logger.info("User unblocked successfully");
-        } else {
-            logger.warn("Block relationship not found for blocker {} and blocked {}", blockerId, blockedId);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isBlocked(Long blockerId, Long blockedId) {
-        return followRepository.existsByFollowerIdAndFollowingIdAndIsBlockedTrue(blockerId, blockedId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<FollowResponse> getBlockedUsers(Long userId, Pageable pageable) {
-        logger.debug("Getting blocked users for user: {}", userId);
-        
-        Page<Follow> blockedUsers = followRepository.findByFollowerIdAndIsBlockedTrueOrderByCreatedAtDesc(userId, pageable);
-        return blockedUsers.map(followMapper::toFollowResponse);
     }
 }

@@ -1,65 +1,175 @@
 server:
   port: 8080
+  shutdown: graceful
+  netty:
+    connection-timeout: 2s
+    idle-timeout: 15s
 
 spring:
   application:
     name: api-gateway
   profiles:
-    active: development
+    active: ${SPRING_PROFILES_ACTIVE:development}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWT_JWK_SET_URI:http://localhost:8081/.well-known/jwks.json}
+
+  # Main configuration
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+
+  # Cloud Gateway Configuration
   cloud:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
           lower-case-service-id: true
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-      globalcors:
-        corsConfigurations:
-          '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: "*"
-            allowedHeaders: "*"
-            allowCredentials: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+        pool:
+          type: elastic
+          max-idle-time: 15s
+          max-life-time: 60s
+      metrics:
+        enabled: true
+        tags:
+          path:
+            enabled: true
 
+  # Note: Add Redis config only when enabling RequestRateLimiter
+
+# Service Discovery Configuration
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
+    registry-fetch-interval-seconds: 5
+    healthcheck:
+      enabled: true
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
+    metadata-map:
+      zone: ${EUREKA_ZONE:zone1}
+      version: ${spring.application.version:1.0.0}
 
+# Management & Monitoring
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,gateway
+        include: health,info,metrics,gateway,prometheus,circuitbreakers,ratelimiters
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
+      show-components: always
+      probes:
+        enabled: true
     gateway:
       enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+    ratelimiters:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      sla:
+        http.server.requests: 100ms, 500ms, 1s, 2s, 5s
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
 
+# Keep resilience configs minimal; can be reintroduced per-route via filters if needed
+
+# Logging Configuration
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.web.cors: DEBUG
-    com.raved: DEBUG
+    org.springframework.cloud.gateway: ${GATEWAY_LOG_LEVEL:INFO}
+    org.springframework.web.cors: ${CORS_LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}
+    com.raved: ${APP_LOG_LEVEL:INFO}
+    io.github.resilience4j: ${RESILIENCE_LOG_LEVEL:INFO}
+    reactor.netty: ${NETTY_LOG_LEVEL:INFO}
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
   file:
-    name: logs/api-gateway.log
+    name: ${LOG_FILE:logs/api-gateway.log}
+    max-size: 100MB
+    max-history: 30
 
----
-spring:
-  profiles: production
+# Custom Application Properties
+raved:
+  gateway:
+    security:
+      jwt:
+        secret: ${JWT_SECRET:mySecretKey}
+        expiration: ${JWT_EXPIRATION:86400000} # 24 hours
+        refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days
+      cors:
+        allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:19006}
+        max-age: ${CORS_MAX_AGE:3600}
 
-logging:
-  level:
-    org.springframework.cloud.gateway: INFO
-    com.raved: INFO
+    rate-limiting:
+      enabled: ${RATE_LIMITING_ENABLED:true}
+      default-limit: ${DEFAULT_RATE_LIMIT:100}
+      auth-limit: ${AUTH_RATE_LIMIT:10}
+      payment-limit: ${PAYMENT_RATE_LIMIT:20}
+
+    monitoring:
+      tracing:
+        enabled: ${TRACING_ENABLED:true}
+        sample-rate: ${TRACING_SAMPLE_RATE:0.1}
+      metrics:
+        enabled: ${METRICS_ENABLED:true}
+
+    circuit-breaker:
+      enabled: ${CIRCUIT_BREAKER_ENABLED:true}
+      failure-threshold: ${CB_FAILURE_THRESHOLD:50}
+      timeout: ${CB_TIMEOUT:5000}
+
+    services:
+      user-service:
+        url: ${USER_SERVICE_URL:lb://user-service}
+        timeout: ${USER_SERVICE_TIMEOUT:5000}
+      content-service:
+        url: ${CONTENT_SERVICE_URL:lb://content-service}
+        timeout: ${CONTENT_SERVICE_TIMEOUT:5000}
+      social-service:
+        url: ${SOCIAL_SERVICE_URL:lb://social-service}
+        timeout: ${SOCIAL_SERVICE_TIMEOUT:5000}
+      realtime-service:
+        url: ${REALTIME_SERVICE_URL:lb://realtime-service}
+        timeout: ${REALTIME_SERVICE_TIMEOUT:5000}
+      ecommerce-service:
+        url: ${ECOMMERCE_SERVICE_URL:lb://ecommerce-service}
+        timeout: ${ECOMMERCE_SERVICE_TIMEOUT:5000}
+      notification-service:
+        url: ${NOTIFICATION_SERVICE_URL:lb://notification-service}
+        timeout: ${NOTIFICATION_SERVICE_TIMEOUT:5000}
+      analytics-service:
+        url: ${ANALYTICS_SERVICE_URL:lb://analytics-service}
+        timeout: ${ANALYTICS_SERVICE_TIMEOUT:5000}

@@ -73,18 +73,12 @@ public class PostServiceImpl implements PostService {
         // Update fields
         if (request.getContent() != null) {
             post.setContent(request.getContent());
-            post.setIsEdited(true);
-            post.setEditedAt(LocalDateTime.now());
+            // Note: isEdited and editedAt are not supported in current model
         }
         if (request.getVisibility() != null) {
-            post.setVisibility(Post.Visibility.valueOf(request.getVisibility()));
+            post.setVisibility(request.getVisibility());
         }
-        if (request.getAllowComments() != null) {
-            post.setAllowComments(request.getAllowComments());
-        }
-        if (request.getAllowSharing() != null) {
-            post.setAllowSharing(request.getAllowSharing());
-        }
+        // Note: allowComments and allowSharing are not supported in current model
         
         post.setUpdatedAt(LocalDateTime.now());
         
@@ -135,7 +129,7 @@ public class PostServiceImpl implements PostService {
         logger.debug("Getting public posts");
         
         Page<Post> posts = postRepository.findByVisibilityAndIsDeletedFalseOrderByCreatedAtDesc(
-                Post.Visibility.PUBLIC, pageable);
+                "PUBLIC", pageable);
         return posts.map(postMapper::toPostResponse);
     }
 
@@ -208,7 +202,7 @@ public class PostServiceImpl implements PostService {
             Post post = postOpt.get();
             post.setIsFlagged(true);
             post.setFlaggedReason(reason);
-            post.setModerationStatus(Post.ModerationStatus.PENDING);
+            post.setModerationStatus("PENDING");
             post.setUpdatedAt(LocalDateTime.now());
             postRepository.save(post);
             

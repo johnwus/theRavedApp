@@ -1,25 +1,13 @@
 package com.raved.social.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Comment Entity for TheRavedApp
- *
- * Represents comments on posts and replies to other comments.
- * Based on the comments table schema.
+ * Entity representing a comment on a post or another comment
  */
 @Entity
-@Table(name = "comments", indexes = {
-        @Index(name = "idx_comments_post", columnList = "post_id"),
-        @Index(name = "idx_comments_user", columnList = "user_id"),
-        @Index(name = "idx_comments_parent", columnList = "parent_comment_id"),
-        @Index(name = "idx_comments_created", columnList = "created_at"),
-        @Index(name = "idx_comments_thread", columnList = "post_id, parent_comment_id, created_at")
-})
+@Table(name = "comments")
 public class Comment {
 
     @Id
@@ -27,39 +15,30 @@ public class Comment {
     private Long id;
 
     @Column(name = "post_id", nullable = false)
-    private Long postId; // Reference to content service
+    private Long postId;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
-
-    @NotBlank(message = "Comment content is required")
-    @Size(max = 2000, message = "Comment must not exceed 2000 characters")
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String content;
+    private Long userId;
 
     @Column(name = "parent_comment_id")
-    private Long parentCommentId; // For nested comments/replies
+    private Long parentCommentId;
 
-    // Engagement Metrics (denormalized for performance)
-    @Column(name = "likes_count", nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @Column(name = "likes_count")
     private Integer likesCount = 0;
 
-    @Column(name = "replies_count", nullable = false)
+    @Column(name = "replies_count")
     private Integer repliesCount = 0;
 
-    // Content Moderation
-    @Column(name = "is_flagged", nullable = false)
+    @Column(name = "is_flagged")
     private Boolean isFlagged = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false)
-    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+    @Column(name = "moderation_status")
+    private String moderationStatus = "APPROVED";
 
-    @Column(name = "flagged_reason", columnDefinition = "TEXT")
-    private String flaggedReason;
-
-    // System Fields
-    @Column(name = "is_deleted", nullable = false)
+    @Column(name = "is_deleted")
     private Boolean isDeleted = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -68,31 +47,26 @@ public class Comment {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relationships (for convenience, but be careful with N+1 queries)
-    @OneToMany(mappedBy = "parentCommentId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Comment> replies;
-
-    // Enums
-    public enum ModerationStatus {
-        PENDING, APPROVED, REJECTED
-    }
-
-    // Constructors
+    // Default constructor
     public Comment() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public Comment(Long postId, Long userId, String content) {
-        this();
+    // Constructor with all fields
+    public Comment(Long id, Long postId, Long userId, Long parentCommentId, String content, 
+                  Integer likesCount, Integer repliesCount, Boolean isFlagged, String moderationStatus, 
+                  Boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
         this.postId = postId;
         this.userId = userId;
-        this.content = content;
-    }
-
-    public Comment(Long postId, Long userId, String content, Long parentCommentId) {
-        this(postId, userId, content);
         this.parentCommentId = parentCommentId;
+        this.content = content;
+        this.likesCount = likesCount;
+        this.repliesCount = repliesCount;
+        this.isFlagged = isFlagged;
+        this.moderationStatus = moderationStatus;
+        this.isDeleted = isDeleted;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
@@ -120,20 +94,20 @@ public class Comment {
         this.userId = userId;
     }
 
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
     public Long getParentCommentId() {
         return parentCommentId;
     }
 
     public void setParentCommentId(Long parentCommentId) {
         this.parentCommentId = parentCommentId;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public Integer getLikesCount() {
@@ -160,20 +134,12 @@ public class Comment {
         this.isFlagged = isFlagged;
     }
 
-    public ModerationStatus getModerationStatus() {
+    public String getModerationStatus() {
         return moderationStatus;
     }
 
-    public void setModerationStatus(ModerationStatus moderationStatus) {
+    public void setModerationStatus(String moderationStatus) {
         this.moderationStatus = moderationStatus;
-    }
-
-    public String getFlaggedReason() {
-        return flaggedReason;
-    }
-
-    public void setFlaggedReason(String flaggedReason) {
-        this.flaggedReason = flaggedReason;
     }
 
     public Boolean getIsDeleted() {
@@ -200,14 +166,6 @@ public class Comment {
         this.updatedAt = updatedAt;
     }
 
-    public List<Comment> getReplies() {
-        return replies;
-    }
-
-    public void setReplies(List<Comment> replies) {
-        this.replies = replies;
-    }
-
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
@@ -217,47 +175,5 @@ public class Comment {
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    // Utility methods
-    public void incrementLikes() {
-        this.likesCount++;
-    }
-
-    public void decrementLikes() {
-        if (this.likesCount > 0) {
-            this.likesCount--;
-        }
-    }
-
-    public void incrementReplies() {
-        this.repliesCount++;
-    }
-
-    public void decrementReplies() {
-        if (this.repliesCount > 0) {
-            this.repliesCount--;
-        }
-    }
-
-    public boolean isReply() {
-        return parentCommentId != null;
-    }
-
-    public boolean isTopLevel() {
-        return parentCommentId == null;
-    }
-
-    @Override
-    public String toString() {
-        return "Comment{" +
-                "id=" + id +
-                ", postId=" + postId +
-                ", userId=" + userId +
-                ", parentCommentId=" + parentCommentId +
-                ", likesCount=" + likesCount +
-                ", repliesCount=" + repliesCount +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

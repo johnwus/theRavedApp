@@ -8,6 +8,9 @@ import jakarta.validation.constraints.NotNull;
  */
 public class StudentVerificationRequest {
 
+    @NotNull(message = "User ID is required")
+    private Long userId;
+
     @NotNull(message = "University ID is required")
     private Long universityId;
 
@@ -19,12 +22,21 @@ public class StudentVerificationRequest {
     // Constructors
     public StudentVerificationRequest() {}
 
-    public StudentVerificationRequest(Long universityId, String studentIdDocumentUrl) {
+    public StudentVerificationRequest(Long userId, Long universityId, String studentIdDocumentUrl) {
+        this.userId = userId;
         this.universityId = universityId;
         this.studentIdDocumentUrl = studentIdDocumentUrl;
     }
 
     // Getters and Setters
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
     public Long getUniversityId() {
         return universityId;
     }

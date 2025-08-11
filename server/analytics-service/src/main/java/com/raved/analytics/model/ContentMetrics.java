@@ -91,6 +91,31 @@ public class ContentMetrics {
     @Column(name = "top_age_group")
     private String topAgeGroup;
 
+    // Additional fields for MetricsServiceImpl compatibility
+    @Column(name = "content_id")
+    private Long contentId;
+
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
+
+    @Column(name = "like_count")
+    private Long likeCount = 0L;
+
+    @Column(name = "comment_count")
+    private Long commentCount = 0L;
+
+    @Column(name = "share_count")
+    private Long shareCount = 0L;
+
+    @Column(name = "engagement_score", precision = 5, scale = 2)
+    private Double engagementScore = 0.0;
+
+    @Column(name = "reach_count")
+    private Long reachCount = 0L;
+
+    @Column(name = "impression_count")
+    private Long impressionCount = 0L;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -293,6 +318,71 @@ public class ContentMetrics {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    // Getters and setters for additional fields
+    public Long getContentId() {
+        return contentId;
+    }
+
+    public void setContentId(Long contentId) {
+        this.contentId = contentId;
+    }
+
+    public Long getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Long viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public Long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(Long likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public Long getCommentCount() {
+        return commentCount;
+    }
+
+    public void setCommentCount(Long commentCount) {
+        this.commentCount = commentCount;
+    }
+
+    public Long getShareCount() {
+        return shareCount;
+    }
+
+    public void setShareCount(Long shareCount) {
+        this.shareCount = shareCount;
+    }
+
+    public Double getEngagementScore() {
+        return engagementScore;
+    }
+
+    public void setEngagementScore(Double engagementScore) {
+        this.engagementScore = engagementScore;
+    }
+
+    public Long getReachCount() {
+        return reachCount;
+    }
+
+    public void setReachCount(Long reachCount) {
+        this.reachCount = reachCount;
+    }
+
+    public Long getImpressionCount() {
+        return impressionCount;
+    }
+
+    public void setImpressionCount(Long impressionCount) {
+        this.impressionCount = impressionCount;
     }
 
     @PrePersist

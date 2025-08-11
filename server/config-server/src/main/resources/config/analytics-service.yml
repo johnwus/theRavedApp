@@ -1,0 +1,112 @@
+spring:
+  application:
+    name: analytics-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_analytics
+    username: ${DB_USERNAME:raved_user}
+    password: ${DB_PASSWORD:raved_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: analytics-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: 8087
+
+# Analytics Configuration
+analytics:
+  data-retention:
+    raw-events: 90 # days
+    aggregated-daily: 365 # days
+    aggregated-monthly: 1825 # days (5 years)
+    aggregated-yearly: 3650 # days (10 years)
+  batch-processing:
+    enabled: true
+    batch-size: 1000
+    processing-interval: 300000 # 5 minutes
+    max-workers: 10
+  real-time:
+    enabled: true
+    window-size: 300 # 5 minutes
+    aggregation-interval: 60000 # 1 minute
+  metrics:
+    user-engagement: true
+    content-performance: true
+    social-interactions: true
+    ecommerce-conversion: true
+    system-performance: true
+
+# Data Processing
+data-processing:
+  event-types:
+    - user-login
+    - content-view
+    - content-like
+    - content-comment
+    - social-friend-request
+    - social-group-join
+    - ecommerce-purchase
+    - notification-sent
+  aggregation-levels:
+    - minute
+    - hour
+    - day
+    - week
+    - month
+    - year
+
+# Reporting Configuration
+reporting:
+  scheduled-reports:
+    enabled: true
+    daily-summary: "0 1 * * *" # 1 AM daily
+    weekly-summary: "0 2 * * 1" # 2 AM Monday
+    monthly-summary: "0 3 1 * *" # 3 AM 1st of month
+  export-formats:
+    - csv
+    - json
+    - pdf
+  max-report-rows: 10000
+
+# Integration Configuration
+integration:
+  external-analytics:
+    google-analytics:
+      enabled: false
+      tracking-id: ${GA_TRACKING_ID:}
+    mixpanel:
+      enabled: false
+      project-token: ${MIXPANEL_TOKEN:}
+  data-export:
+    s3:
+      enabled: false
+      bucket: ${ANALYTICS_S3_BUCKET:}
+      region: ${AWS_REGION:us-east-1}

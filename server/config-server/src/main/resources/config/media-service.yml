@@ -1,0 +1,119 @@
+spring:
+  application:
+    name: media-service
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: media-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: 8089
+
+# Media Configuration
+media:
+  storage:
+    type: ${MEDIA_STORAGE_TYPE:local} # local, s3, gcs, azure
+    local:
+      base-path: ${MEDIA_LOCAL_PATH:/uploads}
+      max-size: 100GB
+    s3:
+      bucket: ${MEDIA_S3_BUCKET:raved-media}
+      region: ${AWS_REGION:us-east-1}
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+    gcs:
+      bucket: ${MEDIA_GCS_BUCKET:raved-media}
+      project-id: ${GCS_PROJECT_ID:}
+      credentials-file: ${GCS_CREDENTIALS_FILE:}
+    azure:
+      container: ${MEDIA_AZURE_CONTAINER:raved-media}
+      account-name: ${AZURE_STORAGE_ACCOUNT:}
+      account-key: ${AZURE_STORAGE_KEY:}
+  
+  processing:
+    image:
+      enabled: true
+      formats: jpg,jpeg,png,gif,webp
+      max-width: 4096
+      max-height: 4096
+      quality: 85
+      generate-thumbnails: true
+      thumbnail-sizes: 150x150,300x300,600x600
+      compression: true
+    video:
+      enabled: true
+      formats: mp4,avi,mov,wmv,flv
+      max-duration: 600 # 10 minutes
+      max-resolution: 1920x1080
+      generate-thumbnails: true
+      thumbnail-interval: 10 # seconds
+      transcoding: true
+      codecs: h264,h265
+    audio:
+      enabled: true
+      formats: mp3,wav,aac,ogg
+      max-duration: 3600 # 1 hour
+      quality: 192 # kbps
+      normalize: true
+  
+  cdn:
+    enabled: ${CDN_ENABLED:false}
+    base-url: ${CDN_BASE_URL:http://localhost:8089}
+    cache-control: max-age=31536000 # 1 year
+    compression: true
+  
+  security:
+    allowed-origins: ${MEDIA_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080}
+    max-upload-size: 100MB
+    virus-scan: false
+    content-validation: true
+  
+  cleanup:
+    enabled: true
+    schedule: "0 2 * * *" # 2 AM daily
+    orphaned-files: true
+    temp-files: true
+    retention-days: 30
+
+# File Upload Configuration
+upload:
+  max-file-size: 100MB
+  allowed-types:
+    image: jpg,jpeg,png,gif,webp,bmp,tiff
+    video: mp4,avi,mov,wmv,flv,webm,mkv
+    audio: mp3,wav,aac,ogg,flac
+    document: pdf,doc,docx,txt,rtf
+  chunk-size: 5MB
+  max-chunks: 20
+  temp-directory: ${TEMP_DIR:/tmp/raved-uploads}
+
+# Thumbnail Configuration
+thumbnails:
+  enabled: true
+  sizes:
+    small: 150x150
+    medium: 300x300
+    large: 600x600
+    xlarge: 1200x1200
+  format: jpg
+  quality: 85
+  background: white

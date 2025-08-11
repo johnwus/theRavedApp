@@ -4,22 +4,11 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Like Entity for TheRavedApp
- *
- * Represents likes on posts and comments.
- * Based on the likes table schema.
+ * Entity representing a like on a post, comment, or product
  */
 @Entity
-@Table(name = "likes", indexes = {
-        @Index(name = "idx_likes_post", columnList = "post_id"),
-        @Index(name = "idx_likes_comment", columnList = "comment_id"),
-        @Index(name = "idx_likes_user", columnList = "user_id"),
-        @Index(name = "idx_likes_user_post", columnList = "user_id, post_id"),
-        @Index(name = "idx_likes_user_comment", columnList = "user_id, comment_id")
-}, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_like_user_post", columnNames = { "user_id", "post_id" }),
-        @UniqueConstraint(name = "uk_like_user_comment", columnNames = { "user_id", "comment_id" })
-})
+@Table(name = "likes", 
+       uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "target_id", "target_type"}))
 public class Like {
 
     @Id
@@ -27,33 +16,33 @@ public class Like {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    private Long userId;
 
-    @Column(name = "post_id")
-    private Long postId; // Reference to content service (nullable for comment likes)
+    @Column(name = "target_id", nullable = false)
+    private Long targetId;
 
-    @Column(name = "comment_id")
-    private Long commentId; // Reference to comment (nullable for post likes)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", nullable = false)
+    private TargetType targetType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Constructors
+    public enum TargetType {
+        POST, COMMENT, PRODUCT
+    }
+
+    // Default constructor
     public Like() {
-        this.createdAt = LocalDateTime.now();
     }
 
-    public Like(Long userId, Long postId) {
-        this();
+    // Constructor with all fields
+    public Like(Long id, Long userId, Long targetId, TargetType targetType, LocalDateTime createdAt) {
+        this.id = id;
         this.userId = userId;
-        this.postId = postId;
-    }
-
-    public Like(Long userId, Long postId, Long commentId) {
-        this();
-        this.userId = userId;
-        this.postId = postId;
-        this.commentId = commentId;
+        this.targetId = targetId;
+        this.targetType = targetType;
+        this.createdAt = createdAt;
     }
 
     // Getters and Setters
@@ -73,20 +62,20 @@ public class Like {
         this.userId = userId;
     }
 
-    public Long getPostId() {
-        return postId;
+    public Long getTargetId() {
+        return targetId;
     }
 
-    public void setPostId(Long postId) {
-        this.postId = postId;
+    public void setTargetId(Long targetId) {
+        this.targetId = targetId;
     }
 
-    public Long getCommentId() {
-        return commentId;
+    public TargetType getTargetType() {
+        return targetType;
     }
 
-    public void setCommentId(Long commentId) {
-        this.commentId = commentId;
+    public void setTargetType(TargetType targetType) {
+        this.targetType = targetType;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -100,25 +89,5 @@ public class Like {
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
-    }
-
-    // Utility methods
-    public boolean isPostLike() {
-        return postId != null && commentId == null;
-    }
-
-    public boolean isCommentLike() {
-        return commentId != null;
-    }
-
-    @Override
-    public String toString() {
-        return "Like{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", postId=" + postId +
-                ", commentId=" + commentId +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

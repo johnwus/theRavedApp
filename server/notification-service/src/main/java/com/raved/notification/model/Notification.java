@@ -1,8 +1,6 @@
 package com.raved.notification.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
@@ -13,115 +11,104 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "notifications", indexes = {
-        @Index(name = "idx_notifications_recipient", columnList = "recipient_user_id"),
-        @Index(name = "idx_notifications_template", columnList = "template_id"),
+        @Index(name = "idx_notifications_user", columnList = "user_id"),
         @Index(name = "idx_notifications_type", columnList = "notification_type"),
-        @Index(name = "idx_notifications_status", columnList = "delivery_status"),
-        @Index(name = "idx_notifications_created", columnList = "created_at"),
-        @Index(name = "idx_notifications_scheduled", columnList = "scheduled_at"),
-        @Index(name = "idx_notifications_user_status", columnList = "recipient_user_id, delivery_status")
+        @Index(name = "idx_notifications_read", columnList = "is_read"),
+        @Index(name = "idx_notifications_created_at", columnList = "created_at"),
+        @Index(name = "idx_notifications_delivery_status", columnList = "delivery_status"),
+        @Index(name = "idx_notifications_scheduled", columnList = "scheduled_at")
 })
 public class Notification {
+
+    /**
+     * Enum representing the type of notification
+     */
+    public enum NotificationType {
+        LIKED, COMMENTED, FOLLOWED, ORDER_CONFIRMED, ORDER_SHIPPED, ORDER_DELIVERED,
+        PAYMENT_SUCCESS, PAYMENT_FAILED, WELCOME, PASSWORD_RESET, EMAIL_VERIFICATION,
+        SYSTEM_MAINTENANCE, PROMOTIONAL
+    }
+
+    /**
+     * Enum representing the delivery status of a notification
+     */
+    public enum DeliveryStatus {
+        PENDING, SENT, FAILED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "recipient_user_id", nullable = false)
-    private Long recipientUserId; // Reference to user service
+    @Column(name = "user_id", nullable = false)
+    private Long userId; // Reference to user service
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id")
-    private NotificationTemplate template;
+    @Column(name = "notification_type", nullable = false, length = 50)
+    private String notificationType; // LIKE, COMMENT, FOLLOW, ORDER_UPDATE, etc.
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "notification_type", nullable = false)
-    private NotificationType notificationType;
+    @Column(nullable = false, length = 255)
+    private String title;
 
-    @NotBlank(message = "Subject is required")
-    @Size(max = 500, message = "Subject must not exceed 500 characters")
-    @Column(nullable = false)
-    private String subject;
-
-    @NotBlank(message = "Content is required")
     @Column(columnDefinition = "TEXT", nullable = false)
-    private String content;
+    private String body;
 
-    @Column(name = "sms_content", columnDefinition = "TEXT")
-    private String smsContent;
+    // Notification Data
+    @Column(columnDefinition = "JSONB")
+    private String data; // Additional notification data
 
-    @Column(name = "push_content", columnDefinition = "TEXT")
-    private String pushContent;
+    @Column(name = "action_url", columnDefinition = "TEXT")
+    private String actionUrl; // Deep link URL
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_status", nullable = false)
-    private DeliveryStatus deliveryStatus = DeliveryStatus.PENDING;
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Priority priority = Priority.NORMAL;
+    // Delivery Status
+    @Column(name = "is_read")
+    private Boolean isRead = false;
 
+    @Column(name = "is_sent")
+    private Boolean isSent = false;
+
+    @Column(name = "delivery_status", length = 20)
+    private String deliveryStatus = "PENDING"; // PENDING, SENT, FAILED
+
+    // Channels
+    @Column(name = "push_sent")
+    private Boolean pushSent = false;
+
+    @Column(name = "email_sent")
+    private Boolean emailSent = false;
+
+    @Column(name = "sms_sent")
+    private Boolean smsSent = false;
+
+    // Timeline
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
 
-    @Column(name = "delivered_at")
-    private LocalDateTime deliveredAt;
-
     @Column(name = "read_at")
     private LocalDateTime readAt;
 
-    @Column(name = "retry_count", nullable = false)
-    private Integer retryCount = 0;
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
 
-    @Column(name = "max_retries", nullable = false)
-    private Integer maxRetries = 3;
-
-    @Column(name = "failure_reason", columnDefinition = "TEXT")
-    private String failureReason;
-
-    @Column(name = "metadata", columnDefinition = "TEXT")
-    private String metadata; // JSON string for additional data
-
-    @Column(name = "channels")
-    private String channels; // Comma-separated list of delivery channels (EMAIL,PUSH,SMS)
-
-    @Column(name = "html_content", columnDefinition = "TEXT")
-    private String htmlContent; // HTML version of content for emails
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    // Enums
-    public enum NotificationType {
-        EMAIL, SMS, PUSH_NOTIFICATION, IN_APP
-    }
-
-    public enum DeliveryStatus {
-        PENDING, SCHEDULED, PROCESSING, SENT, DELIVERED, FAILED, CANCELLED
-    }
-
-    public enum Priority {
-        LOW, NORMAL, HIGH, URGENT
-    }
 
     // Constructors
     public Notification() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public Notification(Long recipientUserId, NotificationType notificationType, String subject, String content) {
+    public Notification(Long userId, String notificationType, String title, String body) {
         this();
-        this.recipientUserId = recipientUserId;
+        this.userId = userId;
         this.notificationType = notificationType;
-        this.subject = subject;
-        this.content = content;
+        this.title = title;
+        this.body = body;
     }
 
     // Getters and Setters
@@ -133,76 +120,108 @@ public class Notification {
         this.id = id;
     }
 
-    public Long getRecipientUserId() {
-        return recipientUserId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setRecipientUserId(Long recipientUserId) {
-        this.recipientUserId = recipientUserId;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
-    public NotificationTemplate getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(NotificationTemplate template) {
-        this.template = template;
-    }
-
-    public NotificationType getNotificationType() {
+    public String getNotificationType() {
         return notificationType;
     }
 
-    public void setNotificationType(NotificationType notificationType) {
+    public void setNotificationType(String notificationType) {
         this.notificationType = notificationType;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getTitle() {
+        return title;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getContent() {
-        return content;
+    public String getBody() {
+        return body;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setBody(String body) {
+        this.body = body;
     }
 
-    public String getSmsContent() {
-        return smsContent;
+    public String getData() {
+        return data;
     }
 
-    public void setSmsContent(String smsContent) {
-        this.smsContent = smsContent;
+    public void setData(String data) {
+        this.data = data;
     }
 
-    public String getPushContent() {
-        return pushContent;
+    public String getActionUrl() {
+        return actionUrl;
     }
 
-    public void setPushContent(String pushContent) {
-        this.pushContent = pushContent;
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
     }
 
-    public DeliveryStatus getDeliveryStatus() {
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Boolean getIsRead() {
+        return isRead;
+    }
+
+    public void setIsRead(Boolean isRead) {
+        this.isRead = isRead;
+    }
+
+    public Boolean getIsSent() {
+        return isSent;
+    }
+
+    public void setIsSent(Boolean isSent) {
+        this.isSent = isSent;
+    }
+
+    public String getDeliveryStatus() {
         return deliveryStatus;
     }
 
-    public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
+    public void setDeliveryStatus(String deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
 
-    public Priority getPriority() {
-        return priority;
+    public Boolean getPushSent() {
+        return pushSent;
     }
 
-    public void setPriority(Priority priority) {
-        this.priority = priority;
+    public void setPushSent(Boolean pushSent) {
+        this.pushSent = pushSent;
+    }
+
+    public Boolean getEmailSent() {
+        return emailSent;
+    }
+
+    public void setEmailSent(Boolean emailSent) {
+        this.emailSent = emailSent;
+    }
+
+    public Boolean getSmsSent() {
+        return smsSent;
+    }
+
+    public void setSmsSent(Boolean smsSent) {
+        this.smsSent = smsSent;
     }
 
     public LocalDateTime getScheduledAt() {
@@ -221,14 +240,6 @@ public class Notification {
         this.sentAt = sentAt;
     }
 
-    public LocalDateTime getDeliveredAt() {
-        return deliveredAt;
-    }
-
-    public void setDeliveredAt(LocalDateTime deliveredAt) {
-        this.deliveredAt = deliveredAt;
-    }
-
     public LocalDateTime getReadAt() {
         return readAt;
     }
@@ -237,36 +248,12 @@ public class Notification {
         this.readAt = readAt;
     }
 
-    public Integer getRetryCount() {
-        return retryCount;
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
     }
 
-    public void setRetryCount(Integer retryCount) {
-        this.retryCount = retryCount;
-    }
-
-    public Integer getMaxRetries() {
-        return maxRetries;
-    }
-
-    public void setMaxRetries(Integer maxRetries) {
-        this.maxRetries = maxRetries;
-    }
-
-    public String getFailureReason() {
-        return failureReason;
-    }
-
-    public void setFailureReason(String failureReason) {
-        this.failureReason = failureReason;
-    }
-
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(String metadata) {
-        this.metadata = metadata;
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -277,104 +264,41 @@ public class Notification {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getChannels() {
-        return channels;
-    }
-
-    public void setChannels(String channels) {
-        this.channels = channels;
-    }
-
-    public String getHtmlContent() {
-        return htmlContent;
-    }
-
-    public void setHtmlContent(String htmlContent) {
-        this.htmlContent = htmlContent;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    // Utility methods
+    // Business Methods
     public void markAsSent() {
-        this.deliveryStatus = DeliveryStatus.SENT;
+        this.isSent = true;
         this.sentAt = LocalDateTime.now();
-    }
-
-    public void markAsDelivered() {
-        this.deliveryStatus = DeliveryStatus.DELIVERED;
-        this.deliveredAt = LocalDateTime.now();
-    }
-
-    public void markAsFailed(String reason) {
-        this.deliveryStatus = DeliveryStatus.FAILED;
-        this.failureReason = reason;
-        this.retryCount++;
+        this.deliveryStatus = "SENT";
     }
 
     public void markAsRead() {
+        this.isRead = true;
         this.readAt = LocalDateTime.now();
     }
 
-    public void cancel() {
-        this.deliveryStatus = DeliveryStatus.CANCELLED;
-    }
-
     public boolean isPending() {
-        return deliveryStatus == DeliveryStatus.PENDING;
+        return "PENDING".equals(this.deliveryStatus);
     }
 
     public boolean isSent() {
-        return deliveryStatus == DeliveryStatus.SENT;
-    }
-
-    public boolean isDelivered() {
-        return deliveryStatus == DeliveryStatus.DELIVERED;
+        return "SENT".equals(this.deliveryStatus);
     }
 
     public boolean isFailed() {
-        return deliveryStatus == DeliveryStatus.FAILED;
-    }
-
-    public boolean canRetry() {
-        return isFailed() && retryCount < maxRetries;
-    }
-
-    public boolean isScheduled() {
-        return scheduledAt != null && LocalDateTime.now().isBefore(scheduledAt);
-    }
-
-    public boolean isReadyToSend() {
-        return isPending() && (scheduledAt == null || LocalDateTime.now().isAfter(scheduledAt));
+        return "FAILED".equals(this.deliveryStatus);
     }
 
     @Override
     public String toString() {
         return "Notification{" +
                 "id=" + id +
-                ", recipientUserId=" + recipientUserId +
-                ", notificationType=" + notificationType +
-                ", subject='" + subject + '\'' +
-                ", deliveryStatus=" + deliveryStatus +
-                ", priority=" + priority +
-                ", retryCount=" + retryCount +
+                ", userId=" + userId +
+                ", notificationType='" + notificationType + '\'' +
+                ", title='" + title + '\'' +
+                ", body='" + body + '\'' +
+                ", isRead=" + isRead +
+                ", isSent=" + isSent +
+                ", deliveryStatus='" + deliveryStatus + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
     }

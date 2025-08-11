@@ -47,6 +47,9 @@ public class OrderItem {
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
+    @Column(name = "product_snapshot", columnDefinition = "JSONB")
+    private String productSnapshot; // Store product details at time of purchase
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -117,6 +120,14 @@ public class OrderItem {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public String getProductSnapshot() {
+        return productSnapshot;
+    }
+
+    public void setProductSnapshot(String productSnapshot) {
+        this.productSnapshot = productSnapshot;
     }
 
     public LocalDateTime getCreatedAt() {

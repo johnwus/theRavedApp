@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +38,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         try {
             Message.Builder messageBuilder = Message.builder()
                     .setToken(deviceToken)
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build());
@@ -55,7 +56,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
             logger.error("Failed to send push notification to device token: {}", deviceToken, e);
             
             // Handle invalid tokens
-            if (e.getErrorCode() == "UNREGISTERED" || e.getErrorCode() == "INVALID_ARGUMENT") {
+            if ("UNREGISTERED".equals(e.getErrorCode()) || "INVALID_ARGUMENT".equals(e.getErrorCode())) {
                 logger.info("Removing invalid device token: {}", deviceToken);
                 deviceTokenRepository.deleteByToken(deviceToken);
             }
@@ -76,7 +77,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         try {
             MulticastMessage.Builder messageBuilder = MulticastMessage.builder()
                     .addAllTokens(deviceTokens)
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build());
@@ -141,15 +142,15 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         
         Map<String, String> data = new HashMap<>();
         data.put("notificationId", notification.getId().toString());
-        data.put("type", notification.getNotificationType().name());
-        data.put("userId", notification.getRecipientUserId().toString());
+        data.put("type", notification.getNotificationType());
+        data.put("userId", notification.getUserId().toString());
         
         if (deviceTokens.size() == 1) {
-            return sendPushNotification(deviceTokens.get(0), notification.getSubject(), 
-                    notification.getContent(), data);
+            return sendPushNotification(deviceTokens.get(0), notification.getTitle(), 
+                    notification.getBody(), data);
         } else {
-            sendPushNotificationToMultipleDevices(deviceTokens, notification.getSubject(), 
-                    notification.getContent(), data);
+            sendPushNotificationToMultipleDevices(deviceTokens, notification.getTitle(), 
+                    notification.getBody(), data);
             return true;
         }
     }
@@ -159,12 +160,13 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         logger.info("Registering device token for user: {}", userId);
         
         // Check if token already exists
-        DeviceToken existingToken = deviceTokenRepository.findByToken(deviceToken);
-        if (existingToken != null) {
+        Optional<DeviceToken> existingTokenOpt = deviceTokenRepository.findByToken(deviceToken);
+        if (existingTokenOpt.isPresent()) {
+            DeviceToken existingToken = existingTokenOpt.get();
             // Update existing token
             existingToken.setUserId(userId);
-            existingToken.setDeviceType(deviceType);
-            existingToken.setAppVersion(appVersion);
+            existingToken.setPlatform(DeviceToken.Platform.valueOf(deviceType.toUpperCase()));
+            existingToken.setDeviceInfo("{\"appVersion\":\"" + appVersion + "\"}");
             existingToken.setIsActive(true);
             existingToken.setUpdatedAt(LocalDateTime.now());
             deviceTokenRepository.save(existingToken);
@@ -174,8 +176,8 @@ public class PushNotificationServiceImpl implements PushNotificationService {
             DeviceToken newToken = new DeviceToken();
             newToken.setUserId(userId);
             newToken.setToken(deviceToken);
-            newToken.setDeviceType(deviceType);
-            newToken.setAppVersion(appVersion);
+            newToken.setPlatform(DeviceToken.Platform.valueOf(deviceType.toUpperCase()));
+            newToken.setDeviceInfo("{\"appVersion\":\"" + appVersion + "\"}");
             newToken.setIsActive(true);
             newToken.setCreatedAt(LocalDateTime.now());
             newToken.setUpdatedAt(LocalDateTime.now());
@@ -188,8 +190,9 @@ public class PushNotificationServiceImpl implements PushNotificationService {
     public void unregisterDeviceToken(String deviceToken) {
         logger.info("Unregistering device token: {}", deviceToken.substring(0, 10) + "...");
         
-        DeviceToken token = deviceTokenRepository.findByToken(deviceToken);
-        if (token != null) {
+        Optional<DeviceToken> tokenOpt = deviceTokenRepository.findByToken(deviceToken);
+        if (tokenOpt.isPresent()) {
+            DeviceToken token = tokenOpt.get();
             token.setIsActive(false);
             token.setUpdatedAt(LocalDateTime.now());
             deviceTokenRepository.save(token);
@@ -213,7 +216,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         try {
             Message.Builder messageBuilder = Message.builder()
                     .setTopic(topic)
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build());
@@ -336,8 +339,9 @@ public class PushNotificationServiceImpl implements PushNotificationService {
         logger.info("Cleaning up {} failed device tokens", failedTokens.size());
         
         failedTokens.forEach(token -> {
-            DeviceToken deviceToken = deviceTokenRepository.findByToken(token);
-            if (deviceToken != null) {
+            Optional<DeviceToken> deviceTokenOpt = deviceTokenRepository.findByToken(token);
+            if (deviceTokenOpt.isPresent()) {
+                DeviceToken deviceToken = deviceTokenOpt.get();
                 deviceToken.setIsActive(false);
                 deviceToken.setUpdatedAt(LocalDateTime.now());
                 deviceTokenRepository.save(deviceToken);

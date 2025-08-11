@@ -16,7 +16,8 @@ public class LoginRequest {
     private boolean rememberMe = false;
 
     // Constructors
-    public LoginRequest() {}
+    public LoginRequest() {
+    }
 
     public LoginRequest(String usernameOrEmail, String password) {
         this.usernameOrEmail = usernameOrEmail;
@@ -24,14 +25,34 @@ public class LoginRequest {
     }
 
     // Getters and Setters
-    public String getUsernameOrEmail() { return usernameOrEmail; }
-    public void setUsernameOrEmail(String usernameOrEmail) { this.usernameOrEmail = usernameOrEmail; }
+    public String getUsernameOrEmail() {
+        return usernameOrEmail;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setUsernameOrEmail(String usernameOrEmail) {
+        this.usernameOrEmail = usernameOrEmail;
+    }
 
-    public boolean isRememberMe() { return rememberMe; }
-    public void setRememberMe(boolean rememberMe) { this.rememberMe = rememberMe; }
+    // Alias for backward compatibility
+    public String getUsername() {
+        return usernameOrEmail;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isRememberMe() {
+        return rememberMe;
+    }
+
+    public void setRememberMe(boolean rememberMe) {
+        this.rememberMe = rememberMe;
+    }
 
     @Override
     public String toString() {

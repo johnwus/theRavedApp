@@ -22,14 +22,16 @@ public class PostMapper {
         response.setId(post.getId());
         response.setAuthorId(post.getUserId());
         response.setContent(post.getContent());
-        response.setContentType(post.getContentType() != null ? post.getContentType().name() : null);
-        response.setVisibility(post.getVisibility() != null ? post.getVisibility().name() : null);
-        response.setModerationStatus(post.getModerationStatus() != null ? post.getModerationStatus().name() : null);
-        response.setIsEdited(post.getIsEdited());
-        response.setIsPinned(post.getIsPinned());
+        response.setContentType(post.getPostType()); // Use postType instead of contentType
+        response.setVisibility(post.getVisibility());
+        response.setModerationStatus(post.getModerationStatus());
+        
+        // Set default values for fields not in Post model
+        response.setIsEdited(false); // Not supported in current model
+        response.setIsPinned(false); // Not supported in current model
         response.setIsFeatured(post.getIsFeatured());
-        response.setAllowComments(post.getAllowComments());
-        response.setAllowSharing(post.getAllowSharing());
+        response.setAllowComments(true); // Default to true, not supported in current model
+        response.setAllowSharing(true); // Default to true, not supported in current model
         
         // Engagement metrics
         response.setLikesCount(post.getLikesCount());
@@ -40,7 +42,7 @@ public class PostMapper {
         // Timestamps
         response.setCreatedAt(post.getCreatedAt());
         response.setUpdatedAt(post.getUpdatedAt());
-        response.setEditedAt(post.getEditedAt());
+        response.setEditedAt(null); // Not supported in current model
 
         // TODO: Add media files, tags, and mentions mapping
         // This would require additional service calls or joins
@@ -58,36 +60,33 @@ public class PostMapper {
         post.setContent(request.getContent());
         
         if (request.getContentType() != null) {
-            post.setContentType(Post.ContentType.valueOf(request.getContentType()));
+            post.setPostType(request.getContentType());
         } else {
-            post.setContentType(Post.ContentType.TEXT);
+            post.setPostType("OUTFIT");
         }
         
         if (request.getVisibility() != null) {
-            post.setVisibility(Post.Visibility.valueOf(request.getVisibility()));
+            post.setVisibility(request.getVisibility());
         } else {
-            post.setVisibility(Post.Visibility.PUBLIC);
+            post.setVisibility("PUBLIC");
         }
         
         post.setFacultyId(request.getFacultyId());
-        post.setAllowComments(request.getAllowComments() != null ? request.getAllowComments() : true);
-        post.setAllowSharing(request.getAllowSharing() != null ? request.getAllowSharing() : true);
         
         // Initialize counters
         post.setLikesCount(0);
         post.setCommentsCount(0);
         post.setSharesCount(0);
         post.setViewsCount(0);
+        post.setSavesCount(0);
         
         // Initialize flags
-        post.setIsEdited(false);
-        post.setIsPinned(false);
         post.setIsFeatured(false);
         post.setIsDeleted(false);
         post.setIsFlagged(false);
         
         // Set moderation status
-        post.setModerationStatus(Post.ModerationStatus.APPROVED);
+        post.setModerationStatus("APPROVED");
         
         return post;
     }

@@ -1,20 +1,13 @@
 package com.raved.social.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
 /**
  * Request DTO for creating/updating comments
  */
 public class CommentRequest {
 
-    @NotNull(message = "Post ID is required")
-    private Long postId;
-
-    @NotBlank(message = "Comment content is required")
-    @Size(max = 2000, message = "Comment content must not exceed 2000 characters")
-    private String content;
+    private Long postId; // Required
+    
+    private String content; // Required, max 2000 characters
 
     private Long parentCommentId; // For threaded comments
 

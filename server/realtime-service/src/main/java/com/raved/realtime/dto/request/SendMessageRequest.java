@@ -1,47 +1,46 @@
 package com.raved.realtime.dto.request;
 
+import com.raved.realtime.model.MessageType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 /**
- * Request DTO for sending a message
+ * DTO for sending a message
  */
 public class SendMessageRequest {
-
-    @NotNull(message = "Chat room ID is required")
-    private Long chatRoomId;
-
-    @NotBlank(message = "Message content is required")
-    @Size(max = 4000, message = "Message content must not exceed 4000 characters")
+    
+    @NotBlank(message = "Room ID is required")
+    private String roomId;
+    
+    @NotNull(message = "Sender ID is required")
+    private Long senderId;
+    
+    @NotBlank(message = "Content is required")
+    @Size(max = 2000, message = "Content cannot exceed 2000 characters")
     private String content;
+    
+    private MessageType type = MessageType.TEXT;
+    
+    private String attachmentUrl;
+    
+    private String metadata;
 
-    private String messageType; // "text", "image", "file", "audio", "video", "system"
-
-    private Long replyToMessageId; // For threaded messages
-
-    private List<String> mediaUrls;
-
-    private String metadata; // JSON string for additional data
-
-    // Constructors
-    public SendMessageRequest() {
+    // Getters and setters
+    public String getRoomId() {
+        return roomId;
     }
 
-    public SendMessageRequest(Long chatRoomId, String content) {
-        this.chatRoomId = chatRoomId;
-        this.content = content;
-        this.messageType = "text";
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
-    // Getters and Setters
-    public Long getChatRoomId() {
-        return chatRoomId;
+    public Long getSenderId() {
+        return senderId;
     }
 
-    public void setChatRoomId(Long chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public void setSenderId(Long senderId) {
+        this.senderId = senderId;
     }
 
     public String getContent() {
@@ -52,28 +51,20 @@ public class SendMessageRequest {
         this.content = content;
     }
 
-    public String getMessageType() {
-        return messageType;
+    public MessageType getType() {
+        return type;
     }
 
-    public void setMessageType(String messageType) {
-        this.messageType = messageType;
+    public void setType(MessageType type) {
+        this.type = type;
     }
 
-    public Long getReplyToMessageId() {
-        return replyToMessageId;
+    public String getAttachmentUrl() {
+        return attachmentUrl;
     }
 
-    public void setReplyToMessageId(Long replyToMessageId) {
-        this.replyToMessageId = replyToMessageId;
-    }
-
-    public List<String> getMediaUrls() {
-        return mediaUrls;
-    }
-
-    public void setMediaUrls(List<String> mediaUrls) {
-        this.mediaUrls = mediaUrls;
+    public void setAttachmentUrl(String attachmentUrl) {
+        this.attachmentUrl = attachmentUrl;
     }
 
     public String getMetadata() {

@@ -25,6 +25,11 @@ public interface StudentVerificationRepository extends JpaRepository<StudentVeri
     Optional<StudentVerification> findByUserId(Long userId);
 
     /**
+     * Find verification by user ID and status
+     */
+    Optional<StudentVerification> findByUserIdAndStatus(Long userId, VerificationStatus status);
+
+    /**
      * Find verification by user ID and university ID
      */
     Optional<StudentVerification> findByUserIdAndUniversityId(Long userId, Long universityId);
@@ -38,6 +43,16 @@ public interface StudentVerificationRepository extends JpaRepository<StudentVeri
      * Find verifications by status with pagination
      */
     Page<StudentVerification> findByStatus(VerificationStatus status, Pageable pageable);
+
+    /**
+     * Find verifications by status ordered by submitted date ascending
+     */
+    Page<StudentVerification> findByStatusOrderBySubmittedAtAsc(VerificationStatus status, Pageable pageable);
+
+    /**
+     * Find verifications by status ordered by submitted date descending
+     */
+    Page<StudentVerification> findByStatusOrderBySubmittedAtDesc(VerificationStatus status, Pageable pageable);
 
     /**
      * Find verifications by university ID

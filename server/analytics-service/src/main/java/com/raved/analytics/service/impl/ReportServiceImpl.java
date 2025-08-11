@@ -9,6 +9,7 @@ import com.raved.analytics.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,7 +82,7 @@ public class ReportServiceImpl implements ReportService {
         engagementByType.put("shares", eventRepository.countByEventTypeAndTimestampBetween(EventType.POST_SHARED, startDate, endDate));
         
         // Top engaged users
-        List<Object[]> topUsers = userMetricsRepository.getTopUsersByEngagement(10);
+        List<Object[]> topUsers = userMetricsRepository.getTopUsersByEngagement(PageRequest.of(0, 10));
         List<Map<String, Object>> topUsersList = new ArrayList<>();
         for (Object[] user : topUsers) {
             Map<String, Object> userMap = new HashMap<>();
@@ -229,7 +230,7 @@ public class ReportServiceImpl implements ReportService {
         }
         
         // Daily platform activity
-        List<Object[]> dailyActivity = eventRepository.getDailyEventCounts(startDate, endDate);
+        List<Object[]> dailyActivity = eventRepository.getDailyEventCounts(null, null, startDate, endDate);
         Map<String, Long> dailyActivityMap = convertToMap(dailyActivity);
         
         data.put("totalUsers", totalUsers);

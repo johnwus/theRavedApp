@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${ANALYTICS_DB_URL}
+    username: ${ANALYTICS_DB_USERNAME}
+    password: ${ANALYTICS_DB_PASSWORD}
+
+logging:
+  level:
+    com.raved.analytics: INFO

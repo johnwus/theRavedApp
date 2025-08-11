@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: user-service
+  config:
+    import: optional:configserver:${SPRING_CONFIG_IMPORT_URI:http://localhost:8888}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
@@ -186,7 +188,9 @@ jwt:
 
 ---
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   datasource:
     url: ${DATABASE_URL}
     username: ${DATABASE_USERNAME}

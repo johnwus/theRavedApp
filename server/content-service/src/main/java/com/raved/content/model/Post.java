@@ -2,7 +2,6 @@ package com.raved.content.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,9 +17,7 @@ import java.util.List;
         @Index(name = "idx_posts_faculty_id", columnList = "faculty_id"),
         @Index(name = "idx_posts_created_at", columnList = "created_at"),
         @Index(name = "idx_posts_featured", columnList = "is_featured, featured_until"),
-        @Index(name = "idx_posts_visibility", columnList = "visibility"),
-        @Index(name = "idx_posts_feed_algorithm", columnList = "faculty_id, created_at, visibility"),
-        @Index(name = "idx_posts_trending", columnList = "likes_count, comments_count, created_at")
+        @Index(name = "idx_posts_visibility", columnList = "visibility")
 })
 public class Post {
 
@@ -35,19 +32,24 @@ public class Post {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    // Content Classification
-    @Enumerated(EnumType.STRING)
-    @Column(name = "post_type", nullable = false)
-    private PostType postType = PostType.OUTFIT;
+    // Types and visibility
+    @Column(name = "post_type", nullable = false, length = 20)
+    private String postType = "OUTFIT"; // OUTFIT, GENERAL, POLL, EVENT
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Visibility visibility = Visibility.PUBLIC;
+    @Column(nullable = false, length = 20)
+    private String visibility = "PUBLIC"; // PUBLIC, FACULTY_ONLY, FOLLOWERS_ONLY, CONNECTIONS_ONLY, PRIVATE
 
     @Column(name = "faculty_id")
     private Long facultyId; // Reference to user service
 
-    // Engagement Metrics (denormalized for performance)
+    // Drafts & scheduling
+    @Column(name = "publish_status", nullable = false, length = 12)
+    private String publishStatus = "PUBLISHED"; // DRAFT, SCHEDULED, PUBLISHED, ARCHIVED
+
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
+
+    // Denormalized metrics
     @Column(name = "likes_count", nullable = false)
     private Integer likesCount = 0;
 
@@ -60,18 +62,20 @@ public class Post {
     @Column(name = "views_count", nullable = false)
     private Integer viewsCount = 0;
 
-    // Content Moderation
+    @Column(name = "saves_count", nullable = false)
+    private Integer savesCount = 0;
+
+    // Moderation
     @Column(name = "is_flagged", nullable = false)
     private Boolean isFlagged = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false)
-    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+    @Column(name = "moderation_status", nullable = false, length = 20)
+    private String moderationStatus = "APPROVED";
 
     @Column(name = "flagged_reason", columnDefinition = "TEXT")
     private String flaggedReason;
 
-    // System Fields
+    // System flags
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
@@ -91,32 +95,13 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MediaFile> mediaFiles;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostTag> tags;
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostMention> mentions;
-
-    // Enums
-    public enum PostType {
-        OUTFIT, GENERAL, POLL, EVENT
-    }
-
-    public enum Visibility {
-        PUBLIC, FACULTY_ONLY, FOLLOWERS_ONLY, PRIVATE
-    }
-
-    public enum ModerationStatus {
-        PENDING, APPROVED, REJECTED
-    }
-
     // Constructors
     public Post() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Post(Long userId, String content, PostType postType, Visibility visibility) {
+    public Post(Long userId, String content, String postType, String visibility) {
         this();
         this.userId = userId;
         this.content = content;
@@ -149,19 +134,19 @@ public class Post {
         this.content = content;
     }
 
-    public PostType getPostType() {
+    public String getPostType() {
         return postType;
     }
 
-    public void setPostType(PostType postType) {
+    public void setPostType(String postType) {
         this.postType = postType;
     }
 
-    public Visibility getVisibility() {
+    public String getVisibility() {
         return visibility;
     }
 
-    public void setVisibility(Visibility visibility) {
+    public void setVisibility(String visibility) {
         this.visibility = visibility;
     }
 
@@ -171,6 +156,22 @@ public class Post {
 
     public void setFacultyId(Long facultyId) {
         this.facultyId = facultyId;
+    }
+
+    public String getPublishStatus() {
+        return publishStatus;
+    }
+
+    public void setPublishStatus(String publishStatus) {
+        this.publishStatus = publishStatus;
+    }
+
+    public LocalDateTime getScheduledAt() {
+        return scheduledAt;
+    }
+
+    public void setScheduledAt(LocalDateTime scheduledAt) {
+        this.scheduledAt = scheduledAt;
     }
 
     public Integer getLikesCount() {
@@ -205,6 +206,14 @@ public class Post {
         this.viewsCount = viewsCount;
     }
 
+    public Integer getSavesCount() {
+        return savesCount;
+    }
+
+    public void setSavesCount(Integer savesCount) {
+        this.savesCount = savesCount;
+    }
+
     public Boolean getIsFlagged() {
         return isFlagged;
     }
@@ -213,11 +222,11 @@ public class Post {
         this.isFlagged = isFlagged;
     }
 
-    public ModerationStatus getModerationStatus() {
+    public String getModerationStatus() {
         return moderationStatus;
     }
 
-    public void setModerationStatus(ModerationStatus moderationStatus) {
+    public void setModerationStatus(String moderationStatus) {
         this.moderationStatus = moderationStatus;
     }
 
@@ -277,60 +286,74 @@ public class Post {
         this.mediaFiles = mediaFiles;
     }
 
-    public List<PostTag> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<PostTag> tags) {
-        this.tags = tags;
-    }
-
-    public List<PostMention> getMentions() {
-        return mentions;
-    }
-
-    public void setMentions(List<PostMention> mentions) {
-        this.mentions = mentions;
-    }
-
+    // Lifecycle methods
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
     }
 
     @PreUpdate
     public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    // Utility methods
+    // Business logic methods
     public void incrementLikes() {
+        if (this.likesCount == null) {
+            this.likesCount = 0;
+        }
         this.likesCount++;
     }
 
     public void decrementLikes() {
-        if (this.likesCount > 0) {
+        if (this.likesCount != null && this.likesCount > 0) {
             this.likesCount--;
         }
     }
 
     public void incrementComments() {
+        if (this.commentsCount == null) {
+            this.commentsCount = 0;
+        }
         this.commentsCount++;
     }
 
     public void decrementComments() {
-        if (this.commentsCount > 0) {
+        if (this.commentsCount != null && this.commentsCount > 0) {
             this.commentsCount--;
         }
     }
 
     public void incrementShares() {
+        if (this.sharesCount == null) {
+            this.sharesCount = 0;
+        }
         this.sharesCount++;
     }
 
     public void incrementViews() {
+        if (this.viewsCount == null) {
+            this.viewsCount = 0;
+        }
         this.viewsCount++;
+    }
+
+    public void incrementSaves() {
+        if (this.savesCount == null) {
+            this.savesCount = 0;
+        }
+        this.savesCount++;
+    }
+
+    public void decrementSaves() {
+        if (this.savesCount != null && this.savesCount > 0) {
+            this.savesCount--;
+        }
     }
 
     @Override
@@ -338,11 +361,9 @@ public class Post {
         return "Post{" +
                 "id=" + id +
                 ", userId=" + userId +
-                ", postType=" + postType +
-                ", visibility=" + visibility +
-                ", likesCount=" + likesCount +
-                ", commentsCount=" + commentsCount +
-                ", isFeatured=" + isFeatured +
+                ", content='" + content + '\'' +
+                ", postType='" + postType + '\'' +
+                ", visibility='" + visibility + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
     }

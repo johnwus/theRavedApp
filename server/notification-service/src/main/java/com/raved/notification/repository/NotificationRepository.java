@@ -1,7 +1,6 @@
 package com.raved.notification.repository;
 
 import com.raved.notification.model.Notification;
-import com.raved.notification.model.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * NotificationRepository for TheRavedApp
@@ -20,52 +18,62 @@ import java.util.Map;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
     /**
-     * Find notifications by recipient user ID
+     * Find notifications by user ID
      */
-    Page<Notification> findByRecipientUserIdOrderByCreatedAtDesc(Long recipientUserId, Pageable pageable);
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     /**
-     * Find unread notifications by recipient user ID
+     * Find unread notifications by user ID
      */
-    Page<Notification> findByRecipientUserIdAndReadAtIsNullOrderByCreatedAtDesc(Long recipientUserId, Pageable pageable);
+    Page<Notification> findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     /**
      * Find unread notifications (using boolean field if exists)
      */
-    List<Notification> findByRecipientUserIdAndReadAtIsNull(Long recipientUserId);
+    List<Notification> findByUserIdAndReadAtIsNull(Long userId);
 
     /**
      * Find notifications by type
      */
-    Page<Notification> findByRecipientUserIdAndNotificationTypeOrderByCreatedAtDesc(
-            Long recipientUserId, NotificationType notificationType, Pageable pageable);
+    Page<Notification> findByUserIdAndNotificationTypeOrderByCreatedAtDesc(
+            Long userId, String notificationType, Pageable pageable);
 
     /**
      * Find notifications by delivery status
      */
-    Page<Notification> findByDeliveryStatusOrderByCreatedAtDesc(Notification.DeliveryStatus deliveryStatus, Pageable pageable);
+    Page<Notification> findByDeliveryStatusOrderByCreatedAtDesc(String deliveryStatus, Pageable pageable);
 
     /**
      * Find scheduled notifications that are due
      */
-    @Query("SELECT n FROM Notification n WHERE n.deliveryStatus = 'PENDING' " +
+    @Query("SELECT n FROM Notification n WHERE n.deliveryStatus = 'SCHEDULED' " +
            "AND n.scheduledAt IS NOT NULL AND n.scheduledAt <= :now")
     List<Notification> findScheduledNotificationsDue(@Param("now") LocalDateTime now);
 
     /**
-     * Count notifications by recipient user ID
+     * Find notifications by delivery status and scheduled time
      */
-    long countByRecipientUserId(Long recipientUserId);
+    List<Notification> findByDeliveryStatusAndScheduledAtBefore(String deliveryStatus, LocalDateTime scheduledAt);
 
     /**
-     * Count unread notifications by recipient user ID
+     * Count notifications by user ID
      */
-    long countByRecipientUserIdAndReadAtIsNull(Long recipientUserId);
+    long countByUserId(Long userId);
+
+    /**
+     * Count unread notifications by user ID
+     */
+    long countByUserIdAndReadAtIsNull(Long userId);
+
+    /**
+     * Count sent notifications by user ID
+     */
+    long countByUserIdAndIsSentTrue(Long userId);
 
     /**
      * Count notifications by delivery status and date range
      */
-    long countByDeliveryStatusAndCreatedAtBetween(Notification.DeliveryStatus deliveryStatus,
+    long countByDeliveryStatusAndCreatedAtBetween(String deliveryStatus,
                                                  LocalDateTime startDate, LocalDateTime endDate);
 
     /**
@@ -74,36 +82,29 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     /**
+     * Count sent notifications by date range
+     */
+    long countByCreatedAtBetweenAndIsSentTrue(LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Count read notifications by date range
+     */
+    long countByCreatedAtBetweenAndReadAtIsNotNull(LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
      * Get notification statistics by type for a user
      */
     @Query("SELECT n.notificationType as type, COUNT(n) as count " +
-           "FROM Notification n WHERE n.recipientUserId = :userId " +
+           "FROM Notification n WHERE n.userId = :userId " +
            "GROUP BY n.notificationType")
     List<Object[]> countNotificationsByTypeForUser(@Param("userId") Long userId);
-
-    /**
-     * Get delivery statistics by channel
-     */
-    @Query("SELECT n.notificationType as channel, COUNT(n) as count " +
-           "FROM Notification n WHERE n.createdAt BETWEEN :startDate AND :endDate " +
-           "AND n.deliveryStatus = 'DELIVERED' " +
-           "GROUP BY n.notificationType")
-    List<Object[]> getDeliveryStatsByChannelAndDateRange(@Param("startDate") LocalDateTime startDate,
-                                                         @Param("endDate") LocalDateTime endDate);
 
     /**
      * Find failed notifications for retry
      */
     @Query("SELECT n FROM Notification n WHERE n.deliveryStatus = 'FAILED' " +
-           "AND n.retryCount < n.maxRetries " +
            "AND n.createdAt >= :cutoffTime")
     List<Notification> findFailedNotificationsForRetry(@Param("cutoffTime") LocalDateTime cutoffTime);
-
-    /**
-     * Find notifications by priority
-     */
-    List<Notification> findByPriorityAndDeliveryStatusOrderByCreatedAtAsc(
-            Notification.Priority priority, Notification.DeliveryStatus deliveryStatus);
 
     /**
      * Delete old notifications
@@ -113,6 +114,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     /**
      * Find notifications by metadata (JSON search would be database-specific)
      */
-    @Query("SELECT n FROM Notification n WHERE n.metadata LIKE %:searchTerm%")
-    List<Notification> findByMetadataContaining(@Param("searchTerm") String searchTerm);
+    @Query("SELECT n FROM Notification n WHERE n.data LIKE %:searchTerm%")
+    List<Notification> findByDataContaining(@Param("searchTerm") String searchTerm);
 }

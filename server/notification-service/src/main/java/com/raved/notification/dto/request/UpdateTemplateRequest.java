@@ -3,88 +3,60 @@ package com.raved.notification.dto.request;
 import com.raved.notification.model.NotificationTemplate;
 import jakarta.validation.constraints.Size;
 
-/**
- * Request DTO for updating notification templates
- */
 public class UpdateTemplateRequest {
-
-    @Size(max = 255, message = "Name must not exceed 255 characters")
-    private String name;
-
-    private NotificationTemplate.TemplateType type;
-
-    @Size(max = 10, message = "Language code must not exceed 10 characters")
-    private String language;
-
-    @Size(max = 500, message = "Subject must not exceed 500 characters")
-    private String subject;
-
-    private String content;
-
-    @Size(max = 1000, message = "Description must not exceed 1000 characters")
-    private String description;
-
+    @Size(max = 100, message = "Template name cannot exceed 100 characters")
+    private String templateName;
+    
+    private NotificationTemplate.TemplateType templateType;
+    
+    @Size(max = 255, message = "Subject template cannot exceed 255 characters")
+    private String subjectTemplate;
+    
+    private String bodyTemplate;
+    
+    private String variables; // Template variables as JSON string
+    
     private Boolean isActive;
 
-    @Size(max = 50, message = "Version must not exceed 50 characters")
-    private String version;
-
-    @Size(max = 500, message = "Tags must not exceed 500 characters")
-    private String tags;
-
-    @Size(max = 255, message = "Category must not exceed 255 characters")
-    private String category;
-
-    // Constructors
-    public UpdateTemplateRequest() {}
-
-    // Getters and Setters
-    public String getName() {
-        return name;
+    // Getters and setters
+    public String getTemplateName() {
+        return templateName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
     }
 
-    public NotificationTemplate.TemplateType getType() {
-        return type;
+    public NotificationTemplate.TemplateType getTemplateType() {
+        return templateType;
     }
 
-    public void setType(NotificationTemplate.TemplateType type) {
-        this.type = type;
+    public void setTemplateType(NotificationTemplate.TemplateType templateType) {
+        this.templateType = templateType;
     }
 
-    public String getLanguage() {
-        return language;
+    public String getSubjectTemplate() {
+        return subjectTemplate;
     }
 
-    public void setLanguage(String language) {
-        this.language = language;
+    public void setSubjectTemplate(String subjectTemplate) {
+        this.subjectTemplate = subjectTemplate;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getBodyTemplate() {
+        return bodyTemplate;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setBodyTemplate(String bodyTemplate) {
+        this.bodyTemplate = bodyTemplate;
     }
 
-    public String getContent() {
-        return content;
+    public String getVariables() {
+        return variables;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setVariables(String variables) {
+        this.variables = variables;
     }
 
     public Boolean getIsActive() {
@@ -95,27 +67,14 @@ public class UpdateTemplateRequest {
         this.isActive = isActive;
     }
 
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getTags() {
-        return tags;
-    }
-
-    public void setTags(String tags) {
-        this.tags = tags;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
+    @Override
+    public String toString() {
+        return "UpdateTemplateRequest{" +
+                "templateName='" + templateName + '\'' +
+                ", templateType=" + templateType +
+                ", subjectTemplate='" + subjectTemplate + '\'' +
+                ", bodyTemplate='" + bodyTemplate + '\'' +
+                ", isActive=" + isActive +
+                '}';
     }
 }

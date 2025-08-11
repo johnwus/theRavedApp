@@ -2,7 +2,6 @@ package com.raved.analytics.service;
 
 import com.raved.analytics.dto.response.ContentMetricsResponse;
 import com.raved.analytics.dto.response.UserMetricsResponse;
-import com.raved.analytics.model.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -18,7 +18,8 @@ public class LikeMapper {
         LikeResponse response = new LikeResponse();
         response.setId(like.getId());
         response.setUserId(like.getUserId());
-        response.setPostId(like.getPostId());
+        response.setTargetId(like.getTargetId());
+        response.setTargetType(like.getTargetType().name());
         response.setCreatedAt(like.getCreatedAt());
 
         return response;

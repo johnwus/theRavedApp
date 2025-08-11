@@ -3,6 +3,23 @@ package com.raved.analytics.model;
 /**
  * EventType for TheRavedApp
  */
-public class EventType {
-    // Implementation
+public enum EventType {
+    // User Events
+    USER_LOGIN, USER_LOGOUT, USER_REGISTRATION, USER_PROFILE_VIEW, USER_PROFILE_UPDATE,
+
+    // Content Events
+    POST_VIEW, POST_LIKE, POST_UNLIKE, POST_SHARE, POST_COMMENT, POST_CREATE,
+    POST_VIEWED, POST_LIKED, POST_SHARED, COMMENT_CREATED, POST_CREATED,
+
+    // Product Events
+    PRODUCT_VIEW, PRODUCT_LIKE, PRODUCT_PURCHASE, PRODUCT_SEARCH,
+
+    // Chat Events
+    MESSAGE_SENT, CHAT_ROOM_JOIN, CHAT_ROOM_LEAVE,
+
+    // Navigation Events
+    PAGE_VIEW, BUTTON_CLICK, SEARCH_PERFORMED,
+
+    // System Events
+    ERROR_OCCURRED, PERFORMANCE_METRIC
 }

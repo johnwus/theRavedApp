@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_ecommerce
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.raved.ecommerce: DEBUG
+
+

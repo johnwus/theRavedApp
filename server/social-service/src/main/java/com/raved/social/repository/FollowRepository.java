@@ -12,79 +12,43 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * FollowRepository for TheRavedApp
+ * Repository for Follow entities
  */
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
-
-    /**
-     * Check if follow relationship exists
-     */
-    boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
-
-    /**
-     * Find follow relationship
-     */
+    
     Optional<Follow> findByFollowerIdAndFollowingId(Long followerId, Long followingId);
-
-    /**
-     * Find followers of a user
-     */
-    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(Long followingId, Pageable pageable);
-
-    /**
-     * Find users that a user is following
-     */
+    
     Page<Follow> findByFollowerIdOrderByCreatedAtDesc(Long followerId, Pageable pageable);
-
-    /**
-     * Count followers
-     */
-    long countByFollowingId(Long followingId);
-
-    /**
-     * Count following
-     */
+    
+    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(Long followingId, Pageable pageable);
+    
+    boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    
     long countByFollowerId(Long followerId);
-
-    /**
-     * Delete follow relationship
-     */
-    void deleteByFollowerIdAndFollowingId(Long followerId, Long followingId);
-
-    /**
-     * Find mutual followers
-     */
-    @Query("SELECT f1 FROM Follow f1 WHERE f1.followingId IN " +
-           "(SELECT f2.followingId FROM Follow f2 WHERE f2.followerId = :userId1) " +
-           "AND f1.followerId IN " +
-           "(SELECT f3.followingId FROM Follow f3 WHERE f3.followerId = :userId2)")
-    List<Follow> findMutualFollowers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
-
-    /**
-     * Find suggested follows (users followed by people you follow)
-     */
-    @Query("SELECT f FROM Follow f WHERE f.followingId IN " +
-           "(SELECT f2.followingId FROM Follow f2 WHERE f2.followerId IN " +
-           "(SELECT f3.followingId FROM Follow f3 WHERE f3.followerId = :userId)) " +
-           "AND f.followerId != :userId " +
-           "AND NOT EXISTS (SELECT 1 FROM Follow f4 WHERE f4.followerId = :userId AND f4.followingId = f.followingId) " +
-           "GROUP BY f.followingId ORDER BY COUNT(f.followingId) DESC")
-    List<Follow> findSuggestedFollows(@Param("userId") Long userId, @Param("limit") int limit);
-
-    /**
-     * Find recent followers
-     */
-    @Query("SELECT f FROM Follow f WHERE f.followingId = :userId " +
-           "ORDER BY f.createdAt DESC")
+    
+    long countByFollowingId(Long followingId);
+    
+    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :userId")
+    List<Long> findFollowingIds(@Param("userId") Long userId);
+    
+    @Query("SELECT f.followerId FROM Follow f WHERE f.followingId = :userId")
+    List<Long> findFollowerIds(@Param("userId") Long userId);
+    
+    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :userId1 AND f.followingId IN (SELECT f2.followerId FROM Follow f2 WHERE f2.followingId = :userId2)")
+    List<Long> findMutualFollows(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+    
+    @Query("SELECT COUNT(f) FROM Follow f WHERE f.followerId = :userId1 AND f.followingId IN (SELECT f2.followerId FROM Follow f2 WHERE f2.followingId = :userId2)")
+    long countMutualFollows(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+    
+    @Query(value = "SELECT f.* FROM follows f WHERE f.following_id = :userId ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
     List<Follow> findRecentFollowers(@Param("userId") Long userId, @Param("limit") int limit);
-
-    /**
-     * Block-related methods
-     */
-    Optional<Follow> findByFollowerIdAndFollowingIdAndIsBlockedTrue(Long followerId, Long followingId);
-
-    boolean existsByFollowerIdAndFollowingIdAndIsBlockedTrue(Long followerId, Long followingId);
-
-    Page<Follow> findByFollowerIdAndIsBlockedTrueOrderByCreatedAtDesc(Long followerId, Pageable pageable);
+    
+    @Query(value = "SELECT f.* FROM follows f WHERE f.follower_id = :userId ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
+    List<Follow> findRecentFollowing(@Param("userId") Long userId, @Param("limit") int limit);
+    
+    @Query(value = "SELECT f.* FROM follows f WHERE f.follower_id != :userId AND f.following_id != :userId AND f.following_id NOT IN (SELECT f2.following_id FROM follows f2 WHERE f2.follower_id = :userId) ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
+    List<Follow> findSuggestedFollows(@Param("userId") Long userId, @Param("limit") int limit);
+    
+    void deleteByFollowerIdAndFollowingId(Long followerId, Long followingId);
 }

@@ -67,6 +67,15 @@
                     <target>17</target>
                 </configuration>
             </plugin>
+            
+            <!-- Exclude Spring Boot repackage plugin for library modules -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

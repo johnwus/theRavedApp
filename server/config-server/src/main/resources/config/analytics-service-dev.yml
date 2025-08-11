@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_analytics
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.raved.analytics: DEBUG

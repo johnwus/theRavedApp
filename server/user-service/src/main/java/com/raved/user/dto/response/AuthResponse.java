@@ -1,23 +1,27 @@
 package com.raved.user.dto.response;
 
-import com.raved.user.model.Role;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 /**
- * DTO for authentication response
+ * DTO for authentication response containing JWT tokens and user information
+ * after successful authentication.
  */
 public class AuthResponse {
 
+    // Authentication tokens
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
     private Long expiresIn;
+    
+    // User information
     private UserResponse user;
 
-    // Constructors
+    // Default constructor
     public AuthResponse() {}
 
+    // Parameterized constructor
     public AuthResponse(String accessToken, String refreshToken, Long expiresIn, UserResponse user) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
@@ -25,11 +29,14 @@ public class AuthResponse {
         this.user = user;
     }
 
-    // Builder pattern
+    // Builder pattern for fluent API
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Builder class for constructing AuthResponse instances
+     */
     public static class Builder {
         private String accessToken;
         private String refreshToken;
@@ -74,18 +81,43 @@ public class AuthResponse {
     }
 
     // Getters and Setters
-    public String getAccessToken() { return accessToken; }
-    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+    public String getAccessToken() { 
+        return accessToken; 
+    }
+    
+    public void setAccessToken(String accessToken) { 
+        this.accessToken = accessToken; 
+    }
 
-    public String getRefreshToken() { return refreshToken; }
-    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+    public String getRefreshToken() { 
+        return refreshToken; 
+    }
+    
+    public void setRefreshToken(String refreshToken) { 
+        this.refreshToken = refreshToken; 
+    }
 
-    public String getTokenType() { return tokenType; }
-    public void setTokenType(String tokenType) { this.tokenType = tokenType; }
+    public String getTokenType() { 
+        return tokenType; 
+    }
+    
+    public void setTokenType(String tokenType) { 
+        this.tokenType = tokenType; 
+    }
 
-    public Long getExpiresIn() { return expiresIn; }
-    public void setExpiresIn(Long expiresIn) { this.expiresIn = expiresIn; }
+    public Long getExpiresIn() { 
+        return expiresIn; 
+    }
+    
+    public void setExpiresIn(Long expiresIn) { 
+        this.expiresIn = expiresIn; 
+    }
 
-    public UserResponse getUser() { return user; }
-    public void setUser(UserResponse user) { this.user = user; }
+    public UserResponse getUser() { 
+        return user; 
+    }
+    
+    public void setUser(UserResponse user) { 
+        this.user = user; 
+    }
 }

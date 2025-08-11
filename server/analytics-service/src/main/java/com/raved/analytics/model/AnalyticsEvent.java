@@ -156,6 +156,11 @@ public class AnalyticsEvent {
         this.entityId = entityId;
     }
 
+    // Alias method for compatibility
+    public Long getTargetId() {
+        return entityId;
+    }
+
     public String getEventData() {
         return eventData;
     }

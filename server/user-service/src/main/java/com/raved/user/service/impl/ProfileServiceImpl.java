@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 /**
@@ -57,8 +57,8 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userOpt.get();
         
         // Update user fields using mapper
-        userMapper.updateUserFromRequest(user, request);
-        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateUserFromUpdateProfileRequest(request, user);
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile updated successfully for user ID: {}", userId);
@@ -82,7 +82,7 @@ public class ProfileServiceImpl implements ProfileService {
         String profilePictureUrl = "/uploads/profiles/" + userId + "/" + file.getOriginalFilename();
         
         user.setProfilePictureUrl(profilePictureUrl);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile picture uploaded successfully for user ID: {}", userId);
@@ -101,7 +101,7 @@ public class ProfileServiceImpl implements ProfileService {
         
         User user = userOpt.get();
         user.setProfilePictureUrl(null);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile picture deleted successfully for user ID: {}", userId);
@@ -128,7 +128,7 @@ public class ProfileServiceImpl implements ProfileService {
         // 4. Manual review if needed
         
         user.setStudentId(studentId);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         
         logger.info("Student ID verification initiated for user ID: {}", userId);
@@ -146,7 +146,7 @@ public class ProfileServiceImpl implements ProfileService {
         
         User user = userOpt.get();
         int completedFields = 0;
-        int totalFields = 10; // Total number of profile fields
+        int totalFields = 9; // Total number of profile fields
         
         // Check required fields
         if (user.getFirstName() != null && !user.getFirstName().trim().isEmpty()) completedFields++;
@@ -159,7 +159,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().trim().isEmpty()) completedFields++;
         if (user.getUniversityId() != null) completedFields++;
         if (user.getFacultyId() != null) completedFields++;
-        if (user.getDepartmentId() != null) completedFields++;
+
         if (user.getStudentId() != null && !user.getStudentId().trim().isEmpty()) completedFields++;
         
         int percentage = (completedFields * 100) / totalFields;

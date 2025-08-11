@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: subscription-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/subscription_service_db
+    username: ${POSTGRES_USER:raved_user}
+    password: ${POSTGRES_PASSWORD:raved_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+

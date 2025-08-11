@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_users
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.raved.user: DEBUG
+
+jwt:
+  secret: dev-secret-key-change
+
+

@@ -1,104 +1,134 @@
 package com.raved.ecommerce.model;
 
+import lombok.Data;
+
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Payment Entity for TheRavedApp
- *
- * Represents payments for orders.
- * Based on the payments table schema.
+ * Payment entity for TheRavedApp
+ * Based on the payments table schema from migration V4.
  */
 @Entity
 @Table(name = "payments", indexes = {
         @Index(name = "idx_payments_order", columnList = "order_id"),
-        @Index(name = "idx_payments_user", columnList = "user_id"),
-        @Index(name = "idx_payments_status", columnList = "payment_status"),
-        @Index(name = "idx_payments_method", columnList = "payment_method"),
-        @Index(name = "idx_payments_created", columnList = "created_at"),
-        @Index(name = "idx_payments_transaction", columnList = "transaction_id")
+        @Index(name = "idx_payments_status", columnList = "status"),
+        @Index(name = "idx_payments_transaction", columnList = "transaction_id"),
+        @Index(name = "idx_payments_method", columnList = "payment_method")
 })
+@Data
 public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    @Column(name = "buyer_id", nullable = false)
+    private Long buyerId;
 
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
-
-    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
-    private PaymentMethod paymentMethod;
+    private String paymentMethod; // MOBILE_MONEY, CARD, BANK_TRANSFER
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+    @Column(name = "payment_provider")
+    private String paymentProvider; // PAYSTACK, FLUTTERWAVE, etc.
 
-    @Size(max = 255, message = "Transaction ID must not exceed 255 characters")
-    @Column(name = "transaction_id")
+    @Column(name = "transaction_id", unique = true)
     private String transactionId;
 
-    @Size(max = 255, message = "Payment gateway must not exceed 255 characters")
-    @Column(name = "payment_gateway")
-    private String paymentGateway; // e.g., "stripe", "paypal", "momo"
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    private BigDecimal amount;
 
-    @Column(name = "gateway_transaction_id")
-    private String gatewayTransactionId;
+    @Column(name = "currency", columnDefinition = "VARCHAR(3) DEFAULT 'GHS'")
+    private String currency = "GHS";
 
-    @Column(name = "gateway_response", columnDefinition = "TEXT")
-    private String gatewayResponse;
+    @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'PENDING'")
+    private String status = "PENDING"; // PENDING, SUCCESS, FAILED, CANCELLED, REFUNDED
 
-    @Column(name = "failure_reason", columnDefinition = "TEXT")
+    @Column(name = "provider_response", columnDefinition = "JSONB")
+    private String providerResponse;
+
+    @Column(name = "failure_reason")
     private String failureReason;
+
+    @Column(name = "initiated_at", nullable = false, updatable = false)
+    private LocalDateTime initiatedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
+    @Column(name = "failed_at")
+    private LocalDateTime failedAt;
+
+    // Additional fields needed by services
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Column(name = "processed_at")
     private LocalDateTime processedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "gateway_response")
+    private String gatewayResponse;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    // Enums
-    public enum PaymentMethod {
-        CREDIT_CARD, DEBIT_CARD, MOBILE_MONEY, BANK_TRANSFER, PAYPAL, CASH_ON_DELIVERY
-    }
-
-    public enum PaymentStatus {
-        PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED, REFUNDED
-    }
+    @Column(name = "parent_payment_id")
+    private Long parentPaymentId;
 
     // Constructors
     public Payment() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
-    public Payment(Order order, Long userId, BigDecimal amount, PaymentMethod paymentMethod) {
-        this();
-        this.order = order;
-        this.userId = userId;
-        this.amount = amount;
+    public Payment(Long orderId, String paymentMethod, BigDecimal amount) {
+        this.orderId = orderId;
         this.paymentMethod = paymentMethod;
+        this.amount = amount;
     }
 
-    // Getters and Setters
+    // Lifecycle methods
+    @PrePersist
+    public void prePersist() {
+        this.initiatedAt = LocalDateTime.now();
+    }
+
+    // Business logic methods
+    public void markAsSuccess(String transactionId) {
+        this.status = "SUCCESS";
+        this.transactionId = transactionId;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    public void markAsFailed(String failureReason) {
+        this.status = "FAILED";
+        this.failureReason = failureReason;
+        this.failedAt = LocalDateTime.now();
+    }
+
+    public void markAsCancelled() {
+        this.status = "CANCELLED";
+    }
+
+    public void markAsRefunded() {
+        this.status = "REFUNDED";
+    }
+
+    public boolean isSuccessful() {
+        return "SUCCESS".equals(this.status);
+    }
+
+    public boolean isPending() {
+        return "PENDING".equals(this.status);
+    }
+
+    public boolean isFailed() {
+        return "FAILED".equals(this.status);
+    }
+
+    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -107,44 +137,44 @@ public class Payment {
         this.id = id;
     }
 
-    public Order getOrder() {
-        return order;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setOrder(Order order) {
-        this.order = order;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Long getBuyerId() {
+        return buyerId;
+    }
+
+    public void setBuyerId(Long buyerId) {
+        this.buyerId = buyerId;
     }
 
     public Long getUserId() {
-        return userId;
+        return buyerId; // Alias for backward compatibility
     }
 
     public void setUserId(Long userId) {
-        this.userId = userId;
+        this.buyerId = userId;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public PaymentMethod getPaymentMethod() {
+    public String getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(PaymentMethod paymentMethod) {
+    public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
+    public String getPaymentProvider() {
+        return paymentProvider;
     }
 
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setPaymentProvider(String paymentProvider) {
+        this.paymentProvider = paymentProvider;
     }
 
     public String getTransactionId() {
@@ -155,28 +185,41 @@ public class Payment {
         this.transactionId = transactionId;
     }
 
-    public String getPaymentGateway() {
-        return paymentGateway;
+    // Convenience method for services that expect getPaymentId()
+    public String getPaymentId() {
+        return this.transactionId;
     }
 
-    public void setPaymentGateway(String paymentGateway) {
-        this.paymentGateway = paymentGateway;
+    public BigDecimal getAmount() {
+        return amount;
     }
 
-    public String getGatewayTransactionId() {
-        return gatewayTransactionId;
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
-    public void setGatewayTransactionId(String gatewayTransactionId) {
-        this.gatewayTransactionId = gatewayTransactionId;
+    public String getCurrency() {
+        return currency;
     }
 
-    public String getGatewayResponse() {
-        return gatewayResponse;
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
-    public void setGatewayResponse(String gatewayResponse) {
-        this.gatewayResponse = gatewayResponse;
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getProviderResponse() {
+        return providerResponse;
+    }
+
+    public void setProviderResponse(String providerResponse) {
+        this.providerResponse = providerResponse;
     }
 
     public String getFailureReason() {
@@ -187,14 +230,31 @@ public class Payment {
         this.failureReason = failureReason;
     }
 
-    public LocalDateTime getProcessedAt() {
-        return processedAt;
+    public LocalDateTime getInitiatedAt() {
+        return initiatedAt;
     }
 
-    public void setProcessedAt(LocalDateTime processedAt) {
-        this.processedAt = processedAt;
+    public void setInitiatedAt(LocalDateTime initiatedAt) {
+        this.initiatedAt = initiatedAt;
     }
 
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime completedAt) {
+        this.completedAt = completedAt;
+    }
+
+    public LocalDateTime getFailedAt() {
+        return failedAt;
+    }
+
+    public void setFailedAt(LocalDateTime failedAt) {
+        this.failedAt = failedAt;
+    }
+
+    // Additional getters and setters for fields needed by services
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -211,76 +271,31 @@ public class Payment {
         this.updatedAt = updatedAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
     }
 
-    // Utility methods
-    public void markAsCompleted(String gatewayTransactionId) {
-        this.paymentStatus = PaymentStatus.COMPLETED;
-        this.gatewayTransactionId = gatewayTransactionId;
-        this.processedAt = LocalDateTime.now();
+    public String getGatewayResponse() {
+        return gatewayResponse;
     }
 
-    public void markAsFailed(String failureReason) {
-        this.paymentStatus = PaymentStatus.FAILED;
-        this.failureReason = failureReason;
-        this.processedAt = LocalDateTime.now();
+    public void setGatewayResponse(String gatewayResponse) {
+        this.gatewayResponse = gatewayResponse;
     }
 
-    public void markAsRefunded() {
-        this.paymentStatus = PaymentStatus.REFUNDED;
-        this.processedAt = LocalDateTime.now();
+    public Long getParentPaymentId() {
+        return parentPaymentId;
     }
 
-    public void cancel() {
-        this.paymentStatus = PaymentStatus.CANCELLED;
-        this.processedAt = LocalDateTime.now();
+    public void setParentPaymentId(Long parentPaymentId) {
+        this.parentPaymentId = parentPaymentId;
     }
 
-    public boolean isPending() {
-        return paymentStatus == PaymentStatus.PENDING;
-    }
-
-    public boolean isCompleted() {
-        return paymentStatus == PaymentStatus.COMPLETED;
-    }
-
-    public boolean isFailed() {
-        return paymentStatus == PaymentStatus.FAILED;
-    }
-
-    public boolean isRefunded() {
-        return paymentStatus == PaymentStatus.REFUNDED;
-    }
-
-    public boolean isCancelled() {
-        return paymentStatus == PaymentStatus.CANCELLED;
-    }
-
-    public boolean canBeRefunded() {
-        return paymentStatus == PaymentStatus.COMPLETED;
-    }
-
-    @Override
-    public String toString() {
-        return "Payment{" +
-                "id=" + id +
-                ", orderId=" + (order != null ? order.getId() : null) +
-                ", userId=" + userId +
-                ", amount=" + amount +
-                ", paymentMethod=" + paymentMethod +
-                ", paymentStatus=" + paymentStatus +
-                ", transactionId='" + transactionId + '\'' +
-                ", processedAt=" + processedAt +
-                ", createdAt=" + createdAt +
-                '}';
+    public void setPaymentId(String paymentId) {
+        this.transactionId = paymentId;
     }
 }

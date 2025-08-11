@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${ECOM_DB_URL}
+    username: ${ECOM_DB_USERNAME}
+    password: ${ECOM_DB_PASSWORD}
+
+logging:
+  level:
+    com.raved.ecommerce: INFO
+
+

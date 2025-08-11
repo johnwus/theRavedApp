@@ -2,6 +2,17 @@
 spring:
   profiles:
     active: development
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/johnwus/theRavedApp-config}
+          default-label: ${CONFIG_GIT_BRANCH:main}
+          clone-on-start: false
 logging:
   level:
-    com.raved: DEBUG
+    org.springframework.cloud.config: DEBUG
+  file:
+    name: logs/config-server.log

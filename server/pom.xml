@@ -49,6 +49,8 @@
         <module>ecommerce-service</module>
         <module>notification-service</module>
         <module>analytics-service</module>
+         <module>events-service</module>
+         <module>subscription-service</module>
     </modules>
 
     <dependencyManagement>
@@ -97,6 +99,12 @@
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jwt.version}</version>
             </dependency>
+            
+            <!-- Micrometer for metrics -->
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-registry-prometheus</artifactId>
+            </dependency>
 
             <!-- Database -->
             <dependency>
@@ -104,6 +112,8 @@
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
             </dependency>
+            
+
 
             <!-- Shared Modules -->
             <dependency>

@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,17 +20,12 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     /**
      * Find template by name
      */
-    Optional<NotificationTemplate> findByName(String name);
-
-    /**
-     * Find template by name and language
-     */
-    Optional<NotificationTemplate> findByNameAndLanguage(String name, String language);
+    Optional<NotificationTemplate> findByTemplateName(String templateName);
 
     /**
      * Find templates by type
      */
-    List<NotificationTemplate> findByType(NotificationTemplate.TemplateType type);
+    List<NotificationTemplate> findByTemplateType(NotificationTemplate.TemplateType templateType);
 
     /**
      * Find active templates
@@ -41,35 +35,18 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     /**
      * Find templates by type and active status
      */
-    List<NotificationTemplate> findByTypeAndIsActiveTrueOrderByCreatedAtDesc(NotificationTemplate.TemplateType type);
-
-    /**
-     * Find templates by language
-     */
-    List<NotificationTemplate> findByLanguageAndIsActiveTrue(String language);
+    List<NotificationTemplate> findByTemplateTypeAndIsActiveTrueOrderByCreatedAtDesc(NotificationTemplate.TemplateType templateType);
 
     /**
      * Check if template name exists
      */
-    boolean existsByName(String name);
+    boolean existsByTemplateName(String templateName);
 
     /**
      * Find templates by name pattern
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.name LIKE %:namePattern% AND nt.isActive = true")
-    List<NotificationTemplate> findByNameContainingAndIsActiveTrue(@Param("namePattern") String namePattern);
-
-    /**
-     * Find latest version of template by name
-     */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.name = :name AND nt.isActive = true " +
-           "ORDER BY nt.version DESC")
-    List<NotificationTemplate> findLatestVersionByName(@Param("name") String name);
-
-    /**
-     * Count templates by type
-     */
-    long countByTypeAndIsActiveTrue(NotificationTemplate.TemplateType type);
+    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateName LIKE %:namePattern% AND nt.isActive = true")
+    List<NotificationTemplate> findByTemplateNameContainingAndIsActiveTrue(@Param("namePattern") String namePattern);
 
     /**
      * Find paginated templates
@@ -77,10 +54,15 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     Page<NotificationTemplate> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
 
     /**
+     * Count templates by type
+     */
+    long countByTemplateTypeAndIsActiveTrue(NotificationTemplate.TemplateType templateType);
+
+    /**
      * Get template statistics by type
      */
-    @Query("SELECT nt.type as type, COUNT(nt) as count " +
+    @Query("SELECT nt.templateType as templateType, COUNT(nt) as count " +
            "FROM NotificationTemplate nt WHERE nt.isActive = true " +
-           "GROUP BY nt.type")
+           "GROUP BY nt.templateType")
     List<Object[]> getTemplateStatsByType();
 }

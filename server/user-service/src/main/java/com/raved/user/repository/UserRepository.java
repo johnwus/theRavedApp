@@ -95,7 +95,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Count users by status
      */
-    long countByStatus(UserStatus status);
+
 
     /**
      * Count users created today

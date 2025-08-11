@@ -47,11 +47,6 @@ public interface TemplateService {
     Optional<NotificationTemplateResponse> getTemplateByName(String templateName);
 
     /**
-     * Get template by name and language
-     */
-    Optional<NotificationTemplateResponse> getTemplateByNameAndLanguage(String templateName, String language);
-
-    /**
      * Get all active templates
      */
     List<NotificationTemplateResponse> getAllActiveTemplates();
@@ -59,7 +54,7 @@ public interface TemplateService {
     /**
      * Get templates by type
      */
-    List<NotificationTemplateResponse> getTemplatesByType(NotificationTemplate.TemplateType type);
+    List<NotificationTemplateResponse> getTemplatesByType(NotificationTemplate.TemplateType templateType);
 
     /**
      * Get paginated templates

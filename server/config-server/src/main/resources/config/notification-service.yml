@@ -1,0 +1,118 @@
+# Notification Service Configuration
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/raved_notifications
+    username: ${DB_USERNAME:raved_user}
+    password: ${DB_PASSWORD:raved_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: notification-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  port: 8086
+
+# Notification Configuration
+notification:
+  email:
+    enabled: true
+    from-address: ${NOTIFICATION_FROM_EMAIL:noreply@raved.com}
+    reply-to: ${NOTIFICATION_REPLY_TO:support@raved.com}
+    batch-size: 100
+    retry-attempts: 3
+    retry-delay: 5000 # 5 seconds
+  sms:
+    enabled: false
+    provider: twilio
+    from-number: ${SMS_FROM_NUMBER:}
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+  push:
+    enabled: true
+    fcm:
+      server-key: ${FCM_SERVER_KEY:}
+      project-id: ${FCM_PROJECT_ID:}
+    apns:
+      key-id: ${APNS_KEY_ID:}
+      team-id: ${APNS_TEAM_ID:}
+      bundle-id: ${APNS_BUNDLE_ID:}
+      private-key: ${APNS_PRIVATE_KEY:}
+  in-app:
+    enabled: true
+    max-notifications: 100
+    retention-days: 30
+  templates:
+    welcome: welcome-notification
+    verification: email-verification
+    password-reset: password-reset
+    friend-request: friend-request
+    event-reminder: event-reminder
+    content-mention: content-mention
+
+# Queue Configuration
+queue:
+  email:
+    max-workers: 10
+    batch-size: 50
+    retry-delay: 30000 # 30 seconds
+  sms:
+    max-workers: 5
+    batch-size: 20
+    retry-delay: 60000 # 60 seconds
+  push:
+    max-workers: 15
+    batch-size: 100
+    retry-delay: 15000 # 15 seconds
+
+# Rate Limiting
+rate-limit:
+  email:
+    per-user: 10 # per hour
+    global: 1000 # per hour
+  sms:
+    per-user: 5 # per hour
+    global: 500 # per hour
+  push:
+    per-user: 50 # per hour
+    global: 10000 # per hour

@@ -1,221 +1,52 @@
 package com.raved.ecommerce.dto.response;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Response DTO for shopping cart
+ * Response DTO for Cart entity
  */
+@Data
 public class CartResponse {
 
+    private Long id;
     private Long userId;
-    private List<CartItemResponse> items;
-    private Integer totalItems;
-    private BigDecimal subtotal;
-    private BigDecimal taxAmount;
-    private BigDecimal shippingCost;
-    private BigDecimal discountAmount;
     private BigDecimal totalAmount;
-    private String currency;
-    private LocalDateTime lastUpdated;
-    private LocalDateTime expiresAt;
+    private Integer itemCount;
+    private String discountCode;
+    private BigDecimal discountAmount;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private List<CartItemResponse> cartItems;
 
-    // Constructors
-    public CartResponse() {
-    }
+    // Getters and setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public CartResponse(Long userId) {
-        this.userId = userId;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    // Getters and Setters
-    public Long getUserId() {
-        return userId;
-    }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+    public Integer getItemCount() { return itemCount; }
+    public void setItemCount(Integer itemCount) { this.itemCount = itemCount; }
 
-    public List<CartItemResponse> getItems() {
-        return items;
-    }
+    public String getDiscountCode() { return discountCode; }
+    public void setDiscountCode(String discountCode) { this.discountCode = discountCode; }
 
-    public void setItems(List<CartItemResponse> items) {
-        this.items = items;
-    }
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
 
-    public Integer getTotalItems() {
-        return totalItems;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setTotalItems(Integer totalItems) {
-        this.totalItems = totalItems;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public BigDecimal getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(BigDecimal subtotal) {
-        this.subtotal = subtotal;
-    }
-
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-
-    public void setTaxAmount(BigDecimal taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-
-    public BigDecimal getShippingCost() {
-        return shippingCost;
-    }
-
-    public void setShippingCost(BigDecimal shippingCost) {
-        this.shippingCost = shippingCost;
-    }
-
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(BigDecimal discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public LocalDateTime getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public void setLastUpdated(LocalDateTime lastUpdated) {
-        this.lastUpdated = lastUpdated;
-    }
-
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(LocalDateTime expiresAt) {
-        this.expiresAt = expiresAt;
-    }
-
-    /**
-     * Cart item response DTO
-     */
-    public static class CartItemResponse {
-        private Long productId;
-        private String productName;
-        private String productImageUrl;
-        private String productSku;
-        private BigDecimal unitPrice;
-        private Integer quantity;
-        private BigDecimal totalPrice;
-        private Boolean inStock;
-        private Integer availableQuantity;
-        private LocalDateTime addedAt;
-
-        // Constructors
-        public CartItemResponse() {
-        }
-
-        // Getters and Setters
-        public Long getProductId() {
-            return productId;
-        }
-
-        public void setProductId(Long productId) {
-            this.productId = productId;
-        }
-
-        public String getProductName() {
-            return productName;
-        }
-
-        public void setProductName(String productName) {
-            this.productName = productName;
-        }
-
-        public String getProductImageUrl() {
-            return productImageUrl;
-        }
-
-        public void setProductImageUrl(String productImageUrl) {
-            this.productImageUrl = productImageUrl;
-        }
-
-        public String getProductSku() {
-            return productSku;
-        }
-
-        public void setProductSku(String productSku) {
-            this.productSku = productSku;
-        }
-
-        public BigDecimal getUnitPrice() {
-            return unitPrice;
-        }
-
-        public void setUnitPrice(BigDecimal unitPrice) {
-            this.unitPrice = unitPrice;
-        }
-
-        public Integer getQuantity() {
-            return quantity;
-        }
-
-        public void setQuantity(Integer quantity) {
-            this.quantity = quantity;
-        }
-
-        public BigDecimal getTotalPrice() {
-            return totalPrice;
-        }
-
-        public void setTotalPrice(BigDecimal totalPrice) {
-            this.totalPrice = totalPrice;
-        }
-
-        public Boolean getInStock() {
-            return inStock;
-        }
-
-        public void setInStock(Boolean inStock) {
-            this.inStock = inStock;
-        }
-
-        public Integer getAvailableQuantity() {
-            return availableQuantity;
-        }
-
-        public void setAvailableQuantity(Integer availableQuantity) {
-            this.availableQuantity = availableQuantity;
-        }
-
-        public LocalDateTime getAddedAt() {
-            return addedAt;
-        }
-
-        public void setAddedAt(LocalDateTime addedAt) {
-            this.addedAt = addedAt;
-        }
-    }
+    public List<CartItemResponse> getCartItems() { return cartItems; }
+    public void setCartItems(List<CartItemResponse> cartItems) { this.cartItems = cartItems; }
 }

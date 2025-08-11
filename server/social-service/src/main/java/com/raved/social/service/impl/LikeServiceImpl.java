@@ -36,17 +36,21 @@ public class LikeServiceImpl implements LikeService {
     private LikeMapper likeMapper;
 
     @Override
-    public LikeResponse likePost(LikeRequest request) {
-        logger.info("User {} liking post {}", request.getUserId(), request.getPostId());
+    public LikeResponse likeTarget(LikeRequest request) {
+        logger.info("User {} liking target {} of type {}", request.getUserId(), request.getTargetId(), request.getTargetType());
+        
+        // Convert string target type to enum
+        Like.TargetType targetType = Like.TargetType.valueOf(request.getTargetType().toUpperCase());
         
         // Check if already liked
-        if (likeRepository.existsByUserIdAndPostId(request.getUserId(), request.getPostId())) {
-            throw new DuplicateLikeException("User has already liked this post");
+        if (likeRepository.existsByUserIdAndTargetIdAndTargetType(request.getUserId(), request.getTargetId(), targetType)) {
+            throw new DuplicateLikeException("User has already liked this target");
         }
         
         Like like = new Like();
         like.setUserId(request.getUserId());
-        like.setPostId(request.getPostId());
+        like.setTargetId(request.getTargetId());
+        like.setTargetType(targetType);
         like.setCreatedAt(LocalDateTime.now());
         
         Like savedLike = likeRepository.save(like);
@@ -56,30 +60,33 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
-    public void unlikePost(Long userId, Long postId) {
-        logger.info("User {} unliking post {}", userId, postId);
+    public void unlikeTarget(Long userId, Long targetId, String targetType) {
+        logger.info("User {} unliking target {} of type {}", userId, targetId, targetType);
         
-        Optional<Like> likeOpt = likeRepository.findByUserIdAndPostId(userId, postId);
+        Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
+        Optional<Like> likeOpt = likeRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, targetTypeEnum);
         if (likeOpt.isPresent()) {
             likeRepository.delete(likeOpt.get());
             logger.info("Like removed successfully");
         } else {
-            logger.warn("Like not found for user {} and post {}", userId, postId);
+            logger.warn("Like not found for user {} and target {} of type {}", userId, targetId, targetType);
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasUserLikedPost(Long userId, Long postId) {
-        return likeRepository.existsByUserIdAndPostId(userId, postId);
+    public boolean hasUserLikedTarget(Long userId, Long targetId, String targetType) {
+        Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
+        return likeRepository.existsByUserIdAndTargetIdAndTargetType(userId, targetId, targetTypeEnum);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LikeResponse> getPostLikes(Long postId, Pageable pageable) {
-        logger.debug("Getting likes for post: {}", postId);
+    public Page<LikeResponse> getTargetLikes(Long targetId, String targetType, Pageable pageable) {
+        logger.debug("Getting likes for target: {} of type: {}", targetId, targetType);
         
-        Page<Like> likes = likeRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable);
+        Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
+        Page<Like> likes = likeRepository.findByTargetIdAndTargetTypeOrderByCreatedAtDesc(targetId, targetTypeEnum, pageable);
         return likes.map(likeMapper::toLikeResponse);
     }
 
@@ -94,8 +101,9 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional(readOnly = true)
-    public long getLikeCount(Long postId) {
-        return likeRepository.countByPostId(postId);
+    public long getLikeCount(Long targetId, String targetType) {
+        Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
+        return likeRepository.countByTargetIdAndTargetType(targetId, targetTypeEnum);
     }
 
     @Override
@@ -107,5 +115,41 @@ public class LikeServiceImpl implements LikeService {
         return likes.stream()
                 .map(likeMapper::toLikeResponse)
                 .collect(Collectors.toList());
+    }
+
+    // Legacy methods for backward compatibility (deprecated)
+    @Override
+    @Deprecated
+    public LikeResponse likePost(LikeRequest request) {
+        // Convert post request to generic target request
+        LikeRequest targetRequest = new LikeRequest(request.getUserId(), request.getTargetId(), "POST");
+        return likeTarget(targetRequest);
+    }
+
+    @Override
+    @Deprecated
+    public void unlikePost(Long userId, Long postId) {
+        unlikeTarget(userId, postId, "POST");
+    }
+
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public boolean hasUserLikedPost(Long userId, Long postId) {
+        return hasUserLikedTarget(userId, postId, "POST");
+    }
+
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public Page<LikeResponse> getPostLikes(Long postId, Pageable pageable) {
+        return getTargetLikes(postId, "POST", pageable);
+    }
+
+    @Override
+    @Deprecated
+    @Transactional(readOnly = true)
+    public long getLikeCount(Long postId) {
+        return getLikeCount(postId, "POST");
     }
 }

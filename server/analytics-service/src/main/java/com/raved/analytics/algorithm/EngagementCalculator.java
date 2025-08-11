@@ -1,8 +1,19 @@
 package com.raved.analytics.algorithm;
 
-/**
- * EngagementCalculator for TheRavedApp
- */
+import org.springframework.stereotype.Component;
+
+@Component
 public class EngagementCalculator {
-    // Implementation
+    
+    public double calculateUserEngagementRate(Long userId) {
+        // TODO: Implement user engagement calculation
+        // For now, return a default value
+        return 0.0;
+    }
+    
+    public double calculateContentEngagementScore(Long contentId) {
+        // TODO: Implement content engagement calculation
+        // For now, return a default value
+        return 0.0;
+    }
 }

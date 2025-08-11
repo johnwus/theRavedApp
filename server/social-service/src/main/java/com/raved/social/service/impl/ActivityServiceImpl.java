@@ -44,8 +44,7 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Creating activity for user: {} of type: {}", request.getUserId(), request.getActivityType());
         
         Activity activity = activityMapper.toActivity(request);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -62,12 +61,10 @@ public class ActivityServiceImpl implements ActivityService {
         
         Activity activity = new Activity();
         activity.setUserId(userId);
-        activity.setActivityType(ActivityType.LIKE);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
+        activity.setActivityType(ActivityType.LIKE.name());
+        activity.setPostId(postId);
         activity.setTargetUserId(postAuthorId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -83,18 +80,16 @@ public class ActivityServiceImpl implements ActivityService {
         
         Activity activity = new Activity();
         activity.setUserId(userId);
-        activity.setActivityType(ActivityType.COMMENT);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
+        activity.setActivityType(ActivityType.COMMENT.name());
+        activity.setPostId(postId);
+        activity.setCommentId(commentId);
         activity.setTargetUserId(postAuthorId);
-        activity.setReferenceId(commentId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
         // Publish comment event
-        eventPublisher.publishCommentEvent(userId, postId, postAuthorId, commentId, "");
+        eventPublisher.publishCommentCreatedEvent(userId, postId, commentId, postAuthorId);
         
         logger.info("Comment activity recorded: {}", savedActivity.getId());
     }
@@ -105,17 +100,14 @@ public class ActivityServiceImpl implements ActivityService {
         
         Activity activity = new Activity();
         activity.setUserId(followerId);
-        activity.setActivityType(ActivityType.FOLLOW);
-        activity.setTargetId(followingId);
-        activity.setTargetType("USER");
+        activity.setActivityType(ActivityType.FOLLOW.name());
         activity.setTargetUserId(followingId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
         // Publish follow event
-        eventPublisher.publishFollowEvent(followerId, followingId);
+        eventPublisher.publishFollowCreatedEvent(followerId, followingId);
         
         logger.info("Follow activity recorded: {}", savedActivity.getId());
     }
@@ -126,18 +118,16 @@ public class ActivityServiceImpl implements ActivityService {
         
         Activity activity = new Activity();
         activity.setUserId(userId);
-        activity.setActivityType(ActivityType.SHARE);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
+        activity.setActivityType(ActivityType.SHARE.name());
+        activity.setPostId(postId);
         activity.setTargetUserId(postAuthorId);
-        activity.setMetadata("{\"shareType\":\"" + shareType + "\"}");
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // Note: metadata field doesn't exist in the current Activity model
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
-        // Publish share event
-        eventPublisher.publishShareEvent(userId, postId, postAuthorId, shareType);
+        // Publish share event - using the available method
+        eventPublisher.publishActivityCreatedEvent(userId, ActivityType.SHARE.name(), postId, "POST");
         
         logger.info("Share activity recorded: {}", savedActivity.getId());
     }
@@ -148,12 +138,10 @@ public class ActivityServiceImpl implements ActivityService {
         
         Activity activity = new Activity();
         activity.setUserId(userId);
-        activity.setActivityType(ActivityType.POST);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
+        activity.setActivityType(ActivityType.POST.name());
+        activity.setPostId(postId);
         activity.setTargetUserId(userId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -184,8 +172,10 @@ public class ActivityServiceImpl implements ActivityService {
     public Page<ActivityResponse> getActivitiesForTarget(Long targetId, String targetType, Pageable pageable) {
         logger.debug("Getting activities for target: {} of type: {}", targetId, targetType);
         
+        // Use the existing repository method that takes targetId and targetType
         Page<Activity> activities = activityRepository.findByTargetIdAndTargetTypeOrderByCreatedAtDesc(
                 targetId, targetType, pageable);
+        
         return activities.map(activityMapper::toActivityResponse);
     }
 
@@ -261,24 +251,20 @@ public class ActivityServiceImpl implements ActivityService {
 
     private void publishActivityEvent(Activity activity) {
         try {
-            switch (activity.getActivityType()) {
-                case LIKE:
-                    eventPublisher.publishLikeEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId());
-                    break;
-                case COMMENT:
-                    eventPublisher.publishCommentEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId(), activity.getReferenceId(), "");
-                    break;
-                case FOLLOW:
-                    eventPublisher.publishFollowEvent(activity.getUserId(), activity.getTargetUserId());
-                    break;
-                case SHARE:
-                    eventPublisher.publishShareEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId(), "");
-                    break;
-                default:
-                    logger.debug("No event publishing for activity type: {}", activity.getActivityType());
+            String activityType = activity.getActivityType();
+            if (ActivityType.LIKE.name().equals(activityType)) {
+                eventPublisher.publishLikeEvent(activity.getUserId(), activity.getPostId(), 
+                        activity.getTargetUserId());
+            } else if (ActivityType.COMMENT.name().equals(activityType)) {
+                eventPublisher.publishCommentCreatedEvent(activity.getUserId(), activity.getPostId(), 
+                        activity.getCommentId(), activity.getTargetUserId());
+            } else if (ActivityType.FOLLOW.name().equals(activityType)) {
+                eventPublisher.publishFollowCreatedEvent(activity.getUserId(), activity.getTargetUserId());
+            } else if (ActivityType.SHARE.name().equals(activityType)) {
+                eventPublisher.publishActivityCreatedEvent(activity.getUserId(), activityType, 
+                        activity.getPostId(), "POST");
+            } else {
+                logger.debug("No event publishing for activity type: {}", activityType);
             }
         } catch (Exception e) {
             logger.error("Error publishing activity event", e);
