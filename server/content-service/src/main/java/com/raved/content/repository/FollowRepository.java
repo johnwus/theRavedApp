@@ -1,27 +1,34 @@
 package com.raved.content.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
 /**
- * FollowRepository for TheRavedApp
+ * Mock FollowRepository for TheRavedApp Content Service
+ * 
+ * Note: Follow functionality is handled by the social service.
+ * This is a temporary mock implementation for content service compilation.
  */
 @Repository
-public interface FollowRepository extends JpaRepository<Object, Long> {
-    
-    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :followerId")
-    List<Long> findFollowingIdsByFollowerId(@Param("followerId") Long followerId);
-    
-    @Query("SELECT f.followerId FROM Follow f WHERE f.followingId = :followingId")
-    List<Long> findFollowerIdsByFollowingId(@Param("followingId") Long followingId);
-    
-    @Query("SELECT COUNT(f) FROM Follow f WHERE f.followerId = :followerId")
-    long countFollowingByFollowerId(@Param("followerId") Long followerId);
-    
-    @Query("SELECT COUNT(f) FROM Follow f WHERE f.followingId = :followingId")
-    long countFollowersByFollowingId(@Param("followingId") Long followingId);
-} 
+public class FollowRepository {
+
+    public List<String> findFollowingIdsByFollowerId(String followerId) {
+        // Mock implementation - follow functionality is in social service
+        return List.of();
+    }
+
+    public List<String> findFollowerIdsByFollowingId(String followingId) {
+        // Mock implementation - follow functionality is in social service
+        return List.of();
+    }
+
+    public long countFollowingByFollowerId(String followerId) {
+        // Mock implementation - follow functionality is in social service
+        return 0L;
+    }
+
+    public long countFollowersByFollowingId(String followingId) {
+        // Mock implementation - follow functionality is in social service
+        return 0L;
+    }
+}
