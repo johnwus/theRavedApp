@@ -29,6 +29,12 @@ public class UserEventPublisher {
     @Value("${kafka.topics.user-events:user-events}")
     private String userEventsTopic;
 
+    @Value("${kafka.topics.user-created:user.created}")
+    private String userCreatedTopic;
+
+    @Value("${kafka.topics.user-updated:user.updated}")
+    private String userUpdatedTopic;
+
     /**
      * Publish user registration event
      */
@@ -231,6 +237,33 @@ public class UserEventPublisher {
             logger.error("Failed to serialize user event: {}", event.get("activityType"), e);
         } catch (Exception e) {
             logger.error("Failed to publish user event: {}", event.get("activityType"), e);
+        }
+    }
+
+    public void publishUserCreated(Long userId, String username, String email) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("userId", userId);
+        payload.put("username", username);
+        payload.put("email", email);
+        payload.put("timestamp", System.currentTimeMillis());
+        sendToTopic(userCreatedTopic, userId.toString(), payload);
+    }
+
+    public void publishUserUpdated(Long userId, Map<String, Object> userProfile) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("userId", userId);
+        payload.put("userProfile", userProfile);
+        payload.put("timestamp", System.currentTimeMillis());
+        sendToTopic(userUpdatedTopic, userId.toString(), payload);
+    }
+
+    private void sendToTopic(String topic, String key, Map<String, Object> payload) {
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            kafkaTemplate.send(topic, key, json);
+            logger.info("Published event to {} for key {}", topic, key);
+        } catch (Exception e) {
+            logger.error("Failed to publish to {} for key {}", topic, key, e);
         }
     }
 }

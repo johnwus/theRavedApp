@@ -7,6 +7,7 @@ import com.raved.user.mapper.UserMapper;
 import com.raved.user.model.User;
 import com.raved.user.repository.UserRepository;
 import com.raved.user.service.ProfileService;
+import com.raved.user.event.UserEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Implementation of ProfileService
@@ -31,6 +34,9 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserEventPublisher userEventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -62,7 +68,23 @@ public class ProfileServiceImpl implements ProfileService {
         
         User savedUser = userRepository.save(user);
         logger.info("Profile updated successfully for user ID: {}", userId);
-        
+
+        // Publish user.updated event
+        try {
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("username", savedUser.getUsername());
+            profile.put("displayName", savedUser.getDisplayName());
+            profile.put("firstName", savedUser.getFirstName());
+            profile.put("lastName", savedUser.getLastName());
+            profile.put("email", savedUser.getEmail());
+            profile.put("bio", savedUser.getBio());
+            profile.put("phoneNumber", savedUser.getPhoneNumber());
+            profile.put("profilePictureUrl", savedUser.getProfilePictureUrl());
+            userEventPublisher.publishUserUpdated(savedUser.getId(), profile);
+        } catch (Exception e) {
+            logger.warn("Failed to publish user.updated for {}: {}", userId, e.getMessage());
+        }
+
         return userMapper.toUserResponse(savedUser);
     }
 

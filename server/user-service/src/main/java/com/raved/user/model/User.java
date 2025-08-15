@@ -25,7 +25,7 @@ public class User {
     private Long id;
 
     // Student identification
-    @Column(name = "student_id", nullable = false, unique = true, length = 50)
+    @Column(name = "student_id", nullable = true, unique = true, length = 50)
     private String studentId;
 
     // Authentication fields

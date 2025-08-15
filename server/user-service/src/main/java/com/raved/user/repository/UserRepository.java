@@ -1,7 +1,10 @@
 package com.raved.user.repository;
 
-import com.raved.user.model.User;
-import com.raved.user.model.UserStatus;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +12,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.raved.user.model.User;
+import com.raved.user.model.UserStatus;
 
 /**
  * Repository interface for User entity operations
@@ -89,8 +91,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Find users who haven't logged in for a specific period
      */
-    @Query("SELECT u FROM User u WHERE u.lastLogin < :date OR u.lastLogin IS NULL")
-    List<User> findInactiveUsers(@Param("date") LocalDateTime date);
+    @Query("SELECT u FROM User u WHERE u.lastLoginAt < :threshold OR u.lastLoginAt IS NULL")
+    List<User> findInactiveUsers(@Param("threshold") Instant threshold);
 
     /**
      * Count users by status

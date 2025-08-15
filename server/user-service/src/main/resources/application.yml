@@ -25,11 +25,13 @@ raved:
 ---
 # LOCAL DEVELOPMENT PROFILE
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: ${USER_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/raved_user_db}
-    username: ${DATABASE_USERNAME:raved_user}
-    password: ${DATABASE_PASSWORD:raved_password}
+    username: ${DATABASE_USERNAME:raved_admin}
+    password: ${DATABASE_PASSWORD:theRAVEDapp#123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -61,7 +63,9 @@ spring:
 ---
 # STAGING PROFILE (Neon Cloud)
 spring:
-  profiles: staging
+  config:
+    activate:
+      on-profile: staging
   datasource:
     url: ${USER_SERVICE_DB_URL}
     username: ${DATABASE_USERNAME}
@@ -100,7 +104,9 @@ spring:
 ---
 # PRODUCTION PROFILE (Neon Cloud)
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   datasource:
     url: ${USER_SERVICE_DB_URL}
     username: ${DATABASE_USERNAME}

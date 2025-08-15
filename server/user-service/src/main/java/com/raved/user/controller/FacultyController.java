@@ -40,7 +40,7 @@ public class FacultyController {
 
     @GetMapping("/university/{universityId}")
     public ResponseEntity<List<FacultyResponse>> getByUniversity(@PathVariable Long universityId) {
-        List<FacultyResponse> list = facultyRepository.findByUniversityId(universityId)
+        List<FacultyResponse> list = facultyRepository.findByUniversity_Id(universityId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }

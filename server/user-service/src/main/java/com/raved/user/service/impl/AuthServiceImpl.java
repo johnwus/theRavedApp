@@ -42,6 +42,9 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private UserMapper userMapper;
 
+    @Autowired
+    private com.raved.user.event.UserEventPublisher userEventPublisher;
+
     @Override
     public AuthResponse login(LoginRequest request) {
         logger.info("Login attempt for user: {}", request.getUsername());
@@ -114,6 +117,13 @@ public class AuthServiceImpl implements AuthService {
 
         // Save user
         user = userRepository.save(user);
+
+        // Emit user.created event
+        try {
+            userEventPublisher.publishUserCreated(user.getId(), user.getUsername(), user.getEmail());
+        } catch (Exception e) {
+            logger.warn("Failed to publish user.created for {}: {}", user.getId(), e.getMessage());
+        }
 
         // Generate tokens
         String accessToken = jwtTokenProvider.generateAccessToken(user);

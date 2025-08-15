@@ -56,8 +56,9 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         User user = userOpt.get();
         
         // Check if verification already exists
-        Optional<StudentVerification> existingVerification = 
-                verificationRepository.findByUserIdAndStatus(request.getUserId(), StudentVerification.VerificationStatus.PENDING);
+        Optional<StudentVerification> existingVerification
+                =
+ verificationRepository.findByUser_IdAndVerificationStatus(request.getUserId(), StudentVerification.VerificationStatus.PENDING);
         
         if (existingVerification.isPresent()) {
             throw new VerificationFailedException("Verification already pending for user: " + request.getUserId());
@@ -160,7 +161,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
     public Optional<StudentVerificationResponse> getVerificationByUserId(Long userId) {
         logger.debug("Getting verification by user ID: {}", userId);
         
-        Optional<StudentVerification> verificationOpt = verificationRepository.findByUserId(userId);
+        Optional<StudentVerification> verificationOpt = verificationRepository.findByUser_Id(userId);
         return verificationOpt.map(verificationMapper::toStudentVerificationResponse);
     }
 
@@ -170,7 +171,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         logger.debug("Getting pending verifications");
         
         Page<StudentVerification> verifications = verificationRepository
-                .findByStatusOrderBySubmittedAtAsc(StudentVerification.VerificationStatus.PENDING, pageable);
+                .findByVerificationStatusOrderBySubmittedAtAsc(StudentVerification.VerificationStatus.PENDING, pageable);
         
         return verifications.map(verificationMapper::toStudentVerificationResponse);
     }
@@ -182,7 +183,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         logger.debug("Getting verifications by status: {}", status);
         
         Page<StudentVerification> verifications = verificationRepository
-                .findByStatusOrderBySubmittedAtDesc(status, pageable);
+                .findByVerificationStatusOrderBySubmittedAtDesc(status, pageable);
         
         return verifications.map(verificationMapper::toStudentVerificationResponse);
     }
@@ -201,7 +202,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
     public long getVerificationCount(StudentVerification.VerificationStatus status) {
         logger.debug("Getting verification count for status: {}", status);
         
-        return verificationRepository.countByStatus(status);
+        return verificationRepository.countByVerificationStatus(status);
     }
 
     @Override

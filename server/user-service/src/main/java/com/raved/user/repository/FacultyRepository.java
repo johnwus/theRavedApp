@@ -18,14 +18,9 @@ import java.util.Optional;
 public interface FacultyRepository extends JpaRepository<Faculty, Long> {
 
     /**
-     * Find faculty by user ID
+     * Find faculties by university ID (via relationship)
      */
-    Optional<Faculty> findByUserId(Long userId);
-
-    /**
-     * Find faculty by university ID
-     */
-    List<Faculty> findByUniversityId(Long universityId);
+    List<Faculty> findByUniversity_Id(Long universityId);
 
     /**
      * Search faculty by name or code
@@ -40,18 +35,18 @@ public interface FacultyRepository extends JpaRepository<Faculty, Long> {
 
 
     /**
-     * Count faculty by university
+     * Count faculties by university ID
      */
-    long countByUniversityId(Long universityId);
+    long countByUniversity_Id(Long universityId);
 
 
 
 
 
     /**
-     * Check if faculty ID exists for a university
+     * Check if a faculty code exists for a university
      */
-    boolean existsByUniversityIdAndFacultyId(Long universityId, String facultyId);
+    boolean existsByUniversity_IdAndCode(Long universityId, String code);
 
 
 }
