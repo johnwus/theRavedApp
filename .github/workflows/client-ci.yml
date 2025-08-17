@@ -19,22 +19,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: client/package-lock.json
+          cache: 'yarn'
+          cache-dependency-path: client/yarn.lock
       - name: Install dependencies
         run: |
           cd client
-          npm ci
+          yarn install --frozen-lockfile
       - name: Lint
         run: |
           cd client
-          npm run lint
+          yarn lint
       - name: Test
         run: |
           cd client
-          npm test -- --ci
+          yarn test --ci
       - name: Type check
         run: |
           cd client
-          npm run type-check
+          yarn type-check
 
