@@ -1,6 +1,17 @@
 apiVersion: v1
-kind: Namespace
+kind: ConfigMap
 metadata:
-  name: raved-dev
-  labels:
-    environment: development
+  name: user-service-config
+  namespace: raved-dev
+data:
+  SPRING_PROFILES_ACTIVE: "staging"
+  EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/raved_user_db"
+  DATABASE_USERNAME: "raved_admin"
+  LOG_LEVEL: "INFO"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  KAFKA_TOPIC_USER_EVENTS: "user.events"
+  KAFKA_TOPIC_USER_CREATED: "user.created"
+  KAFKA_TOPIC_USER_UPDATED: "user.updated"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"

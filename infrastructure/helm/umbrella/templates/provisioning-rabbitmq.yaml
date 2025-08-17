@@ -1,0 +1,31 @@
+{{- if .Values.provisioning.rabbitmq.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rabbitmq-topology-setup
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: rabbitmq-setup
+          image: rabbitmq:3-management
+          command: ["bash", "-c"]
+          env:
+            - name: RABBIT_HOST
+              value: {{ .Values.provisioning.rabbitmq.host | default "rabbitmq" | quote }}
+            - name: RABBIT_USERNAME
+              value: {{ .Values.provisioning.rabbitmq.username | default "guest" | quote }}
+            - name: RABBIT_PASSWORD
+              value: {{ .Values.provisioning.rabbitmq.password | default "guest" | quote }}
+          args:
+            - >-
+              export RABBITMQ_URL="http://$RABBIT_USERNAME:$RABBIT_PASSWORD@$RABBIT_HOST:15672";
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare exchange name=chat.exchange type=direct || true;
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare queue name=chat.queue durable=true || true;
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare binding source=chat.exchange destination=chat.queue routing_key=chat.message || true;
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare exchange name=notification.exchange type=direct || true;
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare queue name=notification.queue durable=true || true;
+              rabbitmqadmin --host="$RABBIT_HOST" --port=15672 --username="$RABBIT_USERNAME" --password="$RABBIT_PASSWORD" -V / declare binding source=notification.exchange destination=notification.queue routing_key=notification.send || true;
+{{- end }}
+

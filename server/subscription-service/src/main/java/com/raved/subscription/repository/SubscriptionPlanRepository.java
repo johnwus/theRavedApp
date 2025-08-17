@@ -60,3 +60,4 @@ public interface SubscriptionPlanRepository extends JpaRepository<SubscriptionPl
     long countByBillingCycleAndIsActiveTrue(String billingCycle);
 }
 
+

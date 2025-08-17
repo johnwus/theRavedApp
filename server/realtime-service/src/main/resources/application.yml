@@ -16,6 +16,11 @@ raved:
   database:
     environment: ${SPRING_PROFILES_ACTIVE:local}
 
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:mySecretKey}
+
 # =============================================================================
 # PROFILE-SPECIFIC CONFIGURATIONS
 # =============================================================================
@@ -25,9 +30,9 @@ raved:
 spring:
   profiles: local
   datasource:
-    url: ${REALTIME_SERVICE_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/raved_realtime_service_db}
-    username: ${DATABASE_USERNAME:raved_user}
-    password: ${DATABASE_PASSWORD:raved_password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/raved_realtime_db}
+    username: ${DATABASE_USERNAME:raved_admin}
+    password: ${DATABASE_PASSWORD:theRAVEDapp#123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -61,7 +66,7 @@ spring:
 spring:
   profiles: staging
   datasource:
-    url: ${REALTIME_SERVICE_SERVICE_DB_URL}
+    url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -100,7 +105,7 @@ spring:
 spring:
   profiles: production
   datasource:
-    url: ${REALTIME_SERVICE_SERVICE_DB_URL}
+    url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -151,7 +156,6 @@ spring:
 # =============================================================================
 # REALTIME SERVICE SPECIFIC CONFIGURATION
 # =============================================================================
-spring:
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -165,7 +169,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
@@ -177,7 +181,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: always

@@ -6,6 +6,12 @@ spring:
     name: notification-service
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
 
 # =============================================================================
 # RAVED CONFIGURATION
@@ -17,6 +23,15 @@ raved:
     environment: ${SPRING_PROFILES_ACTIVE:local}
 
 # =============================================================================
+# MONGODB CONFIGURATION (Primary for Notification Service)
+# =============================================================================
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_notifications?authSource=admin}
+      database: ${MONGODB_DATABASE:raved_notifications}
+      auto-index-creation: true
+
+# =============================================================================
 # PROFILE-SPECIFIC CONFIGURATIONS
 # =============================================================================
 
@@ -24,46 +39,21 @@ raved:
 # LOCAL DEVELOPMENT PROFILE
 spring:
   profiles: local
-  datasource:
-    url: ${NOTIFICATION_SERVICE_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/raved_notification_service_db}
-    username: ${DATABASE_USERNAME:raved_user}
-    password: ${DATABASE_PASSWORD:raved_password}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 300000
-      connection-timeout: 20000
-      leak-detection-threshold: 60000
-      pool-name: RavedHikariPool-Notificationservice-Local
-  jpa:
-    hibernate:
-      ddl-auto: validate
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
-  redis:
-    host: redis
-    port: 6379
-    timeout: 2000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
+  # MongoDB Configuration (Primary)
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_notifications?authSource=admin}
+      database: ${MONGODB_DATABASE:raved_notifications}
+      auto-index-creation: true
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   kafka:
     bootstrap-servers: kafka:9092
     producer:
@@ -99,10 +89,11 @@ spring:
 
 eureka:
   client:
+    enabled: false
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: false
+    fetch-registry: false
   instance:
     prefer-ip-address: true
     lease-renewal-interval-in-seconds: 30
@@ -116,9 +107,9 @@ management:
   endpoint:
     health:
       show-details: always
-  metrics:
-    export:
-      prometheus:
+  prometheus:
+    metrics:
+      export:
         enabled: true
 
 logging:
@@ -159,101 +150,48 @@ app:
   support-email: support@raved.app
 
 ---
-# STAGING PROFILE (Neon Cloud)
+# STAGING PROFILE (MongoDB primary)
 spring:
   profiles: staging
-  datasource:
-    url: ${NOTIFICATION_SERVICE_SERVICE_DB_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 15
-      minimum-idle: 5
-      idle-timeout: 600000
-      connection-timeout: 30000
-      leak-detection-threshold: 60000
-      pool-name: RavedHikariPool-Notificationservice-Staging
-      connection-init-sql: SELECT 1
-  jpa:
-    hibernate:
-      ddl-auto: validate
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-        jdbc:
-          batch_size: 25
-        order_inserts: true
-        order_updates: true
-        connection:
-          provider_disables_autocommit: true
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://mongodb:27017/raved_notifications}
+      database: ${MONGODB_DATABASE:raved_notifications}
+      auto-index-creation: true
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
 ---
-# PRODUCTION PROFILE (Neon Cloud)
+
+# PRODUCTION PROFILE
 spring:
   profiles: production
-  datasource:
-    url: ${NOTIFICATION_SERVICE_SERVICE_DB_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 10
-      idle-timeout: 600000
-      connection-timeout: 30000
-      leak-detection-threshold: 60000
-      pool-name: RavedHikariPool-Notificationservice-Production
-      connection-init-sql: SELECT 1
-      data-source-properties:
-        cachePrepStmts: true
-        prepStmtCacheSize: 250
-        prepStmtCacheSqlLimit: 2048
-        useServerPrepStmts: true
-        useLocalSessionState: true
-        rewriteBatchedStatements: true
-        cacheResultSetMetadata: true
-        cacheServerConfiguration: true
-        elideSetAutoCommits: true
-        maintainTimeStats: false
-  jpa:
-    hibernate:
-      ddl-auto: validate
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: false
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: false
-        jdbc:
-          batch_size: 30
-        order_inserts: true
-        order_updates: true
-        connection:
-          provider_disables_autocommit: true
-        cache:
-          use_second_level_cache: true
-          use_query_cache: true
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
+  # MongoDB Configuration (Primary)
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE:raved_notifications}
+      auto-index-creation: true
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
 
 # =============================================================================
 # NOTIFICATION SERVICE SPECIFIC CONFIGURATION
 # =============================================================================
-spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     consumer:
@@ -262,14 +200,13 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
 # =============================================================================
 # COMMON MICROSERVICE CONFIGURATION
 # =============================================================================
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:

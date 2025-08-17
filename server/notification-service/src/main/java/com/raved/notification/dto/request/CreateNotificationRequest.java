@@ -13,7 +13,7 @@ import java.util.Map;
 public class CreateNotificationRequest {
 
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private String userId; // Changed to String for MongoDB
 
     @NotBlank(message = "Notification type is required")
     @Size(max = 50, message = "Notification type must not exceed 50 characters")
@@ -26,7 +26,7 @@ public class CreateNotificationRequest {
     @NotBlank(message = "Body is required")
     private String body;
 
-    private String data; // Additional notification data as JSON string
+    private Map<String, Object> data; // Changed to Map for MongoDB
 
     private String actionUrl; // Deep link URL
 
@@ -36,14 +36,14 @@ public class CreateNotificationRequest {
 
     private LocalDateTime expiresAt;
 
-    private Long templateId;
+    private String templateId; // Changed to String for MongoDB
 
     private Map<String, Object> templateData;
 
     // Constructors
     public CreateNotificationRequest() {}
 
-    public CreateNotificationRequest(Long userId, String notificationType, String title, String body) {
+    public CreateNotificationRequest(String userId, String notificationType, String title, String body) {
         this.userId = userId;
         this.notificationType = notificationType;
         this.title = title;
@@ -51,11 +51,11 @@ public class CreateNotificationRequest {
     }
 
     // Getters and Setters
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -83,11 +83,11 @@ public class CreateNotificationRequest {
         this.body = body;
     }
 
-    public String getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 
@@ -123,11 +123,11 @@ public class CreateNotificationRequest {
         this.expiresAt = expiresAt;
     }
 
-    public Long getTemplateId() {
+    public String getTemplateId() {
         return templateId;
     }
 
-    public void setTemplateId(Long templateId) {
+    public void setTemplateId(String templateId) {
         this.templateId = templateId;
     }
 

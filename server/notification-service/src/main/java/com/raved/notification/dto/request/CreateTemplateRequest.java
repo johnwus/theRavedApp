@@ -21,7 +21,7 @@ public class CreateTemplateRequest {
     @NotBlank(message = "Body template is required")
     private String bodyTemplate;
     
-    private String variables; // Template variables as JSON string
+    private Map<String, Object> variables; // Template variables (changed to Map for MongoDB)
     
     private Boolean isActive = true;
 
@@ -58,11 +58,11 @@ public class CreateTemplateRequest {
         this.bodyTemplate = bodyTemplate;
     }
 
-    public String getVariables() {
+    public Map<String, Object> getVariables() {
         return variables;
     }
 
-    public void setVariables(String variables) {
+    public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
     }
 

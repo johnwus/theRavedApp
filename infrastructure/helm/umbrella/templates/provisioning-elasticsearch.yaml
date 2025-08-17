@@ -1,0 +1,24 @@
+{{- if .Values.provisioning.elasticsearch.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: elasticsearch-indices-setup
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: es-setup
+          image: curlimages/curl:8.8.0
+          env:
+            - name: ES_URL
+              value: {{ .Values.provisioning.elasticsearch.url | default "http://elasticsearch:9200" | quote }}
+          command: ["sh", "-c"]
+          args:
+            - >-
+              for i in {{ toJson .Values.provisioning.elasticsearch.indices }}; do
+                name=$(echo $i | jq -r .name);
+                curl -s -X PUT "$ES_URL/$name" || true;
+              done;
+{{- end }}
+

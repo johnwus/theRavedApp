@@ -31,37 +31,37 @@ public interface NotificationService {
     /**
      * Get notification by ID
      */
-    Optional<NotificationResponse> getNotificationById(Long id);
+    Optional<NotificationResponse> getNotificationById(String id);
 
     /**
      * Get notifications for a user
      */
-    Page<NotificationResponse> getUserNotifications(Long userId, Pageable pageable);
+    Page<NotificationResponse> getUserNotifications(String userId, Pageable pageable);
 
     /**
      * Get unread notifications for a user
      */
-    Page<NotificationResponse> getUnreadNotifications(Long userId, Pageable pageable);
+    Page<NotificationResponse> getUnreadNotifications(String userId, Pageable pageable);
 
     /**
      * Mark notification as read
      */
-    NotificationResponse markAsRead(Long notificationId);
+    NotificationResponse markAsRead(String notificationId);
 
     /**
      * Mark all notifications as read for a user
      */
-    void markAllAsRead(Long userId);
+    void markAllAsRead(String userId);
 
     /**
      * Delete notification
      */
-    void deleteNotification(Long notificationId);
+    void deleteNotification(String notificationId);
 
     /**
      * Get notification statistics for a user
      */
-    NotificationStats getNotificationStats(Long userId);
+    NotificationStats getNotificationStats(String userId);
 
     /**
      * Schedule notification for later delivery
@@ -71,7 +71,7 @@ public interface NotificationService {
     /**
      * Cancel scheduled notification
      */
-    void cancelScheduledNotification(Long notificationId);
+    void cancelScheduledNotification(String notificationId);
 
     /**
      * Process scheduled notifications
@@ -81,18 +81,18 @@ public interface NotificationService {
     /**
      * Send notification by type with template
      */
-    NotificationResponse sendNotificationByType(Long userId, String notificationType,
+    NotificationResponse sendNotificationByType(String userId, String notificationType,
                                                Map<String, Object> templateData);
 
     /**
      * Get notifications by type
      */
-    Page<NotificationResponse> getNotificationsByType(Long userId, String notificationType, Pageable pageable);
+    Page<NotificationResponse> getNotificationsByType(String userId, String notificationType, Pageable pageable);
 
     /**
      * Resend failed notification
      */
-    NotificationResponse resendNotification(Long notificationId);
+    NotificationResponse resendNotification(String notificationId);
 
     /**
      * Get delivery statistics

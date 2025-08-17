@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   postgres:
@@ -6,8 +6,9 @@ services:
     container_name: raved-postgres-dev
     environment:
       POSTGRES_DB: raved_db
-      POSTGRES_USER: raved_user
-      POSTGRES_PASSWORD: raved_password
+      POSTGRES_USER: raved_admin
+      POSTGRES_PASSWORD: theRAVEDapp#123
+      POSTGRES_HOST_AUTH_METHOD: md5
     ports:
       - "5432:5432"
     volumes:
@@ -15,16 +16,73 @@ services:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raved_admin -d raved_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: raved-pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@raved.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  mongodb:
+    image: mongo:6
+    container_name: raved-mongodb-dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: raved_admin
+      MONGO_INITDB_ROOT_PASSWORD: theRAVEDapp#123
+      MONGO_INITDB_DATABASE: raved_content
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - raved-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   redis:
     image: redis:7-alpine
     container_name: raved-redis-dev
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
       - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
     command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - raved-network
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: raved-elasticsearch-dev
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - raved-network
 
@@ -38,16 +96,19 @@ services:
       - raved-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: raved-kafka-dev
     depends_on:
       - zookeeper
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
     ports:
       - "9092:9092"
     networks:
@@ -65,27 +126,324 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     networks:
       - raved-network
 
-  nginx:
-    image: nginx:alpine
-    container_name: raved-nginx-dev
+  # Monitoring and Observability
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: raved-prometheus-dev
     ports:
-      - "80:80"
-      - "443:443"
+      - "9090:9090"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - raved-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: raved-grafana-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - raved-network
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: raved-jaeger-dev
+    ports:
+      - "16686:16686"
+      - "14268:14268"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - raved-network
+
+  # =============================================================================
+  # MICROSERVICES - INFRASTRUCTURE
+  # =============================================================================
+
+  eureka-server:
+    build:
+      context: ../../../
+      dockerfile: server/eureka-server/Dockerfile
+    container_name: raved-eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - raved-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  config-server:
+    build:
+      context: ../../../
+      dockerfile: server/config-server/Dockerfile
+    container_name: raved-config-server
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
     depends_on:
-      - api-gateway
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  api-gateway:
+    build:
+      context: ../../../
+      dockerfile: server/api-gateway/Dockerfile
+    container_name: raved-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    depends_on:
+      config-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  # =============================================================================
+  # MICROSERVICES - BUSINESS SERVICES (PostgreSQL)
+  # =============================================================================
+
+  user-service:
+    build:
+      context: ../../../
+      dockerfile: server/user-service/Dockerfile
+    container_name: raved-user-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_USERNAME=raved_admin
+      - DATABASE_PASSWORD=theRAVEDapp#123
+      - USER_SERVICE_DB_URL=jdbc:postgresql://postgres:5432/raved_user_db
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_TOPIC_USER_EVENTS=user.events
+      - KAFKA_TOPIC_USER_CREATED=user.created
+      - KAFKA_TOPIC_USER_UPDATED=user.updated
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  ecommerce-service:
+    build:
+      context: ../../../
+      dockerfile: server/ecommerce-service/Dockerfile
+    container_name: raved-ecommerce-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_USERNAME=raved_admin
+      - DATABASE_PASSWORD=theRAVEDapp#123
+      - ECOMMERCE_SERVICE_SERVICE_DB_URL=jdbc:postgresql://postgres:5432/raved_ecommerce_db
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    depends_on:
+      postgres:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  realtime-service:
+    build:
+      context: ../../../
+      dockerfile: server/realtime-service/Dockerfile
+    container_name: raved-realtime-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DATABASE_USERNAME=raved_admin
+      - DATABASE_PASSWORD=theRAVEDapp#123
+      - REALTIME_SERVICE_SERVICE_DB_URL=jdbc:postgresql://postgres:5432/raved_realtime_db
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
+    depends_on:
+      postgres:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  events-service:
+    build:
+      context: ../../../
+      dockerfile: server/events-service/Dockerfile
+    container_name: raved-events-service
+    ports:
+      - "8088:8088"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=raved_admin
+      - POSTGRES_PASSWORD=theRAVEDapp#123
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  subscription-service:
+    build:
+      context: ../../../
+      dockerfile: server/subscription-service/Dockerfile
+    container_name: raved-subscription-service
+    ports:
+      - "8089:8089"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - POSTGRES_USER=raved_admin
+      - POSTGRES_PASSWORD=theRAVEDapp#123
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  # =============================================================================
+  # MICROSERVICES - BUSINESS SERVICES (MongoDB)
+  # =============================================================================
+
+  notification-service:
+    build:
+      context: ../../../
+      dockerfile: server/notification-service/Dockerfile
+    container_name: raved-notification-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGODB_URI=mongodb://raved_admin:theRAVEDapp#123@mongodb:27017/raved_notifications?authSource=admin
+      - MONGODB_DATABASE=raved_notifications
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  social-service:
+    build:
+      context: ../../../
+      dockerfile: server/social-service/Dockerfile
+    container_name: raved-social-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SOCIAL_SERVICE_MONGODB_URI=mongodb://raved_admin:theRAVEDapp#123@mongodb:27017/raved_social?authSource=admin
+      - SOCIAL_SERVICE_MONGODB_DATABASE=raved_social
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  content-service:
+    build:
+      context: ../../../
+      dockerfile: server/content-service/Dockerfile
+    container_name: raved-content-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGODB_URI=mongodb://raved_admin:theRAVEDapp#123@mongodb:27017/raved_content?authSource=admin
+      - MONGODB_DATABASE=raved_content
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  analytics-service:
+    build:
+      context: ../../../
+      dockerfile: server/analytics-service/Dockerfile
+    container_name: raved-analytics-service
+    ports:
+      - "8087:8087"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGODB_URI=mongodb://raved_admin:theRAVEDapp#123@mongodb:27017/raved_analytics?authSource=admin
+      - MONGODB_DATABASE=raved_analytics
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
 volumes:
   postgres_data:
+  pgadmin_data:
+  mongodb_data:
   redis_data:
+  elasticsearch_data:
   rabbitmq_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   raved-network:

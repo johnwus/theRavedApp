@@ -92,12 +92,16 @@
         <dependency>
             <groupId>com.raved</groupId>
             <artifactId>raved-common</artifactId>
-            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.raved</groupId>
             <artifactId>raved-security</artifactId>
-            <version>1.0.0</version>
+        </dependency>
+        
+        <!-- MongoDB for notification templates and logs -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         
         <!-- Micrometer for metrics -->
@@ -106,4 +110,22 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.raved.notification.NotificationServiceApplication</mainClass>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

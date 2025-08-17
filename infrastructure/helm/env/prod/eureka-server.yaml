@@ -1,0 +1,16 @@
+nameOverride: eureka-server
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8761
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+

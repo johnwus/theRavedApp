@@ -114,7 +114,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
     }
 
     @Override
-    public void sendPushNotificationToUser(Long userId, String title, String body, Map<String, String> data) {
+    public void sendPushNotificationToUser(String userId, String title, String body, Map<String, String> data) {
         logger.info("Sending push notification to user: {}", userId);
         
         List<DeviceToken> deviceTokens = deviceTokenRepository.findByUserIdAndIsActiveTrue(userId);
@@ -156,7 +156,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
     }
 
     @Override
-    public void registerDeviceToken(Long userId, String deviceToken, String deviceType, String appVersion) {
+    public void registerDeviceToken(String userId, String deviceToken, String deviceType, String appVersion) {
         logger.info("Registering device token for user: {}", userId);
         
         // Check if token already exists
@@ -166,7 +166,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
             // Update existing token
             existingToken.setUserId(userId);
             existingToken.setPlatform(DeviceToken.Platform.valueOf(deviceType.toUpperCase()));
-            existingToken.setDeviceInfo("{\"appVersion\":\"" + appVersion + "\"}");
+            existingToken.setDeviceInfo(Map.of("appVersion", appVersion));
             existingToken.setIsActive(true);
             existingToken.setUpdatedAt(LocalDateTime.now());
             deviceTokenRepository.save(existingToken);
@@ -177,7 +177,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
             newToken.setUserId(userId);
             newToken.setToken(deviceToken);
             newToken.setPlatform(DeviceToken.Platform.valueOf(deviceType.toUpperCase()));
-            newToken.setDeviceInfo("{\"appVersion\":\"" + appVersion + "\"}");
+            newToken.setDeviceInfo(Map.of("appVersion", appVersion));
             newToken.setIsActive(true);
             newToken.setCreatedAt(LocalDateTime.now());
             newToken.setUpdatedAt(LocalDateTime.now());
@@ -204,7 +204,7 @@ public class PushNotificationServiceImpl implements PushNotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DeviceToken> getUserDeviceTokens(Long userId) {
+    public List<DeviceToken> getUserDeviceTokens(String userId) {
         logger.debug("Getting device tokens for user: {}", userId);
         return deviceTokenRepository.findByUserIdAndIsActiveTrue(userId);
     }

@@ -4,6 +4,7 @@ import com.raved.user.model.VerificationCode;
 import com.raved.user.repository.VerificationCodeRepository;
 import com.raved.user.service.VerificationService;
 import com.raved.user.util.PasswordEncoderUtil;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.raved.user.client.NotificationClient;
@@ -33,6 +34,7 @@ public class VerificationServiceImpl implements VerificationService {
     private static final SecureRandom RNG = new SecureRandom();
 
     @Override
+    @CircuitBreaker(name = "notificationService", fallbackMethod = "sendEmailCodeFallback")
     public void sendEmailCode(String email, String purpose) {
         String code = generateCode();
         saveCode(null, "EMAIL", email, purpose, code);
@@ -50,7 +52,13 @@ public class VerificationServiceImpl implements VerificationService {
         logger.info("Verification email code generated for {} purpose={}", email, purpose);
     }
 
+    // Resilience4j fallback
+    private void sendEmailCodeFallback(String email, String purpose, Throwable t) {
+        logger.warn("Email code dispatch fallback for {} purpose={} due to: {}", email, purpose, t.toString());
+    }
+
     @Override
+    @CircuitBreaker(name = "notificationService", fallbackMethod = "sendPhoneCodeFallback")
     public void sendPhoneCode(String phone, String purpose) {
         String code = generateCode();
         saveCode(null, "PHONE", phone, purpose, code);
@@ -66,6 +74,11 @@ public class VerificationServiceImpl implements VerificationService {
             }
         }
         logger.info("Verification SMS code generated for {} purpose={}", phone, purpose);
+    }
+
+    // Resilience4j fallback
+    private void sendPhoneCodeFallback(String phone, String purpose, Throwable t) {
+        logger.warn("SMS code dispatch fallback for {} purpose={} due to: {}", phone, purpose, t.toString());
     }
 
     @Override

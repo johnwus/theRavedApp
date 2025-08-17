@@ -124,7 +124,7 @@ public class NotificationConsumer {
     private void processNotification(Map<String, Object> event) {
         logger.info("Processing notification event for notification: {}", event.get("notificationId"));
 
-        Long notificationId = Long.valueOf(event.get("notificationId").toString());
+        String notificationId = event.get("notificationId").toString();
         Notification notification = notificationRepository.findById(notificationId).orElse(null);
 
         if (notification == null) {
@@ -133,7 +133,7 @@ public class NotificationConsumer {
         }
 
         // Update delivery status
-        notification.setDeliveryStatus("PROCESSING");
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         notificationRepository.save(notification);
 
         // Send notification through configured channels
@@ -145,7 +145,7 @@ public class NotificationConsumer {
         delivered |= sendSmsNotification(notification);
 
         // Update final delivery status
-        notification.setDeliveryStatus(delivered ? "SENT" : "FAILED");
+        notification.setDeliveryStatus(delivered ? Notification.DeliveryStatus.SENT : Notification.DeliveryStatus.FAILED);
         notification.setSentAt(delivered ? LocalDateTime.now() : null);
         notificationRepository.save(notification);
 
@@ -220,12 +220,12 @@ public class NotificationConsumer {
     }
 
     // Helper methods to get user information (would integrate with user service)
-    private String getUserEmail(Long userId) {
+    private String getUserEmail(String userId) {
         // TODO: Integrate with user service to get email
         return "user" + userId + "@example.com";
     }
 
-    private String getUserPhoneNumber(Long userId) {
+    private String getUserPhoneNumber(String userId) {
         // TODO: Integrate with user service to get phone number
         return null; // Return null if no phone number
     }

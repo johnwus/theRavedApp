@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "raved-app.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "raved-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.autoscaling.enabled | ternary 1 (.Values.autoscaling.minReplicas | default 1) }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "raved-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "raved-app.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "raved-app.serviceAccountName" . }}
+      containers:
+        - name: {{ include "raved-app.name" . }}
+          image: "{{ .Values.image.repository }}/{{ include "raved-app.name" . }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          {{- if .Values.envFrom }}
+          envFrom: {{- toYaml .Values.envFrom | nindent 12 }}
+          {{- end }}
+          env:
+          {{- if .Values.env }}
+{{ toYaml .Values.env | indent 12 }}
+          {{- end }}
+          {{- range $name, $ref := .Values.secretEnv }}
+            - name: {{ $name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $ref.name }}
+                  key: {{ $ref.key }}
+          {{- end }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+

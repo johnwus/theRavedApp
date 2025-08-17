@@ -29,6 +29,15 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private com.raved.content.kafka.ContentEventsProducer contentEventsProducer;
+
+    @Autowired
+    private com.raved.content.service.ElasticsearchSyncService elasticsearchSyncService;
+
+    @Autowired
+    private com.raved.content.repository.elasticsearch.PostSearchRepository postSearchRepository;
+
     @Override
     public Post createPost(Post post) {
         logger.info("Creating new post for user: {}", post.getUserId());
@@ -38,6 +47,20 @@ public class PostServiceImpl implements PostService {
 
         Post savedPost = postRepository.save(post);
         logger.info("Post created successfully with ID: {}", savedPost.getId());
+
+        // Publish an event for downstream consumers (notification, analytics)
+        try {
+            contentEventsProducer.publishPostCreated(savedPost);
+        } catch (Exception e) {
+            logger.warn("Failed to publish content created event for {}: {}", savedPost.getId(), e.getMessage());
+        }
+
+        // Sync to Elasticsearch for search
+        try {
+            elasticsearchSyncService.syncPost(savedPost);
+        } catch (Exception e) {
+            logger.warn("Failed to sync post to Elasticsearch for {}: {}", savedPost.getId(), e.getMessage());
+        }
 
         return savedPost;
     }
@@ -85,6 +108,13 @@ public class PostServiceImpl implements PostService {
         Post savedPost = postRepository.save(existingPost);
         logger.info("Post updated successfully with ID: {}", id);
 
+        // Sync updated post to Elasticsearch
+        try {
+            elasticsearchSyncService.updatePost(savedPost);
+        } catch (Exception e) {
+            logger.warn("Failed to sync updated post to Elasticsearch for {}: {}", savedPost.getId(), e.getMessage());
+        }
+
         return savedPost;
     }
 
@@ -99,6 +129,13 @@ public class PostServiceImpl implements PostService {
             post.setUpdatedAt(LocalDateTime.now());
             postRepository.save(post);
             logger.info("Post deleted successfully with ID: {}", id);
+
+            // Remove from Elasticsearch
+            try {
+                elasticsearchSyncService.deletePost(id);
+            } catch (Exception e) {
+                logger.warn("Failed to delete post from Elasticsearch for {}: {}", id, e.getMessage());
+            }
         }
     }
 
@@ -141,7 +178,29 @@ public class PostServiceImpl implements PostService {
     @Transactional(readOnly = true)
     public Page<Post> searchPosts(String query, Pageable pageable) {
         logger.debug("Searching posts with query: {}", query);
-        return postRepository.searchPosts(query, pageable);
+
+        try {
+            // Use Elasticsearch for full-text search
+            var searchDocuments = postSearchRepository.findByFullTextSearch(query);
+
+            if (!searchDocuments.isEmpty()) {
+                // Extract post IDs from search results
+                List<String> postIds = searchDocuments.stream()
+                        .map(doc -> doc.getId())
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Fetch full Post objects from MongoDB maintaining search order
+                return postRepository.findByIdInOrderByCreatedAtDesc(postIds, pageable);
+            } else {
+                // Fallback to MongoDB search if Elasticsearch returns no results
+                logger.debug("No Elasticsearch results, falling back to MongoDB search");
+                return postRepository.searchPosts(query, pageable);
+            }
+        } catch (Exception e) {
+            // Fallback to MongoDB search if Elasticsearch fails
+            logger.warn("Elasticsearch search failed, falling back to MongoDB: {}", e.getMessage());
+            return postRepository.searchPosts(query, pageable);
+        }
     }
 
     @Override

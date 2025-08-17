@@ -1,0 +1,12 @@
+nameOverride: eureka-server
+image:
+  repository: ghcr.io/theravedapp
+  tag: dev
+service:
+  port: 8761
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: development
+

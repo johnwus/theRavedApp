@@ -1,0 +1,36 @@
+nameOverride: realtime-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: staging
+service:
+  port: 8084
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: staging
+  - name: SPRING_DATASOURCE_URL
+    value: ${SPRING_DATASOURCE_URL}
+  - name: RABBITMQ_HOST
+    value: rabbitmq.raved-staging.svc.cluster.local
+  - name: RABBITMQ_PORT
+    value: "5672"
+  - name: WEBSOCKET_ALLOWED_ORIGINS
+    value: https://staging.raved.app,http://localhost:3000
+  - name: SPRING_REDIS_HOST
+    value: redis-master.raved-staging.svc.cluster.local
+  - name: SPRING_REDIS_PORT
+    value: "6379"
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: raved-jwt
+        key: secret
+
+
+
+

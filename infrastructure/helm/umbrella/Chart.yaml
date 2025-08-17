@@ -1,0 +1,43 @@
+apiVersion: v2
+name: raved-umbrella
+description: Umbrella chart orchestrating Raved microservices
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: api-gateway
+    repository: file://../api-gateway
+    version: 0.1.0
+  - name: user-service
+    repository: file://../user-service
+    version: 0.1.0
+  - name: content-service
+    repository: file://../content-service
+    version: 0.1.0
+  - name: social-service
+    repository: file://../social-service
+    version: 0.1.0
+  - name: realtime-service
+    repository: file://../realtime-service
+    version: 0.1.0
+  - name: ecommerce-service
+    repository: file://../ecommerce-service
+    version: 0.1.0
+  - name: notification-service
+    repository: file://../notification-service
+    version: 0.1.0
+  - name: analytics-service
+    repository: file://../analytics-service
+    version: 0.1.0
+  - name: events-service
+    repository: file://../events-service
+    version: 0.1.0
+  - name: subscription-service
+    repository: file://../subscription-service
+    version: 0.1.0
+  - name: eureka-server
+    repository: file://../eureka-server
+    version: 0.1.0
+  - name: config-server
+    repository: file://../config-server
+    version: 0.1.0
+

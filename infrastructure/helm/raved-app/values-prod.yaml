@@ -1,0 +1,20 @@
+# Prod values
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: prod
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+service:
+  type: ClusterIP
+  port: 8080
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 60
+

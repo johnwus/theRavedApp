@@ -1,0 +1,4 @@
+# API Integration Guide
+
+Placeholder.
+

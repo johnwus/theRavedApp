@@ -1,0 +1,18 @@
+nameOverride: user-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: dev
+service:
+  port: 8081
+autoscaling:
+  enabled: false
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: local
+  - name: EUREKA_SERVER_URL
+    value: http://eureka-server.raved-dev.svc.cluster.local:8761/eureka/
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.raved-dev.svc.cluster.local:9092
+

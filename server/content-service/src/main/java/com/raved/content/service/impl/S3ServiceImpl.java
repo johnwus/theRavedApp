@@ -1,13 +1,22 @@
 package com.raved.content.service.impl;
 
 import com.raved.content.service.S3Service;
+import org.imgscalr.Scalr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -15,11 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * S3Service implementation for TheRavedApp
- * 
- * Note: This is a mock implementation since AWS SDK dependencies are commented
- * out.
- * In production, this would use AWS SDK for S3 operations.
+ * S3Service implementation for TheRavedApp with real AWS SDK integration
  */
 @Service
 public class S3ServiceImpl implements S3Service {
@@ -31,6 +36,26 @@ public class S3ServiceImpl implements S3Service {
 
     @Value("${aws.s3.region:us-east-1}")
     private String region;
+
+    @Value("${aws.s3.cloudfront.domain:}")
+    private String cloudFrontDomain;
+
+    @Value("${aws.s3.enabled:false}")
+    private boolean s3Enabled;
+
+    private final S3Client s3Client;
+
+    public S3ServiceImpl() {
+        if (s3Enabled) {
+            this.s3Client = S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(DefaultCredentialsProvider.create())
+                    .build();
+        } else {
+            this.s3Client = null;
+            logger.warn("S3 is disabled. Using mock implementation for development.");
+        }
+    }
 
     @Override
     public String uploadFile(MultipartFile file, String folder) {
@@ -44,11 +69,24 @@ public class S3ServiceImpl implements S3Service {
             String filename = UUID.randomUUID().toString() + extension;
             String key = folder + "/" + filename;
 
-            // In production, this would use AWS SDK:
-            // s3Client.putObject(bucketName, key, file.getInputStream(), metadata);
+            if (s3Enabled && s3Client != null) {
+                // Real S3 upload
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(file.getContentType())
+                        .contentLength(file.getSize())
+                        .build();
 
-            logger.info("File uploaded successfully to S3: {}", key);
-            return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+                s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+
+                logger.info("File uploaded successfully to S3: {}", key);
+                return getPublicUrl(key);
+            } else {
+                // Mock implementation for development
+                logger.info("Mock S3 upload - File would be uploaded to: {}", key);
+                return "https://mock-cdn.raved.app/" + key;
+            }
 
         } catch (Exception e) {
             logger.error("Error uploading file to S3: {}", e.getMessage(), e);
@@ -62,14 +100,22 @@ public class S3ServiceImpl implements S3Service {
                 contentType, size);
 
         try {
-            // In production, this would use AWS SDK:
-            // ObjectMetadata metadata = new ObjectMetadata();
-            // metadata.setContentType(contentType);
-            // metadata.setContentLength(size);
-            // s3Client.putObject(bucketName, key, inputStream, metadata);
+            if (s3Enabled && s3Client != null) {
+                PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .contentType(contentType)
+                        .contentLength(size)
+                        .build();
 
-            logger.info("File uploaded successfully to S3: {}", key);
-            return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+                s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, size));
+
+                logger.info("File uploaded successfully to S3: {}", key);
+                return getPublicUrl(key);
+            } else {
+                logger.info("Mock S3 upload - File would be uploaded to: {}", key);
+                return "https://mock-cdn.raved.app/" + key;
+            }
 
         } catch (Exception e) {
             logger.error("Error uploading file to S3: {}", e.getMessage(), e);
@@ -85,10 +131,17 @@ public class S3ServiceImpl implements S3Service {
             // Extract key from URL
             String key = extractKeyFromUrl(fileUrl);
 
-            // In production, this would use AWS SDK:
-            // s3Client.deleteObject(bucketName, key);
+            if (s3Enabled && s3Client != null) {
+                DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                        .bucket(bucketName)
+                        .key(key)
+                        .build();
 
-            logger.info("File deleted successfully from S3: {}", key);
+                s3Client.deleteObject(deleteObjectRequest);
+                logger.info("File deleted successfully from S3: {}", key);
+            } else {
+                logger.info("Mock S3 delete - File would be deleted: {}", key);
+            }
 
         } catch (Exception e) {
             logger.error("Error deleting file from S3: {}", e.getMessage(), e);
@@ -99,7 +152,15 @@ public class S3ServiceImpl implements S3Service {
     @Override
     public String getFileUrl(String key) {
         logger.debug("Getting file URL for key: {}", key);
-        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+        return getPublicUrl(key);
+    }
+
+    private String getPublicUrl(String key) {
+        if (cloudFrontDomain != null && !cloudFrontDomain.isEmpty()) {
+            return "https://" + cloudFrontDomain + "/" + key;
+        } else {
+            return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+        }
     }
 
     @Override

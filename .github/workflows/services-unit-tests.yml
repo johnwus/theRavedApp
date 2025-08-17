@@ -1,0 +1,40 @@
+name: Services Unit Tests
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'server/social-service/**'
+      - 'server/realtime-service/**'
+      - 'server/content-service/**'
+      - 'server/analytics-service/**'
+      - 'server/notification-service/**'
+      - '.github/workflows/services-unit-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  test-services:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Build and test social-service
+        working-directory: server/social-service
+        run: mvn -B -q -DskipTests=false test
+      - name: Build and test realtime-service
+        working-directory: server/realtime-service
+        run: mvn -B -q -DskipTests=false test
+      - name: Build and test content-service
+        working-directory: server/content-service
+        run: mvn -B -q -DskipTests=false test
+      - name: Build and test analytics-service
+        working-directory: server/analytics-service
+        run: mvn -B -q -DskipTests=false test
+      - name: Build and test notification-service
+        working-directory: server/notification-service
+        run: mvn -B -q -DskipTests=false test
+

@@ -1,10 +1,28 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-@Entity
-@Table(name = "notification_templates")
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * NotificationTemplate Document for TheRavedApp MongoDB
+ *
+ * Represents templates for different types of notifications. Converted from JPA
+ * entity to MongoDB document.
+ */
+@Document(collection = "notification_templates")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_type_active", def = "{'templateType': 1, 'isActive': 1}"),
+    @CompoundIndex(name = "idx_name_unique", def = "{'templateName': 1}", unique = true)
+})
 public class NotificationTemplate {
     
     /**
@@ -17,32 +35,37 @@ public class NotificationTemplate {
     }
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(name = "template_name", nullable = false, length = 100, unique = true)
+    private String id;
+
+    @Field("templateName")
+    @Indexed(unique = true)
+    @NotBlank
     private String templateName;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "template_type", nullable = false, length = 20)
+
+    @Field("templateType")
+    @Indexed
+    @NotNull
     private TemplateType templateType; // PUSH, EMAIL, SMS
-    
-    @Column(name = "subject_template", columnDefinition = "TEXT")
+
+    @Field("subjectTemplate")
     private String subjectTemplate;
-    
-    @Column(name = "body_template", columnDefinition = "TEXT", nullable = false)
+
+    @Field("bodyTemplate")
+    @NotBlank
     private String bodyTemplate;
-    
-    @Column(columnDefinition = "JSONB")
-    private String variables; // Template variables definition
-    
-    @Column(name = "is_active", nullable = false)
+
+    @Field("variables")
+    private Map<String, Object> variables; // Template variables (changed to Map for MongoDB)
+
+    @Field("isActive")
+    @Indexed
     private Boolean isActive = true;
-    
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+
+    @Field("createdAt")
+    @Indexed
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+
+    @Field("updatedAt")
     private LocalDateTime updatedAt;
     
     // Constructors
@@ -52,11 +75,11 @@ public class NotificationTemplate {
     }
     
     // Getters and setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -96,11 +119,11 @@ public class NotificationTemplate {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public String getVariables() {
+    public Map<String, Object> getVariables() {
         return variables;
     }
 
-    public void setVariables(String variables) {
+    public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
         this.updatedAt = LocalDateTime.now();
     }
@@ -130,8 +153,8 @@ public class NotificationTemplate {
         this.updatedAt = updatedAt;
     }
     
-    @PreUpdate
-    public void preUpdate() {
+    // MongoDB lifecycle method
+    public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
 }

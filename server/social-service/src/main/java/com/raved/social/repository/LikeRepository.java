@@ -3,80 +3,91 @@ package com.raved.social.repository;
 import com.raved.social.model.Like;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for Like entities
+ * Repository for Like MongoDB documents
  */
 @Repository
-public interface LikeRepository extends JpaRepository<Like, Long> {
+public interface LikeRepository extends MongoRepository<Like, String> {
     
-    // Generic methods using target_id and target_type
-    Optional<Like> findByUserIdAndTargetIdAndTargetType(Long userId, Long targetId, Like.TargetType targetType);
+    // Core methods using contentId and contentType
+    Optional<Like> findByUserIdAndContentIdAndContentType(String userId, String contentId, String contentType);
     
-    boolean existsByUserIdAndTargetIdAndTargetType(Long userId, Long targetId, Like.TargetType targetType);
+    boolean existsByUserIdAndContentIdAndContentType(String userId, String contentId, String contentType);
     
-    Page<Like> findByTargetIdAndTargetTypeOrderByCreatedAtDesc(Long targetId, Like.TargetType targetType, Pageable pageable);
+    Page<Like> findByContentIdAndContentTypeAndIsRemovedFalseOrderByCreatedAtDesc(String contentId, String contentType, Pageable pageable);
     
-    Page<Like> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Like> findByUserIdAndIsRemovedFalseOrderByCreatedAtDesc(String userId, Pageable pageable);
     
-    long countByTargetIdAndTargetType(Long targetId, Like.TargetType targetType);
+    long countByContentIdAndContentTypeAndIsRemovedFalse(String contentId, String contentType);
     
-    long countByUserId(Long userId);
+    long countByUserIdAndIsRemovedFalse(String userId);
     
-    @Query(value = "SELECT l.* FROM likes l JOIN posts p ON l.target_id = p.id WHERE l.target_type = 'POST' AND p.user_id = :userId ORDER BY l.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<Like> findRecentLikesForUserPosts(@Param("userId") Long userId, @Param("limit") int limit);
+    // Enhanced MongoDB-specific methods
+    @Query("{'contentId': ?0, 'contentType': ?1, 'isRemoved': false}")
+    List<Like> findByContentIdAndContentType(String contentId, String contentType);
     
-    @Query("SELECT COUNT(l) > 0 FROM Like l WHERE l.targetId = :targetId AND l.targetType = :targetType AND l.userId IN :userIds")
-    boolean isLikedByAnyUser(@Param("targetId") Long targetId, @Param("targetType") Like.TargetType targetType, @Param("userIds") List<Long> userIds);
+    @Query("{'userId': ?0, 'isRemoved': false}")
+    List<Like> findByUserId(String userId);
     
-    @Query("SELECT l.userId FROM Like l WHERE l.targetId = :targetId AND l.targetType = :targetType")
-    List<Long> findUserIdsByTargetIdAndTargetType(@Param("targetId") Long targetId, @Param("targetType") Like.TargetType targetType);
+    @Query("{'contentId': ?0, 'contentType': ?1, 'isRemoved': false}")
+    List<Like> findActiveLikesByContent(String contentId, String contentType);
     
-    void deleteByUserIdAndTargetIdAndTargetType(Long userId, Long targetId, Like.TargetType targetType);
+    @Query("{'userId': ?0, 'likeType': ?1, 'isRemoved': false}")
+    List<Like> findByUserIdAndLikeType(String userId, String likeType);
+
+    @Query("{'contentId': ?0, 'contentType': ?1, 'likeType': ?2, 'isRemoved': false}")
+    List<Like> findByContentIdAndContentTypeAndLikeType(String contentId, String contentType, String likeType);
+
+    @Query("{'contentId': ?0, 'contentType': ?1, 'isRemoved': false}")
+    long countActiveLikesByContent(String contentId, String contentType);
+
+    @Query("{'userId': ?0, 'isRemoved': false}")
+    long countActiveLikesByUser(String userId);
+
+    @Query("{'contentId': ?0, 'contentType': ?1, 'isRemoved': false, 'createdAt': {$gte: ?2}}")
+    List<Like> findRecentLikesByContent(String contentId, String contentType, java.time.LocalDateTime since);
+
+    @Query("{'userId': ?0, 'isRemoved': false, 'createdAt': {$gte: ?1}}")
+    List<Like> findRecentLikesByUser(String userId, java.time.LocalDateTime since);
     
-    void deleteByTargetIdAndTargetType(Long targetId, Like.TargetType targetType);
+    @Query("{'isRemoved': false, 'createdAt': {$gte: ?0}}")
+    List<Like> findRecentLikes(java.time.LocalDateTime since);
     
-    // Legacy methods for backward compatibility (deprecated)
-    @Deprecated
-    Optional<Like> findByUserIdAndPostId(Long userId, Long postId);
+    @Query("{'isRemoved': false, 'likeType': ?0}")
+    List<Like> findByLikeType(String likeType);
     
-    @Deprecated
-    Optional<Like> findByUserIdAndCommentId(Long userId, Long commentId);
+    @Query("{'isRemoved': false, 'likeSource': ?0}")
+    List<Like> findByLikeSource(String likeSource);
     
-    @Deprecated
-    boolean existsByUserIdAndPostId(Long userId, Long postId);
+    @Query("{'isRemoved': false, 'isAnonymous': true}")
+    List<Like> findAnonymousLikes();
     
-    @Deprecated
-    boolean existsByUserIdAndCommentId(Long userId, Long commentId);
+    // Soft delete methods
+    @Query("{'userId': ?0, 'contentId': ?1, 'contentType': ?2}")
+    Optional<Like> findByUserIdAndContentIdAndContentTypeForUpdate(String userId, String contentId, String contentType);
     
-    @Deprecated
-    Page<Like> findByPostIdOrderByCreatedAtDesc(Long postId, Pageable pageable);
-    
-    @Deprecated
-    Page<Like> findByCommentIdOrderByCreatedAtDesc(Long commentId, Pageable pageable);
-    
-    @Deprecated
-    long countByPostId(Long postId);
-    
-    @Deprecated
-    long countByCommentId(Long commentId);
-    
-    @Deprecated
-    void deleteByUserIdAndPostId(Long userId, Long postId);
-    
-    @Deprecated
-    void deleteByUserIdAndCommentId(Long userId, Long commentId);
-    
-    @Deprecated
-    void deleteByPostId(Long postId);
-    
-    @Deprecated
-    void deleteByCommentId(Long commentId);
+    void deleteByUserIdAndContentIdAndContentType(String userId, String contentId, String contentType);
+
+    void deleteByContentIdAndContentType(String contentId, String contentType);
+
+    // Methods for backward compatibility with service layer using targetId/targetType
+    boolean existsByUserIdAndTargetIdAndTargetType(String userId, String targetId, Like.TargetType targetType);
+
+    Optional<Like> findByUserIdAndTargetIdAndTargetType(String userId, String targetId, Like.TargetType targetType);
+
+    Page<Like> findByTargetIdAndTargetTypeOrderByCreatedAtDesc(String targetId, Like.TargetType targetType, Pageable pageable);
+
+    Page<Like> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+
+    long countByTargetIdAndTargetType(String targetId, Like.TargetType targetType);
+
+    @Query("{'userId': ?0, 'createdAt': {$gte: ?1}, 'isRemoved': false}")
+    List<Like> findRecentLikesForUserPosts(String userId, int limit);
 }

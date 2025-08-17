@@ -1,9 +1,14 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/raved_analytics
-  jpa:
-    show-sql: true
-
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_analytics?authSource=admin}
+      database: ${MONGODB_DATABASE:raved_analytics}
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    consumer:
+      group-id: analytics-service
+      auto-offset-reset: earliest
 logging:
   level:
     com.raved.analytics: DEBUG

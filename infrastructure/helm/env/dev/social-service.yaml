@@ -1,0 +1,12 @@
+nameOverride: social-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: dev
+service:
+  port: 8083
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: local
+

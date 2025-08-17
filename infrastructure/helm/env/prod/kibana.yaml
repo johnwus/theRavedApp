@@ -1,0 +1,12 @@
+replicas: 3
+resources:
+  requests:
+    cpu: 300m
+    memory: 1Gi
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+elasticsearch:
+  hosts:
+    - http://elasticsearch-master.raved-prod.svc.cluster.local:9200
+

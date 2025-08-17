@@ -2,19 +2,20 @@ package com.raved.notification.dto.request;
 
 import com.raved.notification.model.NotificationTemplate;
 import jakarta.validation.constraints.Size;
+import java.util.Map;
 
 public class UpdateTemplateRequest {
     @Size(max = 100, message = "Template name cannot exceed 100 characters")
     private String templateName;
-    
+
     private NotificationTemplate.TemplateType templateType;
-    
+
     @Size(max = 255, message = "Subject template cannot exceed 255 characters")
     private String subjectTemplate;
-    
+
     private String bodyTemplate;
-    
-    private String variables; // Template variables as JSON string
+
+    private Map<String, Object> variables; // Template variables (changed to Map for MongoDB)
     
     private Boolean isActive;
 
@@ -51,11 +52,11 @@ public class UpdateTemplateRequest {
         this.bodyTemplate = bodyTemplate;
     }
 
-    public String getVariables() {
+    public Map<String, Object> getVariables() {
         return variables;
     }
 
-    public void setVariables(String variables) {
+    public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
     }
 

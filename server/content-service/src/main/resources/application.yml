@@ -27,7 +27,7 @@ raved:
 # =============================================================================
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://raved_admin:raved_password@localhost:27017/raved_content?authSource=admin}
+      uri: ${MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_content?authSource=admin}
       database: ${MONGODB_DATABASE:raved_content}
       auto-index-creation: true
 
@@ -36,7 +36,7 @@ raved:
 # =============================================================================
   redis:
     host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6380}
+    port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD:}
     database: ${REDIS_DATABASE:0}
     timeout: 2000ms
@@ -45,6 +45,34 @@ raved:
         max-active: 8
         max-idle: 8
         min-idle: 0
+
+# =============================================================================
+# ELASTICSEARCH CONFIGURATION (Search & Analytics)
+# =============================================================================
+    elasticsearch:
+      uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
+      connection-timeout: 5s
+      socket-timeout: 30s
+
+# =============================================================================
+# KAFKA CONFIGURATION (Event Streaming)
+# =============================================================================
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: content-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "com.raved.content.dto,com.raved.common.dto"
 
 # =============================================================================
 # AWS S3 CONFIGURATION (Media Storage)
@@ -73,11 +101,14 @@ spring:
   # MongoDB Configuration (Primary)
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://raved_admin:raved_password@localhost:27017/raved_content?authSource=admin}
+      uri: ${MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_content?authSource=admin}
       database: ${MONGODB_DATABASE:raved_content}
       auto-index-creation: true
-  
-  
+    # Elasticsearch Configuration
+    elasticsearch:
+      uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
 
 ---
 # STAGING PROFILE
@@ -88,9 +119,14 @@ spring:
   # MongoDB Configuration (Primary)
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://raved_admin:raved_password@localhost:27017/raved_content?authSource=admin}
+      uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE:raved_content}
       auto-index-creation: true
+    # Elasticsearch Configuration
+    elasticsearch:
+      uris: ${ELASTICSEARCH_URIS}
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
 
 ---
 # PRODUCTION PROFILE
@@ -101,9 +137,14 @@ spring:
   # MongoDB Configuration (Primary)
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://raved_admin:raved_password@localhost:27017/raved_content?authSource=admin}
+      uri: ${MONGODB_URI}
       database: ${MONGODB_DATABASE:raved_content}
       auto-index-creation: true
+    # Elasticsearch Configuration
+    elasticsearch:
+      uris: ${ELASTICSEARCH_URIS}
+      username: ${ELASTICSEARCH_USERNAME}
+      password: ${ELASTICSEARCH_PASSWORD}
   
  
 
@@ -113,7 +154,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}
     fetch-registry: true
     register-with-eureka: true
   instance:
@@ -125,10 +166,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
 logging:
   level:

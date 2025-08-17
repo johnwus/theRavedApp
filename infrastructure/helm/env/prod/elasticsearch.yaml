@@ -1,0 +1,14 @@
+replicas: 5
+minimumMasterNodes: 3
+esJavaOpts: "-Xms2g -Xmx2g"
+resources:
+  requests:
+    cpu: 2000m
+    memory: 4Gi
+  limits:
+    cpu: 6000m
+    memory: 12Gi
+persistence:
+  enabled: true
+  size: 200Gi
+

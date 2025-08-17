@@ -1,243 +1,289 @@
 package com.raved.analytics.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * ContentMetrics Entity for TheRavedApp
+ * ContentMetrics Document for TheRavedApp MongoDB
  *
- * Represents aggregated metrics for content (posts, products, etc.).
- * Based on the content_metrics table schema.
+ * Comprehensive content analytics and metrics tracking including social
+ * content, ecommerce products, subscription plans, and performance indicators.
  */
-@Entity
-@Table(name = "content_metrics", indexes = {
-        @Index(name = "idx_content_metrics_entity", columnList = "entity_type, entity_id"),
-        @Index(name = "idx_content_metrics_date", columnList = "metric_date"),
-        @Index(name = "idx_content_metrics_views", columnList = "total_views"),
-        @Index(name = "idx_content_metrics_engagement", columnList = "engagement_rate"),
-        @Index(name = "idx_content_metrics_trending", columnList = "trending_score")
-}, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_content_metrics_date", columnNames = { "entity_type", "entity_id", "metric_date" })
-})
+@Document(collection = "content_metrics")
+@CompoundIndex(name = "idx_content_type_date", def = "{'content_type': 1, 'metrics_date': 1}")
+@CompoundIndex(name = "idx_content_engagement", def = "{'content_type': 1, 'engagement_rate': -1}")
+@CompoundIndex(name = "idx_content_viral", def = "{'content_type': 1, 'viral_score': -1}")
+@CompoundIndex(name = "idx_content_ecommerce", def = "{'content_type': 1, 'ecommerce_metrics.conversionRate': -1}")
+@CompoundIndex(name = "idx_content_subscription", def = "{'content_type': 1, 'subscription_metrics.subscriptionRate': -1}")
 public class ContentMetrics {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "entity_type", nullable = false)
-    private String entityType; // "post", "product", "comment"
+    @Indexed
+    @Field("content_id")
+    private String contentId; // post_id, product_id, subscription_plan_id, etc.
 
-    @Column(name = "entity_id", nullable = false)
-    private Long entityId;
+    @Indexed
+    @Field("content_type")
+    private String contentType; // POST, PRODUCT, SUBSCRIPTION_PLAN, ARTICLE, VIDEO, COMMENT
 
-    @Column(name = "metric_date", nullable = false)
-    private java.sql.Date metricDate;
+    @Field("content_category")
+    private String contentCategory; // e.g., "fashion", "technology", "premium", "basic"
 
-    // View Metrics
-    @Column(name = "total_views", nullable = false)
-    private Integer totalViews = 0;
+    @Field("content_subcategory")
+    private String contentSubcategory;
 
-    @Column(name = "unique_views", nullable = false)
-    private Integer uniqueViews = 0;
+    @Field("content_owner_id")
+    private String contentOwnerId; // user_id who created the content
 
-    @Column(name = "views_today", nullable = false)
-    private Integer viewsToday = 0;
+    @Field("content_owner_type")
+    private String contentOwnerType; // USER, BUSINESS, INFLUENCER
 
-    // Engagement Metrics
-    @Column(name = "total_likes", nullable = false)
-    private Integer totalLikes = 0;
+    // Basic Engagement Metrics
+    @Indexed
+    @Field("views_count")
+    private Integer viewsCount;
 
-    @Column(name = "total_comments", nullable = false)
-    private Integer totalComments = 0;
+    @Field("unique_views_count")
+    private Integer uniqueViewsCount;
 
-    @Column(name = "total_shares", nullable = false)
-    private Integer totalShares = 0;
+    @Field("likes_count")
+    private Integer likesCount;
 
-    @Column(name = "likes_today", nullable = false)
-    private Integer likesToday = 0;
+    @Field("dislikes_count")
+    private Integer dislikesCount;
 
-    @Column(name = "comments_today", nullable = false)
-    private Integer commentsToday = 0;
+    @Field("comments_count")
+    private Integer commentsCount;
 
-    @Column(name = "shares_today", nullable = false)
-    private Integer sharesToday = 0;
+    @Field("shares_count")
+    private Integer sharesCount;
 
-    // Calculated Metrics
-    @Column(name = "engagement_rate", precision = 5, scale = 4)
-    private BigDecimal engagementRate = BigDecimal.ZERO;
+    @Field("saves_count")
+    private Integer savesCount;
 
-    @Column(name = "viral_coefficient", precision = 5, scale = 4)
-    private BigDecimal viralCoefficient = BigDecimal.ZERO;
+    @Field("bookmarks_count")
+    private Integer bookmarksCount;
 
-    @Column(name = "trending_score", precision = 8, scale = 2)
-    private BigDecimal trendingScore = BigDecimal.ZERO;
+    // Advanced Engagement Metrics
+    @Indexed
+    @Field("engagement_rate")
+    private BigDecimal engagementRate; // (likes + comments + shares) / views
+
+    @Indexed
+    @Field("viral_score")
+    private BigDecimal viralScore; // weighted score based on shares and reach
+
+    @Field("reach")
+    private Integer reach; // unique users who saw the content
+
+    @Field("impressions")
+    private Integer impressions; // total number of times content was displayed
+
+    @Field("click_through_rate")
+    private BigDecimal clickThroughRate;
+
+    @Field("bounce_rate")
+    private BigDecimal bounceRate;
+
+    // Content Performance Metrics
+    @Field("content_quality_score")
+    private BigDecimal contentQualityScore;
+
+    @Field("content_relevance_score")
+    private BigDecimal contentRelevanceScore;
+
+    @Field("content_freshness_score")
+    private BigDecimal contentFreshnessScore;
+
+    @Field("content_completeness_score")
+    private BigDecimal contentCompletenessScore;
+
+    // E-commerce Specific Metrics (for products)
+    @Field("ecommerce_metrics")
+    private EcommerceMetrics ecommerceMetrics;
+
+    // Subscription Specific Metrics (for subscription plans)
+    @Field("subscription_metrics")
+    private SubscriptionMetrics subscriptionMetrics;
+
+    // Social Content Metrics (for posts, comments)
+    @Field("social_metrics")
+    private SocialMetrics socialMetrics;
+
+    // Content Analytics
+    @Field("content_analytics")
+    private ContentAnalytics contentAnalytics;
 
     // Time-based Metrics
-    @Column(name = "peak_hour")
-    private Integer peakHour; // Hour of day with most activity (0-23)
+    @Indexed
+    @Field("peak_engagement_time")
+    private LocalDateTime peakEngagementTime;
 
-    @Column(name = "average_session_duration")
-    private Integer averageSessionDuration; // in seconds
+    @Indexed
+    @Field("metrics_date")
+    private String metricsDate; // YYYY-MM-DD format
 
-    @Column(name = "bounce_rate", precision = 5, scale = 4)
-    private BigDecimal bounceRate = BigDecimal.ZERO;
+    @Field("metrics_hour")
+    private Integer metricsHour; // 0-23 for hourly analytics
 
-    // Geographic and Demographic
-    @Column(name = "top_country")
-    private String topCountry;
+    @Field("metrics_weekday")
+    private Integer metricsWeekday; // 1-7 for weekly patterns
 
-    @Column(name = "top_age_group")
-    private String topAgeGroup;
+    @Field("metrics_month")
+    private Integer metricsMonth; // 1-12 for monthly trends
 
-    // Additional fields for MetricsServiceImpl compatibility
-    @Column(name = "content_id")
-    private Long contentId;
+    // Timeline
+    @Field("last_calculated_at")
+    private LocalDateTime lastCalculatedAt;
 
-    @Column(name = "view_count")
-    private Long viewCount = 0L;
-
-    @Column(name = "like_count")
-    private Long likeCount = 0L;
-
-    @Column(name = "comment_count")
-    private Long commentCount = 0L;
-
-    @Column(name = "share_count")
-    private Long shareCount = 0L;
-
-    @Column(name = "engagement_score", precision = 5, scale = 2)
-    private Double engagementScore = 0.0;
-
-    @Column(name = "reach_count")
-    private Long reachCount = 0L;
-
-    @Column(name = "impression_count")
-    private Long impressionCount = 0L;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Field("created_at")
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 
     // Constructors
     public ContentMetrics() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public ContentMetrics(String entityType, Long entityId, java.sql.Date metricDate) {
-        this();
-        this.entityType = entityType;
-        this.entityId = entityId;
-        this.metricDate = metricDate;
+        this.lastCalculatedAt = LocalDateTime.now();
+        this.metricsDate = LocalDateTime.now().toLocalDate().toString();
+        this.metricsHour = LocalDateTime.now().getHour();
+        this.metricsWeekday = LocalDateTime.now().getDayOfWeek().getValue();
+        this.metricsMonth = LocalDateTime.now().getMonthValue();
+        this.viewsCount = 0;
+        this.likesCount = 0;
+        this.commentsCount = 0;
+        this.sharesCount = 0;
+        this.engagementRate = BigDecimal.ZERO;
+        this.viralScore = BigDecimal.ZERO;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public String getEntityType() {
-        return entityType;
+    public String getContentId() {
+        return contentId;
     }
 
-    public void setEntityType(String entityType) {
-        this.entityType = entityType;
+    public void setContentId(String contentId) {
+        this.contentId = contentId;
     }
 
-    public Long getEntityId() {
-        return entityId;
+    public String getContentType() {
+        return contentType;
     }
 
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
     }
 
-    public java.sql.Date getMetricDate() {
-        return metricDate;
+    public String getContentCategory() {
+        return contentCategory;
     }
 
-    public void setMetricDate(java.sql.Date metricDate) {
-        this.metricDate = metricDate;
+    public void setContentCategory(String contentCategory) {
+        this.contentCategory = contentCategory;
     }
 
-    public Integer getTotalViews() {
-        return totalViews;
+    public String getContentSubcategory() {
+        return contentSubcategory;
     }
 
-    public void setTotalViews(Integer totalViews) {
-        this.totalViews = totalViews;
+    public void setContentSubcategory(String contentSubcategory) {
+        this.contentSubcategory = contentSubcategory;
     }
 
-    public Integer getUniqueViews() {
-        return uniqueViews;
+    public String getContentOwnerId() {
+        return contentOwnerId;
     }
 
-    public void setUniqueViews(Integer uniqueViews) {
-        this.uniqueViews = uniqueViews;
+    public void setContentOwnerId(String contentOwnerId) {
+        this.contentOwnerId = contentOwnerId;
     }
 
-    public Integer getViewsToday() {
-        return viewsToday;
+    public String getContentOwnerType() {
+        return contentOwnerType;
     }
 
-    public void setViewsToday(Integer viewsToday) {
-        this.viewsToday = viewsToday;
+    public void setContentOwnerType(String contentOwnerType) {
+        this.contentOwnerType = contentOwnerType;
     }
 
-    public Integer getTotalLikes() {
-        return totalLikes;
+    public Integer getViewsCount() {
+        return viewsCount;
     }
 
-    public void setTotalLikes(Integer totalLikes) {
-        this.totalLikes = totalLikes;
+    public void setViewsCount(Integer viewsCount) {
+        this.viewsCount = viewsCount;
     }
 
-    public Integer getTotalComments() {
-        return totalComments;
+    public Integer getUniqueViewsCount() {
+        return uniqueViewsCount;
     }
 
-    public void setTotalComments(Integer totalComments) {
-        this.totalComments = totalComments;
+    public void setUniqueViewsCount(Integer uniqueViewsCount) {
+        this.uniqueViewsCount = uniqueViewsCount;
     }
 
-    public Integer getTotalShares() {
-        return totalShares;
+    public Integer getLikesCount() {
+        return likesCount;
     }
 
-    public void setTotalShares(Integer totalShares) {
-        this.totalShares = totalShares;
+    public void setLikesCount(Integer likesCount) {
+        this.likesCount = likesCount;
     }
 
-    public Integer getLikesToday() {
-        return likesToday;
+    public Integer getDislikesCount() {
+        return dislikesCount;
     }
 
-    public void setLikesToday(Integer likesToday) {
-        this.likesToday = likesToday;
+    public void setDislikesCount(Integer dislikesCount) {
+        this.dislikesCount = dislikesCount;
     }
 
-    public Integer getCommentsToday() {
-        return commentsToday;
+    public Integer getCommentsCount() {
+        return commentsCount;
     }
 
-    public void setCommentsToday(Integer commentsToday) {
-        this.commentsToday = commentsToday;
+    public void setCommentsCount(Integer commentsCount) {
+        this.commentsCount = commentsCount;
     }
 
-    public Integer getSharesToday() {
-        return sharesToday;
+    public Integer getSharesCount() {
+        return sharesCount;
     }
 
-    public void setSharesToday(Integer sharesToday) {
-        this.sharesToday = sharesToday;
+    public void setSharesCount(Integer sharesCount) {
+        this.sharesCount = sharesCount;
+    }
+
+    public Integer getSavesCount() {
+        return savesCount;
+    }
+
+    public void setSavesCount(Integer savesCount) {
+        this.savesCount = savesCount;
+    }
+
+    public Integer getBookmarksCount() {
+        return bookmarksCount;
+    }
+
+    public void setBookmarksCount(Integer bookmarksCount) {
+        this.bookmarksCount = bookmarksCount;
     }
 
     public BigDecimal getEngagementRate() {
@@ -248,36 +294,36 @@ public class ContentMetrics {
         this.engagementRate = engagementRate;
     }
 
-    public BigDecimal getViralCoefficient() {
-        return viralCoefficient;
+    public BigDecimal getViralScore() {
+        return viralScore;
     }
 
-    public void setViralCoefficient(BigDecimal viralCoefficient) {
-        this.viralCoefficient = viralCoefficient;
+    public void setViralScore(BigDecimal viralScore) {
+        this.viralScore = viralScore;
     }
 
-    public BigDecimal getTrendingScore() {
-        return trendingScore;
+    public Integer getReach() {
+        return reach;
     }
 
-    public void setTrendingScore(BigDecimal trendingScore) {
-        this.trendingScore = trendingScore;
+    public void setReach(Integer reach) {
+        this.reach = reach;
     }
 
-    public Integer getPeakHour() {
-        return peakHour;
+    public Integer getImpressions() {
+        return impressions;
     }
 
-    public void setPeakHour(Integer peakHour) {
-        this.peakHour = peakHour;
+    public void setImpressions(Integer impressions) {
+        this.impressions = impressions;
     }
 
-    public Integer getAverageSessionDuration() {
-        return averageSessionDuration;
+    public BigDecimal getClickThroughRate() {
+        return clickThroughRate;
     }
 
-    public void setAverageSessionDuration(Integer averageSessionDuration) {
-        this.averageSessionDuration = averageSessionDuration;
+    public void setClickThroughRate(BigDecimal clickThroughRate) {
+        this.clickThroughRate = clickThroughRate;
     }
 
     public BigDecimal getBounceRate() {
@@ -288,20 +334,116 @@ public class ContentMetrics {
         this.bounceRate = bounceRate;
     }
 
-    public String getTopCountry() {
-        return topCountry;
+    public BigDecimal getContentQualityScore() {
+        return contentQualityScore;
     }
 
-    public void setTopCountry(String topCountry) {
-        this.topCountry = topCountry;
+    public void setContentQualityScore(BigDecimal contentQualityScore) {
+        this.contentQualityScore = contentQualityScore;
     }
 
-    public String getTopAgeGroup() {
-        return topAgeGroup;
+    public BigDecimal getContentRelevanceScore() {
+        return contentRelevanceScore;
     }
 
-    public void setTopAgeGroup(String topAgeGroup) {
-        this.topAgeGroup = topAgeGroup;
+    public void setContentRelevanceScore(BigDecimal contentRelevanceScore) {
+        this.contentRelevanceScore = contentRelevanceScore;
+    }
+
+    public BigDecimal getContentFreshnessScore() {
+        return contentFreshnessScore;
+    }
+
+    public void setContentFreshnessScore(BigDecimal contentFreshnessScore) {
+        this.contentFreshnessScore = contentFreshnessScore;
+    }
+
+    public BigDecimal getContentCompletenessScore() {
+        return contentCompletenessScore;
+    }
+
+    public void setContentCompletenessScore(BigDecimal contentCompletenessScore) {
+        this.contentCompletenessScore = contentCompletenessScore;
+    }
+
+    public EcommerceMetrics getEcommerceMetrics() {
+        return ecommerceMetrics;
+    }
+
+    public void setEcommerceMetrics(EcommerceMetrics ecommerceMetrics) {
+        this.ecommerceMetrics = ecommerceMetrics;
+    }
+
+    public SubscriptionMetrics getSubscriptionMetrics() {
+        return subscriptionMetrics;
+    }
+
+    public void setSubscriptionMetrics(SubscriptionMetrics subscriptionMetrics) {
+        this.subscriptionMetrics = subscriptionMetrics;
+    }
+
+    public SocialMetrics getSocialMetrics() {
+        return socialMetrics;
+    }
+
+    public void setSocialMetrics(SocialMetrics socialMetrics) {
+        this.socialMetrics = socialMetrics;
+    }
+
+    public ContentAnalytics getContentAnalytics() {
+        return contentAnalytics;
+    }
+
+    public void setContentAnalytics(ContentAnalytics contentAnalytics) {
+        this.contentAnalytics = contentAnalytics;
+    }
+
+    public LocalDateTime getPeakEngagementTime() {
+        return peakEngagementTime;
+    }
+
+    public void setPeakEngagementTime(LocalDateTime peakEngagementTime) {
+        this.peakEngagementTime = peakEngagementTime;
+    }
+
+    public String getMetricsDate() {
+        return metricsDate;
+    }
+
+    public void setMetricsDate(String metricsDate) {
+        this.metricsDate = metricsDate;
+    }
+
+    public Integer getMetricsHour() {
+        return metricsHour;
+    }
+
+    public void setMetricsHour(Integer metricsHour) {
+        this.metricsHour = metricsHour;
+    }
+
+    public Integer getMetricsWeekday() {
+        return metricsWeekday;
+    }
+
+    public void setMetricsWeekday(Integer metricsWeekday) {
+        this.metricsWeekday = metricsWeekday;
+    }
+
+    public Integer getMetricsMonth() {
+        return metricsMonth;
+    }
+
+    public void setMetricsMonth(Integer metricsMonth) {
+        this.metricsMonth = metricsMonth;
+    }
+
+    public LocalDateTime getLastCalculatedAt() {
+        return lastCalculatedAt;
+    }
+
+    public void setLastCalculatedAt(LocalDateTime lastCalculatedAt) {
+        this.lastCalculatedAt = lastCalculatedAt;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -312,151 +454,510 @@ public class ContentMetrics {
         this.createdAt = createdAt;
     }
 
+    // Inner Classes for Enhanced Content Analytics
+    public static class EcommerceMetrics {
+
+        private BigDecimal conversionRate;
+        private BigDecimal revenueGenerated;
+        private Integer addToCartCount;
+        private Integer purchaseCount;
+        private BigDecimal averageOrderValue;
+        private Integer wishlistAdds;
+        private BigDecimal costPerClick;
+        private BigDecimal returnOnAdSpend;
+        private Map<String, Integer> conversionsBySource;
+        private Map<String, BigDecimal> revenueBySource;
+        private List<String> topReferringPages;
+        private Map<String, Integer> performanceByDevice;
+
+        // Getters and setters
+        public BigDecimal getConversionRate() {
+            return conversionRate;
+        }
+
+        public void setConversionRate(BigDecimal conversionRate) {
+            this.conversionRate = conversionRate;
+        }
+
+        public BigDecimal getRevenueGenerated() {
+            return revenueGenerated;
+        }
+
+        public void setRevenueGenerated(BigDecimal revenueGenerated) {
+            this.revenueGenerated = revenueGenerated;
+        }
+
+        public Integer getAddToCartCount() {
+            return addToCartCount;
+        }
+
+        public void setAddToCartCount(Integer addToCartCount) {
+            this.addToCartCount = addToCartCount;
+        }
+
+        public Integer getPurchaseCount() {
+            return purchaseCount;
+        }
+
+        public void setPurchaseCount(Integer purchaseCount) {
+            this.purchaseCount = purchaseCount;
+        }
+
+        public BigDecimal getAverageOrderValue() {
+            return averageOrderValue;
+        }
+
+        public void setAverageOrderValue(BigDecimal averageOrderValue) {
+            this.averageOrderValue = averageOrderValue;
+        }
+
+        public Integer getWishlistAdds() {
+            return wishlistAdds;
+        }
+
+        public void setWishlistAdds(Integer wishlistAdds) {
+            this.wishlistAdds = wishlistAdds;
+        }
+
+        public BigDecimal getCostPerClick() {
+            return costPerClick;
+        }
+
+        public void setCostPerClick(BigDecimal costPerClick) {
+            this.costPerClick = costPerClick;
+        }
+
+        public BigDecimal getReturnOnAdSpend() {
+            return returnOnAdSpend;
+        }
+
+        public void setReturnOnAdSpend(BigDecimal returnOnAdSpend) {
+            this.returnOnAdSpend = returnOnAdSpend;
+        }
+
+        public Map<String, Integer> getConversionsBySource() {
+            return conversionsBySource;
+        }
+
+        public void setConversionsBySource(Map<String, Integer> conversionsBySource) {
+            this.conversionsBySource = conversionsBySource;
+        }
+
+        public Map<String, BigDecimal> getRevenueBySource() {
+            return revenueBySource;
+        }
+
+        public void setRevenueBySource(Map<String, BigDecimal> revenueBySource) {
+            this.revenueBySource = revenueBySource;
+        }
+
+        public List<String> getTopReferringPages() {
+            return topReferringPages;
+        }
+
+        public void setTopReferringPages(List<String> topReferringPages) {
+            this.topReferringPages = topReferringPages;
+        }
+
+        public Map<String, Integer> getPerformanceByDevice() {
+            return performanceByDevice;
+        }
+
+        public void setPerformanceByDevice(Map<String, Integer> performanceByDevice) {
+            this.performanceByDevice = performanceByDevice;
+        }
+    }
+
+    public static class SubscriptionMetrics {
+
+        private BigDecimal subscriptionRate;
+        private Integer subscriptionConversions;
+        private BigDecimal averageSubscriptionValue;
+        private Integer trialSignups;
+        private Integer trialConversions;
+        private BigDecimal trialToPaidConversionRate;
+        private Integer planUpgrades;
+        private Integer planDowngrades;
+        private BigDecimal customerLifetimeValue;
+        private Map<String, Integer> subscriptionsByPlan;
+        private Map<String, BigDecimal> revenueByPlan;
+        private List<String> topConversionSources;
+
+        // Getters and setters
+        public BigDecimal getSubscriptionRate() {
+            return subscriptionRate;
+        }
+
+        public void setSubscriptionRate(BigDecimal subscriptionRate) {
+            this.subscriptionRate = subscriptionRate;
+        }
+
+        public Integer getSubscriptionConversions() {
+            return subscriptionConversions;
+        }
+
+        public void setSubscriptionConversions(Integer subscriptionConversions) {
+            this.subscriptionConversions = subscriptionConversions;
+        }
+
+        public BigDecimal getAverageSubscriptionValue() {
+            return averageSubscriptionValue;
+        }
+
+        public void setAverageSubscriptionValue(BigDecimal averageSubscriptionValue) {
+            this.averageSubscriptionValue = averageSubscriptionValue;
+        }
+
+        public Integer getTrialSignups() {
+            return trialSignups;
+        }
+
+        public void setTrialSignups(Integer trialSignups) {
+            this.trialSignups = trialSignups;
+        }
+
+        public Integer getTrialConversions() {
+            return trialConversions;
+        }
+
+        public void setTrialConversions(Integer trialConversions) {
+            this.trialConversions = trialConversions;
+        }
+
+        public BigDecimal getTrialToPaidConversionRate() {
+            return trialToPaidConversionRate;
+        }
+
+        public void setTrialToPaidConversionRate(BigDecimal trialToPaidConversionRate) {
+            this.trialToPaidConversionRate = trialToPaidConversionRate;
+        }
+
+        public Integer getPlanUpgrades() {
+            return planUpgrades;
+        }
+
+        public void setPlanUpgrades(Integer planUpgrades) {
+            this.planUpgrades = planUpgrades;
+        }
+
+        public Integer getPlanDowngrades() {
+            return planDowngrades;
+        }
+
+        public void setPlanDowngrades(Integer planDowngrades) {
+            this.planDowngrades = planDowngrades;
+        }
+
+        public BigDecimal getCustomerLifetimeValue() {
+            return customerLifetimeValue;
+        }
+
+        public void setCustomerLifetimeValue(BigDecimal customerLifetimeValue) {
+            this.customerLifetimeValue = customerLifetimeValue;
+        }
+
+        public Map<String, Integer> getSubscriptionsByPlan() {
+            return subscriptionsByPlan;
+        }
+
+        public void setSubscriptionsByPlan(Map<String, Integer> subscriptionsByPlan) {
+            this.subscriptionsByPlan = subscriptionsByPlan;
+        }
+
+        public Map<String, BigDecimal> getRevenueByPlan() {
+            return revenueByPlan;
+        }
+
+        public void setRevenueByPlan(Map<String, BigDecimal> revenueByPlan) {
+            this.revenueByPlan = revenueByPlan;
+        }
+
+        public List<String> getTopConversionSources() {
+            return topConversionSources;
+        }
+
+        public void setTopConversionSources(List<String> topConversionSources) {
+            this.topConversionSources = topConversionSources;
+        }
+    }
+
+    public static class SocialMetrics {
+
+        private Integer postReach;
+        private Integer postImpressions;
+        private BigDecimal postEngagementRate;
+        private Integer hashtagClicks;
+        private Integer profileVisits;
+        private Integer linkClicks;
+        private Map<String, Integer> engagementByPlatform;
+        private List<String> topHashtags;
+        private List<String> topMentions;
+        private Map<String, Integer> performanceByAudience;
+
+        // Getters and setters
+        public Integer getPostReach() {
+            return postReach;
+        }
+
+        public void setPostReach(Integer postReach) {
+            this.postReach = postReach;
+        }
+
+        public Integer getPostImpressions() {
+            return postImpressions;
+        }
+
+        public void setPostImpressions(Integer postImpressions) {
+            this.postImpressions = postImpressions;
+        }
+
+        public BigDecimal getPostEngagementRate() {
+            return postEngagementRate;
+        }
+
+        public void setPostEngagementRate(BigDecimal postEngagementRate) {
+            this.postEngagementRate = postEngagementRate;
+        }
+
+        public Integer getHashtagClicks() {
+            return hashtagClicks;
+        }
+
+        public void setHashtagClicks(Integer hashtagClicks) {
+            this.hashtagClicks = hashtagClicks;
+        }
+
+        public Integer getProfileVisits() {
+            return profileVisits;
+        }
+
+        public void setProfileVisits(Integer profileVisits) {
+            this.profileVisits = profileVisits;
+        }
+
+        public Integer getLinkClicks() {
+            return linkClicks;
+        }
+
+        public void setLinkClicks(Integer linkClicks) {
+            this.linkClicks = linkClicks;
+        }
+
+        public Map<String, Integer> getEngagementByPlatform() {
+            return engagementByPlatform;
+        }
+
+        public void setEngagementByPlatform(Map<String, Integer> engagementByPlatform) {
+            this.engagementByPlatform = engagementByPlatform;
+        }
+
+        public List<String> getTopHashtags() {
+            return topHashtags;
+        }
+
+        public void setTopHashtags(List<String> topHashtags) {
+            this.topHashtags = topHashtags;
+        }
+
+        public List<String> getTopMentions() {
+            return topMentions;
+        }
+
+        public void setTopMentions(List<String> topMentions) {
+            this.topMentions = topMentions;
+        }
+
+        public Map<String, Integer> getPerformanceByAudience() {
+            return performanceByAudience;
+        }
+
+        public void setPerformanceByAudience(Map<String, Integer> performanceByAudience) {
+            this.performanceByAudience = performanceByAudience;
+        }
+    }
+
+    public static class ContentAnalytics {
+
+        private String contentLanguage;
+        private String contentFormat;
+        private Integer contentLength;
+        private String contentQuality;
+        private String contentSource;
+        private Boolean isOriginal;
+        private String contentStatus;
+        private List<String> contentTags;
+        private Map<String, Integer> performanceByTag;
+        private Map<String, BigDecimal> engagementByCategory;
+        private List<String> relatedContent;
+        private Map<String, Integer> performanceByTimeSlot;
+
+        // Getters and setters
+        public String getContentLanguage() {
+            return contentLanguage;
+        }
+
+        public void setContentLanguage(String contentLanguage) {
+            this.contentLanguage = contentLanguage;
+        }
+
+        public String getContentFormat() {
+            return contentFormat;
+        }
+
+        public void setContentFormat(String contentFormat) {
+            this.contentFormat = contentFormat;
+        }
+
+        public Integer getContentLength() {
+            return contentLength;
+        }
+
+        public void setContentLength(Integer contentLength) {
+            this.contentLength = contentLength;
+        }
+
+        public String getContentQuality() {
+            return contentQuality;
+        }
+
+        public void setContentQuality(String contentQuality) {
+            this.contentQuality = contentQuality;
+        }
+
+        public String getContentSource() {
+            return contentSource;
+        }
+
+        public void setContentSource(String contentSource) {
+            this.contentSource = contentSource;
+        }
+
+        public Boolean getIsOriginal() {
+            return isOriginal;
+        }
+
+        public void setIsOriginal(Boolean isOriginal) {
+            this.isOriginal = isOriginal;
+        }
+
+        public String getContentStatus() {
+            return contentStatus;
+        }
+
+        public void setContentStatus(String contentStatus) {
+            this.contentStatus = contentStatus;
+        }
+
+        public List<String> getContentTags() {
+            return contentTags;
+        }
+
+        public void setContentTags(List<String> contentTags) {
+            this.contentTags = contentTags;
+        }
+
+        public Map<String, Integer> getPerformanceByTag() {
+            return performanceByTag;
+        }
+
+        public void setPerformanceByTag(Map<String, Integer> performanceByTag) {
+            this.performanceByTag = performanceByTag;
+        }
+
+        public Map<String, BigDecimal> getEngagementByCategory() {
+            return engagementByCategory;
+        }
+
+        public void setEngagementByCategory(Map<String, BigDecimal> engagementByCategory) {
+            this.engagementByCategory = engagementByCategory;
+        }
+
+        public List<String> getRelatedContent() {
+            return relatedContent;
+        }
+
+        public void setRelatedContent(List<String> relatedContent) {
+            this.relatedContent = relatedContent;
+        }
+
+        public Map<String, Integer> getPerformanceByTimeSlot() {
+            return performanceByTimeSlot;
+        }
+
+        public void setPerformanceByTimeSlot(Map<String, Integer> performanceByTimeSlot) {
+            this.performanceByTimeSlot = performanceByTimeSlot;
+        }
+    }
+
+    // Additional getters and setters for service compatibility
     public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+        return lastCalculatedAt;
     }
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+        this.lastCalculatedAt = updatedAt;
     }
 
-    // Getters and setters for additional fields
-    public Long getContentId() {
-        return contentId;
-    }
-
-    public void setContentId(Long contentId) {
-        this.contentId = contentId;
-    }
-
+    // Engagement metrics getters/setters using direct fields
     public Long getViewCount() {
-        return viewCount;
+        return viewsCount != null ? Long.valueOf(viewsCount) : 0L;
     }
 
-    public void setViewCount(Long viewCount) {
-        this.viewCount = viewCount;
+    public void setViewCount(long viewCount) {
+        this.viewsCount = (int) viewCount;
     }
 
     public Long getLikeCount() {
-        return likeCount;
+        return likesCount != null ? Long.valueOf(likesCount) : 0L;
     }
 
-    public void setLikeCount(Long likeCount) {
-        this.likeCount = likeCount;
+    public void setLikeCount(long likeCount) {
+        this.likesCount = (int) likeCount;
     }
 
     public Long getCommentCount() {
-        return commentCount;
+        return commentsCount != null ? Long.valueOf(commentsCount) : 0L;
     }
 
-    public void setCommentCount(Long commentCount) {
-        this.commentCount = commentCount;
+    public void setCommentCount(long commentCount) {
+        this.commentsCount = (int) commentCount;
     }
 
     public Long getShareCount() {
-        return shareCount;
+        return sharesCount != null ? Long.valueOf(sharesCount) : 0L;
     }
 
-    public void setShareCount(Long shareCount) {
-        this.shareCount = shareCount;
+    public void setShareCount(long shareCount) {
+        this.sharesCount = (int) shareCount;
     }
 
-    public Double getEngagementScore() {
-        return engagementScore;
+    public BigDecimal getEngagementScore() {
+        return engagementRate != null ? engagementRate : BigDecimal.ZERO;
     }
 
-    public void setEngagementScore(Double engagementScore) {
-        this.engagementScore = engagementScore;
+    public void setEngagementScore(BigDecimal engagementScore) {
+        this.engagementRate = engagementScore;
+    }
+
+    public void setEngagementScore(double engagementScore) {
+        this.engagementRate = BigDecimal.valueOf(engagementScore);
     }
 
     public Long getReachCount() {
-        return reachCount;
+        return reach != null ? Long.valueOf(reach) : 0L;
     }
 
-    public void setReachCount(Long reachCount) {
-        this.reachCount = reachCount;
+    public void setReachCount(long reachCount) {
+        this.reach = (int) reachCount;
     }
 
     public Long getImpressionCount() {
-        return impressionCount;
+        return impressions != null ? Long.valueOf(impressions) : 0L;
     }
 
-    public void setImpressionCount(Long impressionCount) {
-        this.impressionCount = impressionCount;
+    public void setImpressionCount(long impressionCount) {
+        this.impressions = (int) impressionCount;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    // Utility methods
-    public void incrementViews() {
-        this.totalViews++;
-        this.viewsToday++;
-    }
-
-    public void incrementLikes() {
-        this.totalLikes++;
-        this.likesToday++;
-    }
-
-    public void incrementComments() {
-        this.totalComments++;
-        this.commentsToday++;
-    }
-
-    public void incrementShares() {
-        this.totalShares++;
-        this.sharesToday++;
-    }
-
-    public void calculateEngagementRate() {
-        if (totalViews > 0) {
-            int totalEngagements = totalLikes + totalComments + totalShares;
-            this.engagementRate = BigDecimal.valueOf((double) totalEngagements / totalViews);
-        }
-    }
-
-    public void calculateViralCoefficient() {
-        if (totalViews > 0) {
-            this.viralCoefficient = BigDecimal.valueOf((double) totalShares / totalViews);
-        }
-    }
-
-    public int getTotalEngagements() {
-        return totalLikes + totalComments + totalShares;
-    }
-
-    public int getTodayEngagements() {
-        return likesToday + commentsToday + sharesToday;
-    }
-
-    public boolean isViral() {
-        return viralCoefficient.compareTo(BigDecimal.valueOf(0.1)) > 0; // 10% viral threshold
-    }
-
-    public boolean isTrending() {
-        return trendingScore.compareTo(BigDecimal.valueOf(100)) > 0; // Trending threshold
-    }
-
-    @Override
-    public String toString() {
-        return "ContentMetrics{" +
-                "id=" + id +
-                ", entityType='" + entityType + '\'' +
-                ", entityId=" + entityId +
-                ", metricDate=" + metricDate +
-                ", totalViews=" + totalViews +
-                ", totalLikes=" + totalLikes +
-                ", engagementRate=" + engagementRate +
-                ", trendingScore=" + trendingScore +
-                '}';
-    }
 }

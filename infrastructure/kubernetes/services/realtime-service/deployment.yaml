@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realtime-service
+  namespace: raved-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: realtime-service }
+  template:
+    metadata:
+      labels: { app: realtime-service }
+    spec:
+      containers:
+        - name: realtime-service
+          image: raved/realtime-service:latest
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - configMapRef:
+                name: realtime-service-config
+            - secretRef:
+                name: realtime-service-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8084
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: 900m
+              memory: 1Gi
+

@@ -13,7 +13,7 @@ import java.util.Map;
 public class SendNotificationRequest {
 
     @NotEmpty(message = "Recipient user IDs are required")
-    private List<Long> recipientUserIds;
+    private List<String> recipientUserIds; // Changed to String for MongoDB
 
     @NotBlank(message = "Notification type is required")
     @Size(max = 50, message = "Notification type must not exceed 50 characters")
@@ -26,13 +26,13 @@ public class SendNotificationRequest {
     @NotBlank(message = "Body is required")
     private String body;
 
-    private String data; // Additional notification data as JSON string
+    private Map<String, Object> data; // Changed to Map for MongoDB
 
     private String actionUrl; // Deep link URL
 
     private String imageUrl;
 
-    private Long templateId; // Optional: use template instead of title/body
+    private String templateId; // Changed to String for MongoDB
 
     private Map<String, Object> templateVariables; // Variables for template substitution
 
@@ -44,7 +44,7 @@ public class SendNotificationRequest {
     public SendNotificationRequest() {
     }
 
-    public SendNotificationRequest(List<Long> recipientUserIds, String notificationType, String title, String body) {
+    public SendNotificationRequest(List<String> recipientUserIds, String notificationType, String title, String body) {
         this.recipientUserIds = recipientUserIds;
         this.notificationType = notificationType;
         this.title = title;
@@ -52,11 +52,11 @@ public class SendNotificationRequest {
     }
 
     // Getters and Setters
-    public List<Long> getRecipientUserIds() {
+    public List<String> getRecipientUserIds() {
         return recipientUserIds;
     }
 
-    public void setRecipientUserIds(List<Long> recipientUserIds) {
+    public void setRecipientUserIds(List<String> recipientUserIds) {
         this.recipientUserIds = recipientUserIds;
     }
 
@@ -84,11 +84,11 @@ public class SendNotificationRequest {
         this.body = body;
     }
 
-    public String getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 
@@ -108,11 +108,11 @@ public class SendNotificationRequest {
         this.imageUrl = imageUrl;
     }
 
-    public Long getTemplateId() {
+    public String getTemplateId() {
         return templateId;
     }
 
-    public void setTemplateId(Long templateId) {
+    public void setTemplateId(String templateId) {
         this.templateId = templateId;
     }
 

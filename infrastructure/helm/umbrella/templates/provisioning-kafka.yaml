@@ -1,0 +1,23 @@
+{{- if .Values.provisioning.kafka.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-topics-setup
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: kafka-setup
+          image: bitnami/kafka:3.7.0
+          command: ["bash", "-c"]
+          env:
+            - name: KAFKA_BROKERS
+              value: {{ .Values.provisioning.kafka.bootstrap | default "kafka:9092" | quote }}
+          args:
+            - >-
+{{- range .Values.provisioning.kafka.topics }}
+              kafka-topics.sh --bootstrap-server "$KAFKA_BROKERS" --create --if-not-exists --topic {{ .name }} --partitions {{ .partitions }} --replication-factor {{ .replicationFactor }} || true;
+{{- end }}
+{{- end }}
+

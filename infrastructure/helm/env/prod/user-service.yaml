@@ -1,0 +1,44 @@
+nameOverride: user-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8081
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+  - name: EUREKA_SERVER_URL
+    value: http://eureka-server.raved-prod.svc.cluster.local:8761/eureka/
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.raved-prod.svc.cluster.local:9092
+  - name: SPRING_DATASOURCE_URL
+    value: ${SPRING_DATASOURCE_URL}
+secretEnv:
+  DATABASE_USERNAME:
+    name: raved-db
+    key: username
+  DATABASE_PASSWORD:
+    name: raved-db
+    key: password
+secrets:
+  - name: raved-db
+    absoluteName: true
+    data:
+      username: ${DATABASE_USERNAME}
+      password: ${DATABASE_PASSWORD}
+
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+

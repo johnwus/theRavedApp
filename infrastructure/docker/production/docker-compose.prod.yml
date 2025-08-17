@@ -1,32 +1,147 @@
 version: '3.8'
 services:
-  api-gateway:
-    image: raved/api-gateway:latest
-    ports:
-      - "8080:8080"
+  eureka-server:
+    image: raved/eureka-server:latest
     environment:
       - SPRING_PROFILES_ACTIVE=production
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"
+              - "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    ports:
+      - "8761:8761"
+
+
+  config-server:
+    image: raved/config-server:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+    ports:
+      - "8888:8888"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+  api-gateway:
+    image: raved/api-gateway:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+    ports:
+      - "8080:8080"
+
+  user-service:
+    image: raved/user-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     depends_on:
       - eureka-server
       - config-server
 
-  user-service:
-    image: raved/user-service:latest
+  content-service:
+    image: raved/content-service:latest
+    env_file:
+      - ./ENV
     environment:
-      - SPRING_PROFILES_ACTIVE=production
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
     depends_on:
-      - postgres
-      - redis
       - eureka-server
+      - config-server
 
-  postgres:
-    image: postgres:15
+  social-service:
+    image: raved/social-service:latest
+    env_file:
+      - ./ENV
     environment:
-      POSTGRES_DB: raved_prod_db
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - postgres_prod_data:/var/lib/postgresql/data
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
 
-volumes:
-  postgres_prod_data:
+  realtime-service:
+    image: raved/realtime-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+  ecommerce-service:
+    image: raved/ecommerce-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+  notification-service:
+    image: raved/notification-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+  analytics-service:
+    image: raved/analytics-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+
+  events-service:
+    image: raved/events-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+  subscription-service:
+    image: raved/subscription-service:latest
+    env_file:
+      - ./ENV
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+      - config-server
+
+
+
+
+

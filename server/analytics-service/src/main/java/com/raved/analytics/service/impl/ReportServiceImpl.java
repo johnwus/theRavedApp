@@ -42,19 +42,21 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private ContentMetricsRepository contentMetricsRepository;
 
-    @Autowired
+    @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public AnalyticsReportResponse generateUserEngagementReport(LocalDateTime startDate, LocalDateTime endDate) {
         logger.info("Generating user engagement report from {} to {}", startDate, endDate);
-        
+
         String cacheKey = REPORT_CACHE_PREFIX + "user_engagement:" + startDate + ":" + endDate;
-        
-        // Try cache first
-        AnalyticsReportResponse cachedReport = (AnalyticsReportResponse) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedReport != null) {
-            return cachedReport;
+
+        // Try cache first if cache is available
+        if (redisTemplate != null) {
+            AnalyticsReportResponse cachedReport = (AnalyticsReportResponse) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedReport != null) {
+                return cachedReport;
+            }
         }
         
         AnalyticsReportResponse report = new AnalyticsReportResponse();
@@ -76,10 +78,10 @@ public class ReportServiceImpl implements ReportService {
         
         // User engagement by activity type
         Map<String, Long> engagementByType = new HashMap<>();
-        engagementByType.put("posts", eventRepository.countByEventTypeAndTimestampBetween(EventType.POST_CREATED, startDate, endDate));
-        engagementByType.put("likes", eventRepository.countByEventTypeAndTimestampBetween(EventType.POST_LIKED, startDate, endDate));
-        engagementByType.put("comments", eventRepository.countByEventTypeAndTimestampBetween(EventType.COMMENT_CREATED, startDate, endDate));
-        engagementByType.put("shares", eventRepository.countByEventTypeAndTimestampBetween(EventType.POST_SHARED, startDate, endDate));
+        engagementByType.put("posts", eventRepository.countByEventTypeAndEventTimestampBetween(EventType.POST_CREATE, startDate, endDate));
+        engagementByType.put("likes", eventRepository.countByEventTypeAndEventTimestampBetween(EventType.POST_LIKE, startDate, endDate));
+        engagementByType.put("comments", eventRepository.countByEventTypeAndEventTimestampBetween(EventType.POST_COMMENT, startDate, endDate));
+        engagementByType.put("shares", eventRepository.countByEventTypeAndEventTimestampBetween(EventType.POST_SHARE, startDate, endDate));
         
         // Top engaged users
         List<Object[]> topUsers = userMetricsRepository.getTopUsersByEngagement(PageRequest.of(0, 10));
@@ -102,9 +104,11 @@ public class ReportServiceImpl implements ReportService {
         
         report.setData(data);
         
-        // Cache the result
-        redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
-        
+        // Cache the result if available
+        if (redisTemplate != null) {
+            redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
+        }
+
         logger.info("User engagement report generated successfully");
         return report;
     }
@@ -115,10 +119,12 @@ public class ReportServiceImpl implements ReportService {
         
         String cacheKey = REPORT_CACHE_PREFIX + "content_performance:" + startDate + ":" + endDate;
         
-        // Try cache first
-        AnalyticsReportResponse cachedReport = (AnalyticsReportResponse) redisTemplate.opsForValue().get(cacheKey);
-        if (cachedReport != null) {
-            return cachedReport;
+        // Try cache first if available
+        if (redisTemplate != null) {
+            AnalyticsReportResponse cachedReport = (AnalyticsReportResponse) redisTemplate.opsForValue().get(cacheKey);
+            if (cachedReport != null) {
+                return cachedReport;
+            }
         }
         
         AnalyticsReportResponse report = new AnalyticsReportResponse();
@@ -150,13 +156,13 @@ public class ReportServiceImpl implements ReportService {
         }
         
         // Daily content creation
-        List<Object[]> dailyContent = eventRepository.getDailyEventCounts(EventType.POST_CREATED, startDate, endDate);
+        List<Object[]> dailyContent = eventRepository.getDailyEventCounts(EventType.POST_CREATE, startDate, endDate);
         Map<String, Long> dailyContentMap = convertToMap(dailyContent);
         
         // Content engagement trends
-        List<Object[]> dailyViews = eventRepository.getDailyEventCounts(EventType.POST_VIEWED, startDate, endDate);
-        List<Object[]> dailyLikes = eventRepository.getDailyEventCounts(EventType.POST_LIKED, startDate, endDate);
-        List<Object[]> dailyComments = eventRepository.getDailyEventCounts(EventType.COMMENT_CREATED, startDate, endDate);
+        List<Object[]> dailyViews = eventRepository.getDailyEventCounts(EventType.POST_VIEW, startDate, endDate);
+        List<Object[]> dailyLikes = eventRepository.getDailyEventCounts(EventType.POST_LIKE, startDate, endDate);
+        List<Object[]> dailyComments = eventRepository.getDailyEventCounts(EventType.POST_COMMENT, startDate, endDate);
         
         Map<String, Object> engagementTrends = new HashMap<>();
         engagementTrends.put("views", convertToMap(dailyViews));
@@ -174,9 +180,11 @@ public class ReportServiceImpl implements ReportService {
         
         report.setData(data);
         
-        // Cache the result
-        redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
-        
+        // Cache the result if available
+        if (redisTemplate != null) {
+            redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
+        }
+
         logger.info("Content performance report generated successfully");
         return report;
     }
@@ -205,8 +213,8 @@ public class ReportServiceImpl implements ReportService {
         long totalUsers = userMetricsRepository.count();
         long activeUsers = userMetricsRepository.countActiveUsersBetween(startDate, endDate);
         long totalContent = contentMetricsRepository.count();
-        long totalEvents = eventRepository.countByTimestampBetween(startDate, endDate);
-        
+        long totalEvents = eventRepository.countByEventTimestampBetween(startDate, endDate);
+
         // Growth metrics
         long newUsersThisPeriod = userMetricsRepository.countNewUsersBetween(startDate, endDate);
         long newContentThisPeriod = contentMetricsRepository.countContentCreatedBetween(startDate, endDate);
@@ -225,7 +233,7 @@ public class ReportServiceImpl implements ReportService {
         // Event distribution
         Map<String, Long> eventDistribution = new HashMap<>();
         for (EventType eventType : EventType.values()) {
-            long count = eventRepository.countByEventTypeAndTimestampBetween(eventType, startDate, endDate);
+            long count = eventRepository.countByEventTypeAndEventTimestampBetween(eventType, startDate, endDate);
             eventDistribution.put(eventType.name(), count);
         }
         
@@ -246,9 +254,11 @@ public class ReportServiceImpl implements ReportService {
         
         report.setData(data);
         
-        // Cache the result
-        redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
-        
+        // Cache the result if available
+        if (redisTemplate != null) {
+            redisTemplate.opsForValue().set(cacheKey, report, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
+        }
+
         logger.info("Platform overview report generated successfully");
         return report;
     }

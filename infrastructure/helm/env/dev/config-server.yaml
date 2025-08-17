@@ -1,0 +1,12 @@
+nameOverride: config-server
+image:
+  repository: ghcr.io/theravedapp
+  tag: dev
+service:
+  port: 8888
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: development
+

@@ -3,19 +3,19 @@ package com.raved.notification.repository;
 import com.raved.notification.model.NotificationTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * NotificationTemplateRepository for TheRavedApp
+ * NotificationTemplateRepository for TheRavedApp MongoDB Converted from JPA to
+ * MongoDB repository
  */
 @Repository
-public interface NotificationTemplateRepository extends JpaRepository<NotificationTemplate, Long> {
+public interface NotificationTemplateRepository extends MongoRepository<NotificationTemplate, String> {
 
     /**
      * Find template by name
@@ -43,10 +43,10 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     boolean existsByTemplateName(String templateName);
 
     /**
-     * Find templates by name pattern
+     * Find templates by name pattern (MongoDB regex)
      */
-    @Query("SELECT nt FROM NotificationTemplate nt WHERE nt.templateName LIKE %:namePattern% AND nt.isActive = true")
-    List<NotificationTemplate> findByTemplateNameContainingAndIsActiveTrue(@Param("namePattern") String namePattern);
+    @Query("{'templateName': {'$regex': ?0, '$options': 'i'}, 'isActive': true}")
+    List<NotificationTemplate> findByTemplateNameContainingAndIsActiveTrue(String namePattern);
 
     /**
      * Find paginated templates
@@ -59,10 +59,23 @@ public interface NotificationTemplateRepository extends JpaRepository<Notificati
     long countByTemplateTypeAndIsActiveTrue(NotificationTemplate.TemplateType templateType);
 
     /**
-     * Get template statistics by type
+     * Get template statistics by type (MongoDB aggregation - simplified)
      */
-    @Query("SELECT nt.templateType as templateType, COUNT(nt) as count " +
-           "FROM NotificationTemplate nt WHERE nt.isActive = true " +
-           "GROUP BY nt.templateType")
-    List<Object[]> getTemplateStatsByType();
+    @Query(value = "{'isActive': true}", fields = "{'templateType': 1}")
+    List<NotificationTemplate> getActiveTemplatesForStats();
+
+    /**
+     * Additional MongoDB-specific methods
+     */
+    /**
+     * Find templates by multiple types
+     */
+    @Query("{'templateType': {'$in': ?0}, 'isActive': true}")
+    List<NotificationTemplate> findByTemplateTypesAndIsActiveTrue(List<NotificationTemplate.TemplateType> templateTypes);
+
+    /**
+     * Find templates with variables containing specific keys
+     */
+    @Query("{'variables.?0': {'$exists': true}, 'isActive': true}")
+    List<NotificationTemplate> findByVariableKeyAndIsActiveTrue(String variableKey);
 }

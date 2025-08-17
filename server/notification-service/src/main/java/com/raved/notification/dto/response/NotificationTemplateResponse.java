@@ -2,24 +2,25 @@ package com.raved.notification.dto.response;
 
 import com.raved.notification.model.NotificationTemplate;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public class NotificationTemplateResponse {
-    private Long id;
+    private String id; // Changed to String for MongoDB
     private String templateName;
     private NotificationTemplate.TemplateType templateType;
     private String subjectTemplate;
     private String bodyTemplate;
-    private String variables;
+    private Map<String, Object> variables; // Changed to Map for MongoDB
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // Getters and setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -55,11 +56,11 @@ public class NotificationTemplateResponse {
         this.bodyTemplate = bodyTemplate;
     }
 
-    public String getVariables() {
+    public Map<String, Object> getVariables() {
         return variables;
     }
 
-    public void setVariables(String variables) {
+    public void setVariables(Map<String, Object> variables) {
         this.variables = variables;
     }
 

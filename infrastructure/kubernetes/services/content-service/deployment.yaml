@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: content-service
+  namespace: raved-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: content-service }
+  template:
+    metadata:
+      labels: { app: content-service }
+    spec:
+      containers:
+        - name: content-service
+          image: raved/content-service:latest
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - configMapRef:
+                name: content-service-config
+            - configMapRef:
+                name: mongodb-config
+            - secretRef:
+                name: content-service-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 300m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1024Mi
+

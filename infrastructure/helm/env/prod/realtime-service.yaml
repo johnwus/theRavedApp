@@ -1,0 +1,52 @@
+nameOverride: realtime-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8084
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+ingress:
+  enabled: false
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+  - name: SPRING_DATASOURCE_URL
+    value: ${SPRING_DATASOURCE_URL}
+  - name: RABBITMQ_HOST
+    value: rabbitmq.raved-prod.svc.cluster.local
+  - name: RABBITMQ_PORT
+    value: "5672"
+  - name: WEBSOCKET_ALLOWED_ORIGINS
+    value: https://app.raved.app,https://raved.app
+  - name: SPRING_REDIS_HOST
+    value: redis-master.raved-prod.svc.cluster.local
+  - name: SPRING_REDIS_PORT
+    value: "6379"
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: raved-jwt
+        key: secret
+
+
+
+  - name: WEBSOCKET_RATELIMIT_WINDOW_SECONDS
+    value: "5"
+  - name: WEBSOCKET_RATELIMIT_SEND_LIMIT
+    value: "60"
+  - name: WEBSOCKET_RATELIMIT_SUBSCRIBE_LIMIT
+    value: "60"
+  - name: WEBSOCKET_RATELIMIT_ENABLED
+    value: "true"
+
+

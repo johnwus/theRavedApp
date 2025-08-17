@@ -3,61 +3,84 @@ package com.raved.social.repository;
 import com.raved.social.model.Comment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Repository for Comment entities
+ * Repository for Comment MongoDB documents
  */
 @Repository
-public interface CommentRepository extends JpaRepository<Comment, Long> {
+public interface CommentRepository extends MongoRepository<Comment, String> {
+
+    Page<Comment> findByPostIdAndIsDeletedFalseOrderByCreatedAtDesc(String postId, Pageable pageable);
+
+    Page<Comment> findByUserIdAndIsDeletedFalseOrderByCreatedAtDesc(String userId, Pageable pageable);
+
+    Page<Comment> findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtDesc(String parentCommentId, Pageable pageable);
+
+    Page<Comment> findByPostIdAndParentCommentIdIsNullAndIsDeletedFalseOrderByCreatedAtDesc(String postId, Pageable pageable);
+
+    List<Comment> findByPostIdAndParentCommentIdIsNullAndIsDeletedFalseOrderByCreatedAtDesc(String postId);
+
+    List<Comment> findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtAsc(String parentCommentId);
+
+    long countByPostIdAndIsDeletedFalse(String postId);
+
+    long countByParentCommentIdAndIsDeletedFalse(String parentCommentId);
+
+    long countByUserIdAndIsDeletedFalse(String userId);
+
+    long countByPostIdAndCreatedAtAfterAndIsDeletedFalse(String postId, LocalDateTime since);
+
+    @Query("{'postId': ?0, 'content': {$regex: ?1, $options: 'i'}, 'isDeleted': false}")
+    List<Comment> findByPostIdAndContentContaining(String postId, String keyword);
+
+    @Query("{'userId': ?0, 'isDeleted': false}")
+    List<Comment> findByUserIdAndIsDeletedFalse(String userId);
+
+    @Query("{'postId': ?0, 'isDeleted': false}")
+    List<Comment> findByPostIdAndIsDeletedFalse(String postId);
     
-    Page<Comment> findByPostIdOrderByCreatedAtDesc(Long postId, Pageable pageable);
+    @Query("{'parentCommentId': ?0, 'isDeleted': false}")
+    List<Comment> findByParentCommentIdAndIsDeletedFalse(String parentCommentId);
     
-    Page<Comment> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    @Query("{'isFlagged': true, 'isDeleted': false}")
+    List<Comment> findFlaggedComments();
     
-    Page<Comment> findByParentCommentIdOrderByCreatedAtDesc(Long parentCommentId, Pageable pageable);
+    @Query("{'moderationStatus': ?0, 'isDeleted': false}")
+    List<Comment> findByModerationStatus(String status);
     
-    Page<Comment> findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(Long postId, Pageable pageable);
+    @Query("{'sentiment': ?0, 'isDeleted': false}")
+    List<Comment> findBySentiment(String sentiment);
     
-    List<Comment> findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(Long postId);
+    @Query("{'language': ?0, 'isDeleted': false}")
+    List<Comment> findByLanguage(String language);
     
-    List<Comment> findByParentCommentIdOrderByCreatedAtAsc(Long parentCommentId);
+    @Query("{'reportCount': {$gte: ?0}, 'isDeleted': false}")
+    List<Comment> findByReportCountGreaterThanEqual(int reportCount);
     
-    long countByPostId(Long postId);
+    @Query("{'createdAt': {$gte: ?0}, 'isDeleted': false}")
+    List<Comment> findByCreatedAtAfter(LocalDateTime since);
     
-    long countByParentCommentId(Long parentCommentId);
-    
-    long countByUserId(Long userId);
-    
-    long countByPostIdAndCreatedAtAfter(Long postId, LocalDateTime since);
-    
-    @Query("SELECT c FROM Comment c WHERE c.postId = :postId AND c.content LIKE %:keyword%")
-    List<Comment> findByPostIdAndContentContaining(@Param("postId") Long postId, @Param("keyword") String keyword);
-    
-    @Modifying
-    @Query("UPDATE Comment c SET c.isDeleted = true, c.content = '[Deleted]', c.updatedAt = CURRENT_TIMESTAMP WHERE c.userId = :userId")
-    int softDeleteByUserId(@Param("userId") Long userId);
-    
-    @Modifying
-    @Query("UPDATE Comment c SET c.isDeleted = true, c.content = '[Deleted]', c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :commentId")
-    int softDeleteById(@Param("commentId") Long commentId);
-    
-    @Modifying
-    @Query("UPDATE Comment c SET c.likesCount = c.likesCount + 1 WHERE c.id = :commentId")
-    int incrementLikesCount(@Param("commentId") Long commentId);
-    
-    @Modifying
-    @Query("UPDATE Comment c SET c.likesCount = GREATEST(0, c.likesCount - 1) WHERE c.id = :commentId")
-    int decrementLikesCount(@Param("commentId") Long commentId);
-    
-    @Modifying
-    @Query("UPDATE Comment c SET c.isFlagged = true, c.updatedAt = CURRENT_TIMESTAMP WHERE c.id = :commentId")
-    int flagComment(@Param("commentId") Long commentId, @Param("reason") String reason);
+    @Query("{'updatedAt': {$gte: ?0}, 'isDeleted': false}")
+    List<Comment> findByUpdatedAtAfter(LocalDateTime since);
+
+    // Methods for backward compatibility with service layer
+    void softDeleteById(String id);
+
+    Page<Comment> findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(String postId, Pageable pageable);
+
+    Page<Comment> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
+
+    List<Comment> findByParentCommentIdOrderByCreatedAtAsc(String parentCommentId);
+
+    void incrementLikesCount(String commentId);
+
+    void decrementLikesCount(String commentId);
+
+    void flagComment(String commentId, String reason);
 }

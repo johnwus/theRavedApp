@@ -1,0 +1,35 @@
+nameOverride: api-gateway
+image:
+  repository: ghcr.io/theravedapp
+  tag: staging
+service:
+  port: 8080
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.staging.raved.local
+      path: /
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: staging
+secretEnv:
+  JWT_SECRET:
+    name: raved-jwt
+    key: jwt-secret
+secrets:
+  - name: raved-jwt
+    absoluteName: true
+    data:
+      jwt-secret: {{ env "JWT_SECRET" }}

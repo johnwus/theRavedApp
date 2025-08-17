@@ -1,0 +1,26 @@
+workload:
+  nameOverride: subscription-service
+  image:
+    repository: ghcr.io/theravedapp
+    tag: latest
+  service:
+    port: 8089
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+  probes:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 60
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 20
+  envFrom:
+    - configMapRef:
+        name: common-config
+    - configMapRef:
+        name: subscription-service-config
+    - secretRef:
+        name: subscription-service-secrets
+

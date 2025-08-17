@@ -1,21 +1,27 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
 
 /**
- * NotificationDeliveryLog Entity for TheRavedApp
- * 
+ * NotificationDeliveryLog Document for TheRavedApp MongoDB
+ *
  * Represents delivery logs for notifications across different channels.
- * Based on the notification_delivery_logs table schema.
+ * Converted from JPA entity to MongoDB document.
  */
-@Entity
-@Table(name = "notification_delivery_logs", indexes = {
-    @Index(name = "idx_notification_delivery_logs_notification", columnList = "notification_id"),
-    @Index(name = "idx_notification_delivery_logs_channel", columnList = "delivery_channel"),
-    @Index(name = "idx_notification_delivery_logs_status", columnList = "delivery_status"),
-    @Index(name = "idx_notification_delivery_logs_recipient", columnList = "recipient"),
-    @Index(name = "idx_notification_delivery_logs_created_at", columnList = "created_at")
+@Document(collection = "notification_delivery_logs")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_notification_channel", def = "{'notificationId': 1, 'deliveryChannel': 1}"),
+    @CompoundIndex(name = "idx_status_created", def = "{'deliveryStatus': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "idx_recipient_channel", def = "{'recipient': 1, 'deliveryChannel': 1}")
 })
 public class NotificationDeliveryLog {
 
@@ -34,45 +40,51 @@ public class NotificationDeliveryLog {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "notification_id", nullable = false)
-    private Long notificationId;
+    @Field("notificationId")
+    @Indexed
+    @NotNull
+    private String notificationId; // Changed to String for MongoDB
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_channel", nullable = false, length = 20)
+    @Field("deliveryChannel")
+    @Indexed
+    @NotNull
     private DeliveryChannel deliveryChannel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "delivery_status", nullable = false, length = 20)
+    @Field("deliveryStatus")
+    @Indexed
+    @NotNull
     private DeliveryStatus deliveryStatus;
 
-    @Column(nullable = false, length = 255)
+    @Field("recipient")
+    @Indexed
+    @NotBlank
     private String recipient; // Email address, phone number, or device token
 
-    @Column(name = "attempt_count")
+    @Field("attemptCount")
     private Integer attemptCount = 1;
 
-    @Column(name = "error_message", columnDefinition = "TEXT")
+    @Field("errorMessage")
     private String errorMessage;
 
-    @Column(name = "sent_at")
+    @Field("sentAt")
     private LocalDateTime sentAt;
 
-    @Column(name = "delivered_at")
+    @Field("deliveredAt")
     private LocalDateTime deliveredAt;
 
-    @Column(name = "failed_at")
+    @Field("failedAt")
     private LocalDateTime failedAt;
 
-    @Column(name = "retry_after")
+    @Field("retryAfter")
     private LocalDateTime retryAfter;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("createdAt")
+    @Indexed
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("updatedAt")
     private LocalDateTime updatedAt;
 
     // Constructors
@@ -81,7 +93,7 @@ public class NotificationDeliveryLog {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public NotificationDeliveryLog(Long notificationId, DeliveryChannel deliveryChannel, String recipient) {
+    public NotificationDeliveryLog(String notificationId, DeliveryChannel deliveryChannel, String recipient) {
         this();
         this.notificationId = notificationId;
         this.deliveryChannel = deliveryChannel;
@@ -90,19 +102,19 @@ public class NotificationDeliveryLog {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getNotificationId() {
+    public String getNotificationId() {
         return notificationId;
     }
 
-    public void setNotificationId(Long notificationId) {
+    public void setNotificationId(String notificationId) {
         this.notificationId = notificationId;
     }
 
@@ -194,9 +206,8 @@ public class NotificationDeliveryLog {
         this.updatedAt = updatedAt;
     }
 
-    // Lifecycle methods
-    @PreUpdate
-    public void preUpdate() {
+    // Lifecycle methods for MongoDB
+    public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -240,5 +251,6 @@ public class NotificationDeliveryLog {
                 '}';
     }
 }
+
 
 

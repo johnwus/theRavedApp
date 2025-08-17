@@ -8,3 +8,4 @@ ALTER TABLE cart_items
 
 -- Create index for the new price field for better performance
 CREATE INDEX IF NOT EXISTS idx_cart_items_price ON cart_items(price);
+

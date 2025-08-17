@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: events-service
+  namespace: raved-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: events-service }
+  template:
+    metadata:
+      labels: { app: events-service }
+    spec:
+      containers:
+        - name: events-service
+          image: raved/events-service:latest
+          ports:
+            - containerPort: 8088
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - configMapRef:
+                name: events-service-config
+            - secretRef:
+                name: events-service-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 800m
+              memory: 768Mi
+

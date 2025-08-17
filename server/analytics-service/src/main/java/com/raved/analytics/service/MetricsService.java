@@ -16,12 +16,12 @@ public interface MetricsService {
     /**
      * Get user metrics
      */
-    UserMetricsResponse getUserMetrics(Long userId);
+    UserMetricsResponse getUserMetrics(String userId);
 
     /**
      * Get content metrics
      */
-    ContentMetricsResponse getContentMetrics(Long contentId);
+    ContentMetricsResponse getContentMetrics(String contentId);
 
     /**
      * Get top users by engagement
@@ -41,22 +41,22 @@ public interface MetricsService {
     /**
      * Get user engagement trends
      */
-    Map<String, Object> getUserEngagementTrends(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+    Map<String, Object> getUserEngagementTrends(String userId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * Get content performance metrics
      */
-    Map<String, Object> getContentPerformanceMetrics(Long contentId, LocalDateTime startDate, LocalDateTime endDate);
+    Map<String, Object> getContentPerformanceMetrics(String contentId, LocalDateTime startDate, LocalDateTime endDate);
 
     /**
      * Recalculate user metrics
      */
-    void recalculateUserMetrics(Long userId);
+    void recalculateUserMetrics(String userId);
 
     /**
      * Recalculate content metrics
      */
-    void recalculateContentMetrics(Long contentId);
+    void recalculateContentMetrics(String contentId);
 
     /**
      * Refresh platform metrics

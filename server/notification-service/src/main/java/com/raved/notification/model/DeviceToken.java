@@ -1,21 +1,29 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
- * DeviceToken Entity for TheRavedApp
- * 
+ * DeviceToken Document for TheRavedApp MongoDB
+ *
  * Represents device tokens for push notifications.
- * Based on the device_tokens table schema.
+ * Converted from JPA entity to
+ * MongoDB document.
  */
-@Entity
-@Table(name = "device_tokens", indexes = {
-    @Index(name = "idx_device_tokens_user", columnList = "user_id"),
-    @Index(name = "idx_device_tokens_active", columnList = "is_active"),
-    @Index(name = "idx_device_tokens_platform", columnList = "platform")
-}, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_device_token", columnNames = {"user_id", "token"})
+@Document(collection = "device_tokens")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_user_token", def = "{'userId': 1, 'token': 1}", unique = true),
+    @CompoundIndex(name = "idx_user_active", def = "{'userId': 1, 'isActive': 1}"),
+    @CompoundIndex(name = "idx_platform_active", def = "{'platform': 1, 'isActive': 1}")
 })
 public class DeviceToken {
 
@@ -27,32 +35,37 @@ public class DeviceToken {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    @Field("userId")
+    @Indexed
+    @NotNull
+    private String userId; // Reference to user service (changed to String for MongoDB)
 
-    @Column(nullable = false, length = 500)
+    @Field("token")
+    @NotBlank
     private String token;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Field("platform")
+    @Indexed
+    @NotNull
     private Platform platform; // IOS, ANDROID, WEB
 
-    @Column(name = "device_info", columnDefinition = "JSONB")
-    private String deviceInfo;
+    @Field("deviceInfo")
+    private Map<String, Object> deviceInfo; // Changed to Map for MongoDB
 
-    @Column(name = "is_active")
+    @Field("isActive")
+    @Indexed
     private Boolean isActive = true;
 
-    @Column(name = "last_used_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("lastUsedAt")
     private LocalDateTime lastUsedAt;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("createdAt")
+    @Indexed
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("updatedAt")
     private LocalDateTime updatedAt;
 
     // Constructors
@@ -62,7 +75,7 @@ public class DeviceToken {
         this.lastUsedAt = LocalDateTime.now();
     }
 
-    public DeviceToken(Long userId, String token, Platform platform) {
+    public DeviceToken(String userId, String token, Platform platform) {
         this();
         this.userId = userId;
         this.token = token;
@@ -70,19 +83,19 @@ public class DeviceToken {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -102,11 +115,11 @@ public class DeviceToken {
         this.platform = platform;
     }
 
-    public String getDeviceInfo() {
+    public Map<String, Object> getDeviceInfo() {
         return deviceInfo;
     }
 
-    public void setDeviceInfo(String deviceInfo) {
+    public void setDeviceInfo(Map<String, Object> deviceInfo) {
         this.deviceInfo = deviceInfo;
     }
 
@@ -142,18 +155,16 @@ public class DeviceToken {
         this.updatedAt = updatedAt;
     }
 
-    // Lifecycle methods
-    @PrePersist
-    public void prePersist() {
+    // Lifecycle methods for MongoDB
+    public void initializeTimestamps() {
         LocalDateTime now = LocalDateTime.now();
-        this.createdAt = now;
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
         this.updatedAt = now;
-        this.lastUsedAt = now;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        if (this.lastUsedAt == null) {
+            this.lastUsedAt = now;
+        }
     }
 
     // Business methods

@@ -2,7 +2,7 @@
 // This script sets up the initial database structure, collections, and indexes
 
 // Switch to the content database
-use raved_content;
+// use raved_content;
 
 print("🚀 Initializing MongoDB for Content Service...");
 

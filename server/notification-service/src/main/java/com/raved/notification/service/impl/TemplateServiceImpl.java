@@ -44,7 +44,7 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     @Transactional(readOnly = true)
-    public String processTemplate(String templateName, Map<String, Object> templateData) {
+    public String processTemplateByName(String templateName, Map<String, Object> templateData) {
         logger.debug("Processing template: {} with data", templateName);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findByTemplateName(templateName);
@@ -64,7 +64,7 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     @Transactional(readOnly = true)
-    public String processTemplate(Long templateId, Map<String, Object> templateData) {
+    public String processTemplate(String templateId, Map<String, Object> templateData) {
         logger.debug("Processing template ID: {} with data", templateId);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
@@ -103,7 +103,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public NotificationTemplateResponse updateTemplate(Long templateId, UpdateTemplateRequest request) {
+    public NotificationTemplateResponse updateTemplate(String templateId, UpdateTemplateRequest request) {
         logger.info("Updating template: {}", templateId);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
@@ -123,7 +123,7 @@ public class TemplateServiceImpl implements TemplateService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<NotificationTemplateResponse> getTemplateById(Long templateId) {
+    public Optional<NotificationTemplateResponse> getTemplateById(String templateId) {
         logger.debug("Getting template by ID: {}", templateId);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
@@ -172,7 +172,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public void deleteTemplate(Long templateId) {
+    public void deleteTemplate(String templateId) {
         logger.info("Deleting template: {}", templateId);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
@@ -188,7 +188,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     @Override
-    public NotificationTemplateResponse toggleTemplateStatus(Long templateId, boolean isActive) {
+    public NotificationTemplateResponse toggleTemplateStatus(String templateId, boolean isActive) {
         logger.info("Toggling template status: {} to {}", templateId, isActive);
 
         Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
@@ -256,40 +256,7 @@ public class TemplateServiceImpl implements TemplateService {
         return variables;
     }
 
-    @Override
-    public NotificationTemplateResponse cloneTemplate(Long templateId, String newName) {
-        logger.info("Cloning template: {} with new name: {}", templateId, newName);
 
-        Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
-        if (templateOpt.isEmpty()) {
-            throw new TemplateNotFoundException("Template not found with ID: " + templateId);
-        }
-
-        // Check if new name already exists
-        if (templateRepository.existsByTemplateName(newName)) {
-            throw new TemplateProcessingException("Template with name already exists: " + newName);
-        }
-
-        NotificationTemplate originalTemplate = templateOpt.get();
-        NotificationTemplate clonedTemplate = new NotificationTemplate();
-
-        // Copy properties
-        clonedTemplate.setTemplateName(newName);
-        clonedTemplate.setTemplateType(originalTemplate.getTemplateType());
-
-        clonedTemplate.setSubjectTemplate(originalTemplate.getSubjectTemplate());
-        clonedTemplate.setBodyTemplate(originalTemplate.getBodyTemplate());
-        clonedTemplate.setVariables(originalTemplate.getVariables());
-        clonedTemplate.setIsActive(true);
-
-        clonedTemplate.setCreatedAt(LocalDateTime.now());
-        clonedTemplate.setUpdatedAt(LocalDateTime.now());
-
-        NotificationTemplate savedTemplate = templateRepository.save(clonedTemplate);
-        logger.info("Template cloned successfully: {}", savedTemplate.getId());
-
-        return templateMapper.toNotificationTemplateResponse(savedTemplate);
-    }
 
     /**
      * Process template content by replacing variables with actual values
@@ -325,5 +292,33 @@ public class TemplateServiceImpl implements TemplateService {
             logger.error("Error processing template content", e);
             throw new TemplateProcessingException("Error processing template: " + e.getMessage());
         }
+    }
+
+    @Override
+    public NotificationTemplateResponse cloneTemplate(String templateId, String newName) {
+        logger.info("Cloning template: {} with new name: {}", templateId, newName);
+
+        Optional<NotificationTemplate> templateOpt = templateRepository.findById(templateId);
+        if (templateOpt.isEmpty()) {
+            throw new TemplateNotFoundException("Template not found with ID: " + templateId);
+        }
+
+        NotificationTemplate originalTemplate = templateOpt.get();
+
+        // Create new template with cloned data
+        NotificationTemplate clonedTemplate = new NotificationTemplate();
+        clonedTemplate.setTemplateName(newName);
+        clonedTemplate.setTemplateType(originalTemplate.getTemplateType());
+        clonedTemplate.setSubjectTemplate(originalTemplate.getSubjectTemplate());
+        clonedTemplate.setBodyTemplate(originalTemplate.getBodyTemplate());
+        clonedTemplate.setVariables(originalTemplate.getVariables());
+        clonedTemplate.setIsActive(false); // New cloned template starts as inactive
+        clonedTemplate.setCreatedAt(LocalDateTime.now());
+        clonedTemplate.setUpdatedAt(LocalDateTime.now());
+
+        NotificationTemplate savedTemplate = templateRepository.save(clonedTemplate);
+        logger.info("Template cloned successfully: {}", savedTemplate.getId());
+
+        return templateMapper.toNotificationTemplateResponse(savedTemplate);
     }
 }

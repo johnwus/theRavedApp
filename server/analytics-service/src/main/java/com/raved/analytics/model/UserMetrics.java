@@ -1,295 +1,230 @@
 package com.raved.analytics.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * UserMetrics Entity for TheRavedApp
+ * UserMetrics Document for TheRavedApp MongoDB
  *
- * Represents aggregated metrics for users.
- * Based on the user_metrics table schema.
+ * Comprehensive user analytics and metrics tracking including social
+ * engagement, ecommerce activities, subscription behavior, and performance
+ * indicators.
  */
-@Entity
-@Table(name = "user_metrics", indexes = {
-        @Index(name = "idx_user_metrics_user", columnList = "user_id"),
-        @Index(name = "idx_user_metrics_date", columnList = "metric_date"),
-        @Index(name = "idx_user_metrics_user_date", columnList = "user_id, metric_date"),
-        @Index(name = "idx_user_metrics_engagement", columnList = "engagement_score"),
-        @Index(name = "idx_user_metrics_activity", columnList = "activity_score")
-}, uniqueConstraints = {
-        @UniqueConstraint(name = "uk_user_metrics_date", columnNames = { "user_id", "metric_date" })
-})
+@Document(collection = "user_metrics")
+@CompoundIndex(name = "idx_user_engagement", def = "{'user_id': 1, 'engagement_score': -1}")
+@CompoundIndex(name = "idx_user_influence", def = "{'user_id': 1, 'influence_score': -1}")
+@CompoundIndex(name = "idx_user_segment", def = "{'user_segment': 1, 'engagement_score': -1}")
+@CompoundIndex(name = "idx_user_ecommerce", def = "{'user_id': 1, 'ecommerce_metrics.totalSalesAmount': -1}")
+@CompoundIndex(name = "idx_user_subscription", def = "{'user_id': 1, 'subscription_metrics.subscriptionValue': -1}")
 public class UserMetrics {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    @Indexed(unique = true)
+    @Field("user_id")
+    private String userId; // Reference to user service
 
-    @Column(name = "metric_date", nullable = false)
-    private java.sql.Date metricDate;
+    // User Profile & Segmentation
+    @Indexed
+    @Field("user_segment")
+    private String userSegment; // "premium", "regular", "new", "churned"
 
-    // Activity Metrics
-    @Column(name = "posts_created", nullable = false)
-    private Integer postsCreated = 0;
+    @Field("user_tier")
+    private String userTier; // "bronze", "silver", "gold", "platinum"
 
-    @Column(name = "comments_made", nullable = false)
-    private Integer commentsMade = 0;
+    @Field("is_premium")
+    private Boolean isPremium;
 
-    @Column(name = "likes_given", nullable = false)
-    private Integer likesGiven = 0;
+    @Field("registration_date")
+    private LocalDateTime registrationDate;
 
-    @Column(name = "likes_received", nullable = false)
-    private Integer likesReceived = 0;
+    @Field("last_active_date")
+    private LocalDateTime lastActiveDate;
 
-    @Column(name = "shares_made", nullable = false)
-    private Integer sharesMade = 0;
+    // Social Engagement Metrics
+    @Field("social_metrics")
+    private SocialMetrics socialMetrics;
 
-    @Column(name = "shares_received", nullable = false)
-    private Integer sharesReceived = 0;
+    // E-commerce Metrics
+    @Field("ecommerce_metrics")
+    private EcommerceMetrics ecommerceMetrics;
 
-    @Column(name = "messages_sent", nullable = false)
-    private Integer messagesSent = 0;
+    // Subscription Metrics
+    @Field("subscription_metrics")
+    private SubscriptionMetrics subscriptionMetrics;
 
-    @Column(name = "profile_views", nullable = false)
-    private Integer profileViews = 0;
+    // Content Creation Metrics
+    @Field("content_metrics")
+    private ContentMetrics contentMetrics;
 
-    // Engagement Metrics
-    @Column(name = "session_count", nullable = false)
-    private Integer sessionCount = 0;
+    // Activity & Engagement Metrics
+    @Field("activity_metrics")
+    private ActivityMetrics activityMetrics;
 
-    @Column(name = "total_session_duration", nullable = false)
-    private Integer totalSessionDuration = 0; // in minutes
+    // Performance & Quality Metrics
+    @Field("performance_metrics")
+    private PerformanceMetrics performanceMetrics;
 
-    @Column(name = "page_views", nullable = false)
-    private Integer pageViews = 0;
-
-    @Column(name = "unique_page_views", nullable = false)
-    private Integer uniquePageViews = 0;
-
-    // Ecommerce Metrics
-    @Column(name = "products_viewed", nullable = false)
-    private Integer productsViewed = 0;
-
-    @Column(name = "products_liked", nullable = false)
-    private Integer productsLiked = 0;
-
-    @Column(name = "orders_placed", nullable = false)
-    private Integer ordersPlaced = 0;
-
-    @Column(name = "total_spent", precision = 10, scale = 2)
-    private BigDecimal totalSpent = BigDecimal.ZERO;
+    // Behavioral Patterns
+    @Field("behavioral_patterns")
+    private BehavioralPatterns behavioralPatterns;
 
     // Calculated Scores
-    @Column(name = "engagement_score", precision = 5, scale = 2)
-    private BigDecimal engagementScore = BigDecimal.ZERO;
+    @Indexed
+    @Field("engagement_score")
+    private BigDecimal engagementScore;
 
-    @Column(name = "activity_score", precision = 5, scale = 2)
-    private BigDecimal activityScore = BigDecimal.ZERO;
+    @Indexed
+    @Field("influence_score")
+    private BigDecimal influenceScore;
 
-    @Column(name = "influence_score", precision = 5, scale = 2)
-    private BigDecimal influenceScore = BigDecimal.ZERO;
+    @Field("retention_score")
+    private BigDecimal retentionScore;
 
-    // Additional fields for MetricsServiceImpl compatibility
-    @Column(name = "total_posts")
-    private Long totalPosts = 0L;
+    @Field("monetization_score")
+    private BigDecimal monetizationScore;
 
-    @Column(name = "total_likes")
-    private Long totalLikes = 0L;
+    // Timeline
+    @Field("last_calculated_at")
+    private LocalDateTime lastCalculatedAt;
 
-    @Column(name = "total_comments")
-    private Long totalComments = 0L;
-
-    @Column(name = "total_shares")
-    private Long totalShares = 0L;
-
-    @Column(name = "total_views")
-    private Long totalViews = 0L;
-
-    @Column(name = "total_followers")
-    private Long totalFollowers = 0L;
-
-    @Column(name = "total_following")
-    private Long totalFollowing = 0L;
-
-    @Column(name = "engagement_rate", precision = 5, scale = 2)
-    private Double engagementRate = 0.0;
-
-    @Column(name = "last_active_at")
-    private LocalDateTime lastActiveAt;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Field("created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Field("updated_at")
     private LocalDateTime updatedAt;
 
     // Constructors
     public UserMetrics() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-    }
-
-    public UserMetrics(Long userId, java.sql.Date metricDate) {
-        this();
-        this.userId = userId;
-        this.metricDate = metricDate;
+        this.lastCalculatedAt = LocalDateTime.now();
+        this.engagementScore = BigDecimal.ZERO;
+        this.influenceScore = BigDecimal.ZERO;
+        this.retentionScore = BigDecimal.ZERO;
+        this.monetizationScore = BigDecimal.ZERO;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public java.sql.Date getMetricDate() {
-        return metricDate;
+    public String getUserSegment() {
+        return userSegment;
     }
 
-    public void setMetricDate(java.sql.Date metricDate) {
-        this.metricDate = metricDate;
+    public void setUserSegment(String userSegment) {
+        this.userSegment = userSegment;
     }
 
-    public Integer getPostsCreated() {
-        return postsCreated;
+    public String getUserTier() {
+        return userTier;
     }
 
-    public void setPostsCreated(Integer postsCreated) {
-        this.postsCreated = postsCreated;
+    public void setUserTier(String userTier) {
+        this.userTier = userTier;
     }
 
-    public Integer getCommentsMade() {
-        return commentsMade;
+    public Boolean getIsPremium() {
+        return isPremium;
     }
 
-    public void setCommentsMade(Integer commentsMade) {
-        this.commentsMade = commentsMade;
+    public void setIsPremium(Boolean isPremium) {
+        this.isPremium = isPremium;
     }
 
-    public Integer getLikesGiven() {
-        return likesGiven;
+    public LocalDateTime getRegistrationDate() {
+        return registrationDate;
     }
 
-    public void setLikesGiven(Integer likesGiven) {
-        this.likesGiven = likesGiven;
+    public void setRegistrationDate(LocalDateTime registrationDate) {
+        this.registrationDate = registrationDate;
     }
 
-    public Integer getLikesReceived() {
-        return likesReceived;
+    public LocalDateTime getLastActiveDate() {
+        return lastActiveDate;
     }
 
-    public void setLikesReceived(Integer likesReceived) {
-        this.likesReceived = likesReceived;
+    public void setLastActiveDate(LocalDateTime lastActiveDate) {
+        this.lastActiveDate = lastActiveDate;
     }
 
-    public Integer getSharesMade() {
-        return sharesMade;
+    public SocialMetrics getSocialMetrics() {
+        return socialMetrics;
     }
 
-    public void setSharesMade(Integer sharesMade) {
-        this.sharesMade = sharesMade;
+    public void setSocialMetrics(SocialMetrics socialMetrics) {
+        this.socialMetrics = socialMetrics;
     }
 
-    public Integer getSharesReceived() {
-        return sharesReceived;
+    public EcommerceMetrics getEcommerceMetrics() {
+        return ecommerceMetrics;
     }
 
-    public void setSharesReceived(Integer sharesReceived) {
-        this.sharesReceived = sharesReceived;
+    public void setEcommerceMetrics(EcommerceMetrics ecommerceMetrics) {
+        this.ecommerceMetrics = ecommerceMetrics;
     }
 
-    public Integer getMessagesSent() {
-        return messagesSent;
+    public SubscriptionMetrics getSubscriptionMetrics() {
+        return subscriptionMetrics;
     }
 
-    public void setMessagesSent(Integer messagesSent) {
-        this.messagesSent = messagesSent;
+    public void setSubscriptionMetrics(SubscriptionMetrics subscriptionMetrics) {
+        this.subscriptionMetrics = subscriptionMetrics;
     }
 
-    public Integer getProfileViews() {
-        return profileViews;
+    public ContentMetrics getContentMetrics() {
+        return contentMetrics;
     }
 
-    public void setProfileViews(Integer profileViews) {
-        this.profileViews = profileViews;
+    public void setContentMetrics(ContentMetrics contentMetrics) {
+        this.contentMetrics = contentMetrics;
     }
 
-    public Integer getSessionCount() {
-        return sessionCount;
+    public ActivityMetrics getActivityMetrics() {
+        return activityMetrics;
     }
 
-    public void setSessionCount(Integer sessionCount) {
-        this.sessionCount = sessionCount;
+    public void setActivityMetrics(ActivityMetrics activityMetrics) {
+        this.activityMetrics = activityMetrics;
     }
 
-    public Integer getTotalSessionDuration() {
-        return totalSessionDuration;
+    public PerformanceMetrics getPerformanceMetrics() {
+        return performanceMetrics;
     }
 
-    public void setTotalSessionDuration(Integer totalSessionDuration) {
-        this.totalSessionDuration = totalSessionDuration;
+    public void setPerformanceMetrics(PerformanceMetrics performanceMetrics) {
+        this.performanceMetrics = performanceMetrics;
     }
 
-    public Integer getPageViews() {
-        return pageViews;
+    public BehavioralPatterns getBehavioralPatterns() {
+        return behavioralPatterns;
     }
 
-    public void setPageViews(Integer pageViews) {
-        this.pageViews = pageViews;
-    }
-
-    public Integer getUniquePageViews() {
-        return uniquePageViews;
-    }
-
-    public void setUniquePageViews(Integer uniquePageViews) {
-        this.uniquePageViews = uniquePageViews;
-    }
-
-    public Integer getProductsViewed() {
-        return productsViewed;
-    }
-
-    public void setProductsViewed(Integer productsViewed) {
-        this.productsViewed = productsViewed;
-    }
-
-    public Integer getProductsLiked() {
-        return productsLiked;
-    }
-
-    public void setProductsLiked(Integer productsLiked) {
-        this.productsLiked = productsLiked;
-    }
-
-    public Integer getOrdersPlaced() {
-        return ordersPlaced;
-    }
-
-    public void setOrdersPlaced(Integer ordersPlaced) {
-        this.ordersPlaced = ordersPlaced;
-    }
-
-    public BigDecimal getTotalSpent() {
-        return totalSpent;
-    }
-
-    public void setTotalSpent(BigDecimal totalSpent) {
-        this.totalSpent = totalSpent;
+    public void setBehavioralPatterns(BehavioralPatterns behavioralPatterns) {
+        this.behavioralPatterns = behavioralPatterns;
     }
 
     public BigDecimal getEngagementScore() {
@@ -300,20 +235,36 @@ public class UserMetrics {
         this.engagementScore = engagementScore;
     }
 
-    public BigDecimal getActivityScore() {
-        return activityScore;
-    }
-
-    public void setActivityScore(BigDecimal activityScore) {
-        this.activityScore = activityScore;
-    }
-
     public BigDecimal getInfluenceScore() {
         return influenceScore;
     }
 
     public void setInfluenceScore(BigDecimal influenceScore) {
         this.influenceScore = influenceScore;
+    }
+
+    public BigDecimal getRetentionScore() {
+        return retentionScore;
+    }
+
+    public void setRetentionScore(BigDecimal retentionScore) {
+        this.retentionScore = retentionScore;
+    }
+
+    public BigDecimal getMonetizationScore() {
+        return monetizationScore;
+    }
+
+    public void setMonetizationScore(BigDecimal monetizationScore) {
+        this.monetizationScore = monetizationScore;
+    }
+
+    public LocalDateTime getLastCalculatedAt() {
+        return lastCalculatedAt;
+    }
+
+    public void setLastCalculatedAt(LocalDateTime lastCalculatedAt) {
+        this.lastCalculatedAt = lastCalculatedAt;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -332,143 +283,1056 @@ public class UserMetrics {
         this.updatedAt = updatedAt;
     }
 
-    // Getters and setters for additional fields
-    public Long getTotalPosts() {
-        return totalPosts;
+    // Inner Classes for Comprehensive Metrics
+    public static class SocialMetrics {
+
+        private Integer postsCount;
+        private Integer likesGiven;
+        private Integer likesReceived;
+        private Integer commentsGiven;
+        private Integer commentsReceived;
+        private Integer sharesGiven;
+        private Integer sharesReceived;
+        private Integer followersCount;
+        private Integer followingCount;
+        private Integer connectionsCount;
+        private Integer groupsJoined;
+        private Integer eventsAttended;
+        private BigDecimal socialReach;
+        private BigDecimal socialEngagement;
+        private List<String> topHashtags;
+        private List<String> topMentions;
+        private Map<String, Integer> interactionByType;
+
+        // Getters and setters
+        public Integer getPostsCount() {
+            return postsCount;
+        }
+
+        public void setPostsCount(Integer postsCount) {
+            this.postsCount = postsCount;
+        }
+
+        public Integer getLikesGiven() {
+            return likesGiven;
+        }
+
+        public void setLikesGiven(Integer likesGiven) {
+            this.likesGiven = likesGiven;
+        }
+
+        public Integer getLikesReceived() {
+            return likesReceived;
+        }
+
+        public void setLikesReceived(Integer likesReceived) {
+            this.likesReceived = likesReceived;
+        }
+
+        public Integer getCommentsGiven() {
+            return commentsGiven;
+        }
+
+        public void setCommentsGiven(Integer commentsGiven) {
+            this.commentsGiven = commentsGiven;
+        }
+
+        public Integer getCommentsReceived() {
+            return commentsReceived;
+        }
+
+        public void setCommentsReceived(Integer commentsReceived) {
+            this.commentsReceived = commentsReceived;
+        }
+
+        public Integer getSharesGiven() {
+            return sharesGiven;
+        }
+
+        public void setSharesGiven(Integer sharesGiven) {
+            this.sharesGiven = sharesGiven;
+        }
+
+        public Integer getSharesReceived() {
+            return sharesReceived;
+        }
+
+        public void setSharesReceived(Integer sharesReceived) {
+            this.sharesReceived = sharesReceived;
+        }
+
+        public Integer getFollowersCount() {
+            return followersCount;
+        }
+
+        public void setFollowersCount(Integer followersCount) {
+            this.followersCount = followersCount;
+        }
+
+        public Integer getFollowingCount() {
+            return followingCount;
+        }
+
+        public void setFollowingCount(Integer followingCount) {
+            this.followingCount = followingCount;
+        }
+
+        public Integer getConnectionsCount() {
+            return connectionsCount;
+        }
+
+        public void setConnectionsCount(Integer connectionsCount) {
+            this.connectionsCount = connectionsCount;
+        }
+
+        public Integer getGroupsJoined() {
+            return groupsJoined;
+        }
+
+        public void setGroupsJoined(Integer groupsJoined) {
+            this.groupsJoined = groupsJoined;
+        }
+
+        public Integer getEventsAttended() {
+            return eventsAttended;
+        }
+
+        public void setEventsAttended(Integer eventsAttended) {
+            this.eventsAttended = eventsAttended;
+        }
+
+        public BigDecimal getSocialReach() {
+            return socialReach;
+        }
+
+        public void setSocialReach(BigDecimal socialReach) {
+            this.socialReach = socialReach;
+        }
+
+        public BigDecimal getSocialEngagement() {
+            return socialEngagement;
+        }
+
+        public void setSocialEngagement(BigDecimal socialEngagement) {
+            this.socialEngagement = socialEngagement;
+        }
+
+        public List<String> getTopHashtags() {
+            return topHashtags;
+        }
+
+        public void setTopHashtags(List<String> topHashtags) {
+            this.topHashtags = topHashtags;
+        }
+
+        public List<String> getTopMentions() {
+            return topMentions;
+        }
+
+        public void setTopMentions(List<String> topMentions) {
+            this.topMentions = topMentions;
+        }
+
+        public Map<String, Integer> getInteractionByType() {
+            return interactionByType;
+        }
+
+        public void setInteractionByType(Map<String, Integer> interactionByType) {
+            this.interactionByType = interactionByType;
+        }
     }
 
-    public void setTotalPosts(Long totalPosts) {
-        this.totalPosts = totalPosts;
+    public static class EcommerceMetrics {
+
+        private Integer productsSold;
+        private Integer productsBought;
+        private BigDecimal totalSalesAmount;
+        private BigDecimal totalPurchasesAmount;
+        private BigDecimal totalRefundAmount;
+        private Integer ordersPlaced;
+        private Integer ordersReceived;
+        private BigDecimal averageOrderValue;
+        private BigDecimal averagePurchaseValue;
+        private Integer cartAbandonments;
+        private BigDecimal cartAbandonmentRate;
+        private Integer wishlistItems;
+        private Integer reviewsGiven;
+        private Integer reviewsReceived;
+        private BigDecimal averageRating;
+        private List<String> topCategories;
+        private List<String> topBrands;
+        private Map<String, Integer> purchasesByCategory;
+        private Map<String, BigDecimal> revenueByCategory;
+        private LocalDateTime lastPurchaseDate;
+        private LocalDateTime lastSaleDate;
+
+        // Getters and setters
+        public Integer getProductsSold() {
+            return productsSold;
+        }
+
+        public void setProductsSold(Integer productsSold) {
+            this.productsSold = productsSold;
+        }
+
+        public Integer getProductsBought() {
+            return productsBought;
+        }
+
+        public void setProductsBought(Integer productsBought) {
+            this.productsBought = productsBought;
+        }
+
+        public BigDecimal getTotalSalesAmount() {
+            return totalSalesAmount;
+        }
+
+        public void setTotalSalesAmount(BigDecimal totalSalesAmount) {
+            this.totalSalesAmount = totalSalesAmount;
+        }
+
+        public BigDecimal getTotalPurchasesAmount() {
+            return totalPurchasesAmount;
+        }
+
+        public void setTotalPurchasesAmount(BigDecimal totalPurchasesAmount) {
+            this.totalPurchasesAmount = totalPurchasesAmount;
+        }
+
+        public BigDecimal getTotalRefundAmount() {
+            return totalRefundAmount;
+        }
+
+        public void setTotalRefundAmount(BigDecimal totalRefundAmount) {
+            this.totalRefundAmount = totalRefundAmount;
+        }
+
+        public Integer getOrdersPlaced() {
+            return ordersPlaced;
+        }
+
+        public void setOrdersPlaced(Integer ordersPlaced) {
+            this.ordersPlaced = ordersPlaced;
+        }
+
+        public Integer getOrdersReceived() {
+            return ordersReceived;
+        }
+
+        public void setOrdersReceived(Integer ordersReceived) {
+            this.ordersReceived = ordersReceived;
+        }
+
+        public BigDecimal getAverageOrderValue() {
+            return averageOrderValue;
+        }
+
+        public void setAverageOrderValue(BigDecimal averageOrderValue) {
+            this.averageOrderValue = averageOrderValue;
+        }
+
+        public BigDecimal getAveragePurchaseValue() {
+            return averagePurchaseValue;
+        }
+
+        public void setAveragePurchaseValue(BigDecimal averagePurchaseValue) {
+            this.averagePurchaseValue = averagePurchaseValue;
+        }
+
+        public Integer getCartAbandonments() {
+            return cartAbandonments;
+        }
+
+        public void setCartAbandonments(Integer cartAbandonments) {
+            this.cartAbandonments = cartAbandonments;
+        }
+
+        public BigDecimal getCartAbandonmentRate() {
+            return cartAbandonmentRate;
+        }
+
+        public void setCartAbandonmentRate(BigDecimal cartAbandonmentRate) {
+            this.cartAbandonmentRate = cartAbandonmentRate;
+        }
+
+        public Integer getWishlistItems() {
+            return wishlistItems;
+        }
+
+        public void setWishlistItems(Integer wishlistItems) {
+            this.wishlistItems = wishlistItems;
+        }
+
+        public Integer getReviewsGiven() {
+            return reviewsGiven;
+        }
+
+        public void setReviewsGiven(Integer reviewsGiven) {
+            this.reviewsGiven = reviewsGiven;
+        }
+
+        public Integer getReviewsReceived() {
+            return reviewsReceived;
+        }
+
+        public void setReviewsReceived(Integer reviewsReceived) {
+            this.reviewsReceived = reviewsReceived;
+        }
+
+        public BigDecimal getAverageRating() {
+            return averageRating;
+        }
+
+        public void setAverageRating(BigDecimal averageRating) {
+            this.averageRating = averageRating;
+        }
+
+        public List<String> getTopCategories() {
+            return topCategories;
+        }
+
+        public void setTopCategories(List<String> topCategories) {
+            this.topCategories = topCategories;
+        }
+
+        public List<String> getTopBrands() {
+            return topBrands;
+        }
+
+        public void setTopBrands(List<String> topBrands) {
+            this.topBrands = topBrands;
+        }
+
+        public Map<String, Integer> getPurchasesByCategory() {
+            return purchasesByCategory;
+        }
+
+        public void setPurchasesByCategory(Map<String, Integer> purchasesByCategory) {
+            this.purchasesByCategory = purchasesByCategory;
+        }
+
+        public Map<String, BigDecimal> getRevenueByCategory() {
+            return revenueByCategory;
+        }
+
+        public void setRevenueByCategory(Map<String, BigDecimal> revenueByCategory) {
+            this.revenueByCategory = revenueByCategory;
+        }
+
+        public LocalDateTime getLastPurchaseDate() {
+            return lastPurchaseDate;
+        }
+
+        public void setLastPurchaseDate(LocalDateTime lastPurchaseDate) {
+            this.lastPurchaseDate = lastPurchaseDate;
+        }
+
+        public LocalDateTime getLastSaleDate() {
+            return lastSaleDate;
+        }
+
+        public void setLastSaleDate(LocalDateTime lastSaleDate) {
+            this.lastSaleDate = lastSaleDate;
+        }
     }
 
-    public Long getTotalLikes() {
-        return totalLikes;
+    public static class SubscriptionMetrics {
+
+        private Integer activeSubscriptions;
+        private Integer totalSubscriptions;
+        private BigDecimal subscriptionValue;
+        private BigDecimal monthlyRecurringRevenue;
+        private BigDecimal annualRecurringRevenue;
+        private Integer subscriptionUpgrades;
+        private Integer subscriptionDowngrades;
+        private Integer subscriptionCancellations;
+        private BigDecimal churnRate;
+        private BigDecimal retentionRate;
+        private LocalDateTime firstSubscriptionDate;
+        private LocalDateTime lastSubscriptionDate;
+        private String preferredBillingCycle;
+        private String preferredPaymentMethod;
+        private List<String> activePlanTypes;
+        private Map<String, Integer> subscriptionsByPlan;
+        private Map<String, BigDecimal> revenueByPlan;
+
+        // Getters and setters
+        public Integer getActiveSubscriptions() {
+            return activeSubscriptions;
+        }
+
+        public void setActiveSubscriptions(Integer activeSubscriptions) {
+            this.activeSubscriptions = activeSubscriptions;
+        }
+
+        public Integer getTotalSubscriptions() {
+            return totalSubscriptions;
+        }
+
+        public void setTotalSubscriptions(Integer totalSubscriptions) {
+            this.totalSubscriptions = totalSubscriptions;
+        }
+
+        public BigDecimal getSubscriptionValue() {
+            return subscriptionValue;
+        }
+
+        public void setSubscriptionValue(BigDecimal subscriptionValue) {
+            this.subscriptionValue = subscriptionValue;
+        }
+
+        public BigDecimal getMonthlyRecurringRevenue() {
+            return monthlyRecurringRevenue;
+        }
+
+        public void setMonthlyRecurringRevenue(BigDecimal monthlyRecurringRevenue) {
+            this.monthlyRecurringRevenue = monthlyRecurringRevenue;
+        }
+
+        public BigDecimal getAnnualRecurringRevenue() {
+            return annualRecurringRevenue;
+        }
+
+        public void setAnnualRecurringRevenue(BigDecimal annualRecurringRevenue) {
+            this.annualRecurringRevenue = annualRecurringRevenue;
+        }
+
+        public Integer getSubscriptionUpgrades() {
+            return subscriptionUpgrades;
+        }
+
+        public void setSubscriptionUpgrades(Integer subscriptionUpgrades) {
+            this.subscriptionUpgrades = subscriptionUpgrades;
+        }
+
+        public Integer getSubscriptionDowngrades() {
+            return subscriptionDowngrades;
+        }
+
+        public void setSubscriptionDowngrades(Integer subscriptionDowngrades) {
+            this.subscriptionDowngrades = subscriptionDowngrades;
+        }
+
+        public Integer getSubscriptionCancellations() {
+            return subscriptionCancellations;
+        }
+
+        public void setSubscriptionCancellations(Integer subscriptionCancellations) {
+            this.subscriptionCancellations = subscriptionCancellations;
+        }
+
+        public BigDecimal getChurnRate() {
+            return churnRate;
+        }
+
+        public void setChurnRate(BigDecimal churnRate) {
+            this.churnRate = churnRate;
+        }
+
+        public BigDecimal getRetentionRate() {
+            return retentionRate;
+        }
+
+        public void setRetentionRate(BigDecimal retentionRate) {
+            this.retentionRate = retentionRate;
+        }
+
+        public LocalDateTime getFirstSubscriptionDate() {
+            return firstSubscriptionDate;
+        }
+
+        public void setFirstSubscriptionDate(LocalDateTime firstSubscriptionDate) {
+            this.firstSubscriptionDate = firstSubscriptionDate;
+        }
+
+        public LocalDateTime getLastSubscriptionDate() {
+            return lastSubscriptionDate;
+        }
+
+        public void setLastSubscriptionDate(LocalDateTime lastSubscriptionDate) {
+            this.lastSubscriptionDate = lastSubscriptionDate;
+        }
+
+        public String getPreferredBillingCycle() {
+            return preferredBillingCycle;
+        }
+
+        public void setPreferredBillingCycle(String preferredBillingCycle) {
+            this.preferredBillingCycle = preferredBillingCycle;
+        }
+
+        public String getPreferredPaymentMethod() {
+            return preferredPaymentMethod;
+        }
+
+        public void setPreferredPaymentMethod(String preferredPaymentMethod) {
+            this.preferredPaymentMethod = preferredPaymentMethod;
+        }
+
+        public List<String> getActivePlanTypes() {
+            return activePlanTypes;
+        }
+
+        public void setActivePlanTypes(List<String> activePlanTypes) {
+            this.activePlanTypes = activePlanTypes;
+        }
+
+        public Map<String, Integer> getSubscriptionsByPlan() {
+            return subscriptionsByPlan;
+        }
+
+        public void setSubscriptionsByPlan(Map<String, Integer> subscriptionsByPlan) {
+            this.subscriptionsByPlan = subscriptionsByPlan;
+        }
+
+        public Map<String, BigDecimal> getRevenueByPlan() {
+            return revenueByPlan;
+        }
+
+        public void setRevenueByPlan(Map<String, BigDecimal> revenueByPlan) {
+            this.revenueByPlan = revenueByPlan;
+        }
     }
 
-    public void setTotalLikes(Long totalLikes) {
-        this.totalLikes = totalLikes;
+    public static class ContentMetrics {
+
+        private Integer totalContent;
+        private Integer publishedContent;
+        private Integer draftContent;
+        private Integer archivedContent;
+        private Map<String, Integer> contentByType;
+        private Map<String, Integer> contentByCategory;
+        private BigDecimal averageContentRating;
+        private Integer totalContentViews;
+        private Integer totalContentLikes;
+        private Integer totalContentComments;
+        private Integer totalContentShares;
+        private BigDecimal contentEngagementRate;
+        private List<String> topContentTags;
+        private Map<String, Integer> contentPerformanceByType;
+
+        // Getters and setters
+        public Integer getTotalContent() {
+            return totalContent;
+        }
+
+        public void setTotalContent(Integer totalContent) {
+            this.totalContent = totalContent;
+        }
+
+        public Integer getPublishedContent() {
+            return publishedContent;
+        }
+
+        public void setPublishedContent(Integer publishedContent) {
+            this.publishedContent = publishedContent;
+        }
+
+        public Integer getDraftContent() {
+            return draftContent;
+        }
+
+        public void setDraftContent(Integer draftContent) {
+            this.draftContent = draftContent;
+        }
+
+        public Integer getArchivedContent() {
+            return archivedContent;
+        }
+
+        public void setArchivedContent(Integer archivedContent) {
+            this.archivedContent = archivedContent;
+        }
+
+        public Map<String, Integer> getContentByType() {
+            return contentByType;
+        }
+
+        public void setContentByType(Map<String, Integer> contentByType) {
+            this.contentByType = contentByType;
+        }
+
+        public Map<String, Integer> getContentByCategory() {
+            return contentByCategory;
+        }
+
+        public void setContentByCategory(Map<String, Integer> contentByCategory) {
+            this.contentByCategory = contentByCategory;
+        }
+
+        public BigDecimal getAverageContentRating() {
+            return averageContentRating;
+        }
+
+        public void setAverageContentRating(BigDecimal averageContentRating) {
+            this.averageContentRating = averageContentRating;
+        }
+
+        public Integer getTotalContentViews() {
+            return totalContentViews;
+        }
+
+        public void setTotalContentViews(Integer totalContentViews) {
+            this.totalContentViews = totalContentViews;
+        }
+
+        public Integer getTotalContentLikes() {
+            return totalContentLikes;
+        }
+
+        public void setTotalContentLikes(Integer totalContentLikes) {
+            this.totalContentLikes = totalContentLikes;
+        }
+
+        public Integer getTotalContentComments() {
+            return totalContentComments;
+        }
+
+        public void setTotalContentComments(Integer totalContentComments) {
+            this.totalContentComments = totalContentComments;
+        }
+
+        public Integer getTotalContentShares() {
+            return totalContentShares;
+        }
+
+        public void setTotalContentShares(Integer totalContentShares) {
+            this.totalContentShares = totalContentShares;
+        }
+
+        public BigDecimal getContentEngagementRate() {
+            return contentEngagementRate;
+        }
+
+        public void setContentEngagementRate(BigDecimal contentEngagementRate) {
+            this.contentEngagementRate = contentEngagementRate;
+        }
+
+        public List<String> getTopContentTags() {
+            return topContentTags;
+        }
+
+        public void setTopContentTags(List<String> topContentTags) {
+            this.topContentTags = topContentTags;
+        }
+
+        public Map<String, Integer> getContentPerformanceByType() {
+            return contentPerformanceByType;
+        }
+
+        public void setContentPerformanceByType(Map<String, Integer> contentPerformanceByType) {
+            this.contentPerformanceByType = contentPerformanceByType;
+        }
     }
 
-    public Long getTotalComments() {
-        return totalComments;
+    public static class ActivityMetrics {
+
+        private Integer loginStreak;
+        private Integer totalSessions;
+        private Long totalTimeSpent; // in seconds
+        private BigDecimal averageSessionDuration;
+        private Integer totalPageViews;
+        private Integer totalActions;
+        private LocalDateTime lastLoginDate;
+        private LocalDateTime lastLogoutDate;
+        private Map<String, Integer> actionsByType;
+        private Map<String, Integer> pageViewsByPage;
+        private List<String> mostVisitedPages;
+        private Map<String, Integer> activityByHour;
+        private Map<String, Integer> activityByDay;
+
+        // Getters and setters
+        public Integer getLoginStreak() {
+            return loginStreak;
+        }
+
+        public void setLoginStreak(Integer loginStreak) {
+            this.loginStreak = loginStreak;
+        }
+
+        public Integer getTotalSessions() {
+            return totalSessions;
+        }
+
+        public void setTotalSessions(Integer totalSessions) {
+            this.totalSessions = totalSessions;
+        }
+
+        public Long getTotalTimeSpent() {
+            return totalTimeSpent;
+        }
+
+        public void setTotalTimeSpent(Long totalTimeSpent) {
+            this.totalTimeSpent = totalTimeSpent;
+        }
+
+        public BigDecimal getAverageSessionDuration() {
+            return averageSessionDuration;
+        }
+
+        public void setAverageSessionDuration(BigDecimal averageSessionDuration) {
+            this.averageSessionDuration = averageSessionDuration;
+        }
+
+        public Integer getTotalPageViews() {
+            return totalPageViews;
+        }
+
+        public void setTotalPageViews(Integer totalPageViews) {
+            this.totalPageViews = totalPageViews;
+        }
+
+        public Integer getTotalActions() {
+            return totalActions;
+        }
+
+        public void setTotalActions(Integer totalActions) {
+            this.totalActions = totalActions;
+        }
+
+        public LocalDateTime getLastLoginDate() {
+            return lastLoginDate;
+        }
+
+        public void setLastLoginDate(LocalDateTime lastLoginDate) {
+            this.lastLoginDate = lastLoginDate;
+        }
+
+        public LocalDateTime getLastLogoutDate() {
+            return lastLogoutDate;
+        }
+
+        public void setLastLogoutDate(LocalDateTime lastLogoutDate) {
+            this.lastLogoutDate = lastLogoutDate;
+        }
+
+        public Map<String, Integer> getActionsByType() {
+            return actionsByType;
+        }
+
+        public void setActionsByType(Map<String, Integer> actionsByType) {
+            this.actionsByType = actionsByType;
+        }
+
+        public Map<String, Integer> getPageViewsByPage() {
+            return pageViewsByPage;
+        }
+
+        public void setPageViewsByPage(Map<String, Integer> pageViewsByPage) {
+            this.pageViewsByPage = pageViewsByPage;
+        }
+
+        public List<String> getMostVisitedPages() {
+            return mostVisitedPages;
+        }
+
+        public void setMostVisitedPages(List<String> mostVisitedPages) {
+            this.mostVisitedPages = mostVisitedPages;
+        }
+
+        public Map<String, Integer> getActivityByHour() {
+            return activityByHour;
+        }
+
+        public void setActivityByHour(Map<String, Integer> activityByHour) {
+            this.activityByHour = activityByHour;
+        }
+
+        public Map<String, Integer> getActivityByDay() {
+            return activityByDay;
+        }
+
+        public void setActivityByDay(Map<String, Integer> activityByDay) {
+            this.activityByDay = activityByDay;
+        }
     }
 
-    public void setTotalComments(Long totalComments) {
-        this.totalComments = totalComments;
+    public static class PerformanceMetrics {
+
+        private BigDecimal responseTime;
+        private BigDecimal loadTime;
+        private BigDecimal renderTime;
+        private Integer memoryUsage;
+        private Integer cpuUsage;
+        private Integer errorCount;
+        private BigDecimal errorRate;
+        private Integer cacheHitRate;
+        private Integer apiCallSuccessRate;
+        private Map<String, BigDecimal> performanceByFeature;
+
+        // Getters and setters
+        public BigDecimal getResponseTime() {
+            return responseTime;
+        }
+
+        public void setResponseTime(BigDecimal responseTime) {
+            this.responseTime = responseTime;
+        }
+
+        public BigDecimal getLoadTime() {
+            return loadTime;
+        }
+
+        public void setLoadTime(BigDecimal loadTime) {
+            this.loadTime = loadTime;
+        }
+
+        public BigDecimal getRenderTime() {
+            return renderTime;
+        }
+
+        public void setRenderTime(BigDecimal renderTime) {
+            this.renderTime = renderTime;
+        }
+
+        public Integer getMemoryUsage() {
+            return memoryUsage;
+        }
+
+        public void setMemoryUsage(Integer memoryUsage) {
+            this.memoryUsage = memoryUsage;
+        }
+
+        public Integer getCpuUsage() {
+            return cpuUsage;
+        }
+
+        public void setCpuUsage(Integer cpuUsage) {
+            this.cpuUsage = cpuUsage;
+        }
+
+        public Integer getErrorCount() {
+            return errorCount;
+        }
+
+        public void setErrorCount(Integer errorCount) {
+            this.errorCount = errorCount;
+        }
+
+        public BigDecimal getErrorRate() {
+            return errorRate;
+        }
+
+        public void setErrorRate(BigDecimal errorRate) {
+            this.errorRate = errorRate;
+        }
+
+        public Integer getCacheHitRate() {
+            return cacheHitRate;
+        }
+
+        public void setCacheHitRate(Integer cacheHitRate) {
+            this.cacheHitRate = cacheHitRate;
+        }
+
+        public Integer getApiCallSuccessRate() {
+            return apiCallSuccessRate;
+        }
+
+        public void setApiCallSuccessRate(Integer apiCallSuccessRate) {
+            this.apiCallSuccessRate = apiCallSuccessRate;
+        }
+
+        public Map<String, BigDecimal> getPerformanceByFeature() {
+            return performanceByFeature;
+        }
+
+        public void setPerformanceByFeature(Map<String, BigDecimal> performanceByFeature) {
+            this.performanceByFeature = performanceByFeature;
+        }
     }
 
-    public Long getTotalShares() {
-        return totalShares;
+    public static class BehavioralPatterns {
+
+        private String preferredContentType;
+        private String preferredInteractionTime;
+        private String preferredDevice;
+        private String preferredPlatform;
+        private List<String> interests;
+        private List<String> preferences;
+        private Map<String, Integer> behaviorFrequency;
+        private Map<String, BigDecimal> behaviorScores;
+        private String userPersona;
+        private String engagementStyle;
+
+        // Getters and setters
+        public String getPreferredContentType() {
+            return preferredContentType;
+        }
+
+        public void setPreferredContentType(String preferredContentType) {
+            this.preferredContentType = preferredContentType;
+        }
+
+        public String getPreferredInteractionTime() {
+            return preferredInteractionTime;
+        }
+
+        public void setPreferredInteractionTime(String preferredInteractionTime) {
+            this.preferredInteractionTime = preferredInteractionTime;
+        }
+
+        public String getPreferredDevice() {
+            return preferredDevice;
+        }
+
+        public void setPreferredDevice(String preferredDevice) {
+            this.preferredDevice = preferredDevice;
+        }
+
+        public String getPreferredPlatform() {
+            return preferredPlatform;
+        }
+
+        public void setPreferredPlatform(String preferredPlatform) {
+            this.preferredPlatform = preferredPlatform;
+        }
+
+        public List<String> getInterests() {
+            return interests;
+        }
+
+        public void setInterests(List<String> interests) {
+            this.interests = interests;
+        }
+
+        public List<String> getPreferences() {
+            return preferences;
+        }
+
+        public void setPreferences(List<String> preferences) {
+            this.preferences = preferences;
+        }
+
+        public Map<String, Integer> getBehaviorFrequency() {
+            return behaviorFrequency;
+        }
+
+        public void setBehaviorFrequency(Map<String, Integer> behaviorFrequency) {
+            this.behaviorFrequency = behaviorFrequency;
+        }
+
+        public Map<String, BigDecimal> getBehaviorScores() {
+            return behaviorScores;
+        }
+
+        public void setBehaviorScores(Map<String, BigDecimal> behaviorScores) {
+            this.behaviorScores = behaviorScores;
+        }
+
+        public String getUserPersona() {
+            return userPersona;
+        }
+
+        public void setUserPersona(String userPersona) {
+            this.userPersona = userPersona;
+        }
+
+        public String getEngagementStyle() {
+            return engagementStyle;
+        }
+
+        public void setEngagementStyle(String engagementStyle) {
+            this.engagementStyle = engagementStyle;
+        }
     }
 
-    public void setTotalShares(Long totalShares) {
-        this.totalShares = totalShares;
-    }
-
-    public Long getTotalViews() {
-        return totalViews;
-    }
-
-    public void setTotalViews(Long totalViews) {
-        this.totalViews = totalViews;
-    }
-
-    public Long getTotalFollowers() {
-        return totalFollowers;
-    }
-
-    public void setTotalFollowers(Long totalFollowers) {
-        this.totalFollowers = totalFollowers;
-    }
-
-    public Long getTotalFollowing() {
-        return totalFollowing;
-    }
-
-    public void setTotalFollowing(Long totalFollowing) {
-        this.totalFollowing = totalFollowing;
-    }
-
-    public Double getEngagementRate() {
-        return engagementRate;
-    }
-
-    public void setEngagementRate(Double engagementRate) {
-        this.engagementRate = engagementRate;
-    }
-
+    // Additional getters and setters for service compatibility
     public LocalDateTime getLastActiveAt() {
-        return lastActiveAt;
+        return lastActiveDate;
     }
 
     public void setLastActiveAt(LocalDateTime lastActiveAt) {
-        this.lastActiveAt = lastActiveAt;
+        this.lastActiveDate = lastActiveAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    public Long getTotalPosts() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getPostsCount() != null ? socialMetrics.getPostsCount() : 0) : 0L;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public void setTotalPosts(long totalPosts) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setPostsCount((int) totalPosts);
     }
 
-    // Utility methods
-    public void incrementPostsCreated() {
-        this.postsCreated++;
+    public Long getTotalLikes() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getLikesReceived() != null ? socialMetrics.getLikesReceived() : 0) : 0L;
     }
 
-    public void incrementCommentsMade() {
-        this.commentsMade++;
+    public void setTotalLikes(long totalLikes) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setLikesReceived((int) totalLikes);
     }
 
-    public void incrementLikesGiven() {
-        this.likesGiven++;
+    public Long getTotalComments() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getCommentsReceived() != null ? socialMetrics.getCommentsReceived() : 0) : 0L;
     }
 
-    public void incrementLikesReceived() {
-        this.likesReceived++;
+    public void setTotalComments(long totalComments) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setCommentsReceived((int) totalComments);
     }
 
-    public void incrementMessagesSent() {
-        this.messagesSent++;
+    public Long getTotalShares() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getSharesReceived() != null ? socialMetrics.getSharesReceived() : 0) : 0L;
     }
 
-    public void addSessionDuration(int minutes) {
-        this.totalSessionDuration += minutes;
-        this.sessionCount++;
+    public void setTotalShares(long totalShares) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setSharesReceived((int) totalShares);
     }
 
-    public void addSpending(BigDecimal amount) {
-        this.totalSpent = this.totalSpent.add(amount);
-        this.ordersPlaced++;
+    public Long getTotalViews() {
+        // Views are not directly tracked in SocialMetrics, return 0 for now
+        return 0L;
     }
 
-    public double getAverageSessionDuration() {
-        return sessionCount > 0 ? (double) totalSessionDuration / sessionCount : 0.0;
+    public void setTotalViews(long totalViews) {
+        // Views are not directly tracked in SocialMetrics, do nothing for now
     }
 
-    public int getTotalEngagementActions() {
-        return postsCreated + commentsMade + likesGiven + sharesMade + messagesSent;
+    public Long getTotalFollowers() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getFollowersCount() != null ? socialMetrics.getFollowersCount() : 0) : 0L;
     }
 
-    public boolean isActiveUser() {
-        return getTotalEngagementActions() > 0 || sessionCount > 0;
+    public void setTotalFollowers(long totalFollowers) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setFollowersCount((int) totalFollowers);
     }
 
-    @Override
-    public String toString() {
-        return "UserMetrics{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", metricDate=" + metricDate +
-                ", postsCreated=" + postsCreated +
-                ", sessionCount=" + sessionCount +
-                ", engagementScore=" + engagementScore +
-                ", activityScore=" + activityScore +
-                '}';
+    public Long getTotalFollowing() {
+        return socialMetrics != null ? Long.valueOf(socialMetrics.getFollowingCount() != null ? socialMetrics.getFollowingCount() : 0) : 0L;
+    }
+
+    public void setTotalFollowing(long totalFollowing) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setFollowingCount((int) totalFollowing);
+    }
+
+    public BigDecimal getEngagementRate() {
+        return socialMetrics != null ? (socialMetrics.getSocialEngagement() != null ? socialMetrics.getSocialEngagement() : BigDecimal.ZERO) : BigDecimal.ZERO;
+    }
+
+    public void setEngagementRate(BigDecimal engagementRate) {
+        if (socialMetrics == null) {
+            socialMetrics = new SocialMetrics();
+        }
+        socialMetrics.setSocialEngagement(engagementRate);
+    }
+
+    public void setEngagementRate(double engagementRate) {
+        setEngagementRate(BigDecimal.valueOf(engagementRate));
     }
 }

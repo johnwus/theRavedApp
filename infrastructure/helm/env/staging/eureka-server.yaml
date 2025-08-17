@@ -1,0 +1,16 @@
+nameOverride: eureka-server
+image:
+  repository: ghcr.io/theravedapp
+  tag: staging
+service:
+  port: 8761
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: staging
+

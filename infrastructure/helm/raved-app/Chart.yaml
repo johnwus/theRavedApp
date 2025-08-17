@@ -1,0 +1,7 @@
+apiVersion: v2
+name: raved-app
+description: Reusable Helm chart for Raved microservices (Deployment/Service/Ingress/HPA)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+

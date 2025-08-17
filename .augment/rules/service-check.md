@@ -1,0 +1,116 @@
+---
+type: "always_apply"
+---
+
+# Pre-Implementation Instruction Set for Service Development
+
+Before starting any new service implementation (e.g., user-service), always perform a project-context alignment analysis to ensure consistency with the established workflows, infrastructure, and automation patterns of the repository.
+
+---
+
+## 1. Analyze Repository Standards
+
+### a. GitHub Workflows (`@c:\theRavedApp\.github\`)
+- Review CI/CD pipeline configurations  
+- Note automated testing frameworks, coverage requirements, and code quality checks  
+- Understand deployment automation steps (branch rules, build artifacts, container publishing)  
+- Identify required pre-merge checks  
+
+### b. Infrastructure Setup (`@c:\theRavedApp\infrastructure\`)
+- Document Docker build patterns (base images, multi-stage builds, environment variables)  
+- Identify Kubernetes/Helm deployment standards  
+- Understand database provisioning and connectivity patterns  
+- Record environment-specific configuration differences (dev, staging, prod)  
+
+### c. Setup Scripts (`@c:\theRavedApp\scripts\setup\`)
+- Analyze service bootstrap scripts (initialization, migrations, environment prep)  
+- Review patterns for database migration and rollback  
+- Capture service startup sequences (entry points, health checks, dependency ordering)  
+- Note developer onboarding automation and local setup standards  
+
+---
+
+## 2. Adapt Implementation Plan to Project Context
+
+Once analysis is complete, revise the service implementation plan to:
+
+- **CI/CD Alignment**: Ensure new service follows the same testing, linting, and build standards as defined in GitHub workflows.  
+- **Infrastructure Integration**: Follow existing deployment templates (Dockerfile style, Kubernetes manifests, Helm charts) to avoid custom deviations.  
+- **Setup Script Compatibility**: Integrate service initialization, migrations, and bootstrap steps into the existing setup scripts.  
+- **Consistency with Dev Practices**: Match logging, error handling, configuration management, and coding standards already enforced in the repo.  
+- **Seamless Build/Deploy Fit**: Validate that the new service can move through the pipeline (build → test → package → deploy) without breaking established automation.  
+
+---
+
+## 3. Deliverable: Revised Task List
+
+The final deliverable should be a clear, step-by-step revised task list for the new service that incorporates:
+
+- Updates needed in `.github` workflows (if any).  
+- Required infrastructure artifacts (Dockerfile, Helm values, Kubernetes manifests).  
+- Adjustments or additions to `scripts/setup` for integration.  
+- Service-specific implementation tasks (controllers, models, APIs, validations).  
+- Testing tasks aligned with CI/CD coverage requirements.  
+- Deployment verification steps to confirm smooth integration with existing environments.  
+
+---
+
+## GitHub Workflows
+**Path:** `@c:\theRavedApp\.github\`  
+**Purpose:** Review and extract patterns from:  
+- CI/CD pipeline configurations  
+- Automated testing workflows  
+- Code quality checks and standards  
+- Deployment automation processes  
+
+---
+
+## Infrastructure Setup
+**Path:** `@c:\theRavedApp\infrastructure\`  
+**Purpose:** Identify and align with:  
+- Docker and Kubernetes configurations  
+- Database setup patterns  
+- Service deployment templates  
+- Environment-specific configurations  
+
+---
+
+## Setup Scripts
+**Path:** `@c:\theRavedApp\scripts\setup\`  
+**Purpose:** Examine to understand:  
+- Project initialization procedures  
+- Database migration patterns  
+- Service startup sequences  
+- Development environment setup standards  
+
+---
+
+## Documentation & Service Design
+**Path:** `@c:\theRavedApp\docs\services\`  
+**Purpose:** Review service-specific documentation to capture:  
+- Service architecture guidelines  
+- API contracts and specifications  
+- Business rules and domain context  
+- Integration points with other services  
+
+---
+
+## Global Project Doctype
+**File:** `@c:\theRavedApp\Doctype.html`  
+**Purpose:** Extract any project-wide conventions such as:  
+- Architectural principles  
+- Naming standards  
+- Documentation baselines  
+- Design patterns or coding practices mandated  
+
+---
+
+## Task Alignment After Analysis
+Based on this pre-analysis, update the service implementation plan to ensure it:
+
+- **Aligns with CI/CD workflows**: Uses existing test patterns, linting, and pipelines  
+- **Follows infrastructure standards**: Matches deployment, containerization, and service orchestration templates  
+- **Integrates with setup scripts**: Hooks into existing initialization, migration, and automation flows  
+- **Reflects documentation standards**: Extends or updates service docs in `docs/services`  
+- **Respects Doctype conventions**: Ensures compliance with project-wide rules and principles  
+- **Maintains consistency**: Guarantees seamless integration with the current build, deployment, and documentation pipeline  

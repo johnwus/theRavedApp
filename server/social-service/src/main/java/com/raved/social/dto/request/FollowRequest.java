@@ -1,36 +1,43 @@
 package com.raved.social.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * FollowRequest for TheRavedApp
+ * Updated for MongoDB compatibility with String
+ * IDs
  */
 public class FollowRequest {
-    private Long followerId;
-    private Long followingId;
+    @NotBlank(message = "Follower ID is required")
+    private String followerId;
+
+    @NotBlank(message = "Following ID is required")
+    private String followingId;
     
     // Default constructor
     public FollowRequest() {
     }
     
     // Constructor with all fields
-    public FollowRequest(Long followerId, Long followingId) {
+    public FollowRequest(String followerId, String followingId) {
         this.followerId = followerId;
         this.followingId = followingId;
     }
     
     // Getters and Setters
-    public Long getFollowerId() {
+    public String getFollowerId() {
         return followerId;
     }
     
-    public void setFollowerId(Long followerId) {
+    public void setFollowerId(String followerId) {
         this.followerId = followerId;
     }
     
-    public Long getFollowingId() {
+    public String getFollowingId() {
         return followingId;
     }
     
-    public void setFollowingId(Long followingId) {
+    public void setFollowingId(String followingId) {
         this.followingId = followingId;
     }
 }

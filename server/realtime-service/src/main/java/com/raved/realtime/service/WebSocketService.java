@@ -4,5 +4,5 @@ package com.raved.realtime.service;
  * WebSocketService for TheRavedApp
  */
 public interface WebSocketService {
-    // Implementation
+    void sendToRoom(String roomId, String event, String payload);
 }

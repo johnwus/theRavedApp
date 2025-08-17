@@ -1,104 +1,143 @@
 package com.raved.social.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Entity representing a comment on a post or another comment
+ * Comment Document for TheRavedApp MongoDB
+ *
+ * Represents a comment on a post or another comment. Converted from JPA entity
+ * to MongoDB document.
  */
-@Entity
-@Table(name = "comments")
+@Document(collection = "comments")
+@CompoundIndexes({
+    @CompoundIndex(name = "post_created_idx", def = "{'postId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "user_created_idx", def = "{'userId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "parent_created_idx", def = "{'parentCommentId': 1, 'createdAt': -1}")
+})
 public class Comment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "post_id", nullable = false)
-    private Long postId;
+    @Indexed
+    @NotBlank(message = "Post ID is required")
+    private String postId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Indexed
+    @NotBlank(message = "User ID is required")
+    private String userId;
 
-    @Column(name = "parent_comment_id")
-    private Long parentCommentId;
+    @Indexed
+    private String parentCommentId;
 
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    @TextIndexed(weight = 5)
+    @NotBlank(message = "Content is required")
+    @Size(max = 2000, message = "Comment content must not exceed 2000 characters")
     private String content;
 
-    @Column(name = "likes_count")
+    @Indexed
     private Integer likesCount = 0;
 
-    @Column(name = "replies_count")
+    @Indexed
     private Integer repliesCount = 0;
 
-    @Column(name = "is_flagged")
+    @Indexed
     private Boolean isFlagged = false;
 
-    @Column(name = "moderation_status")
+    @Indexed
     private String moderationStatus = "APPROVED";
 
-    @Column(name = "is_deleted")
+    @Indexed
     private Boolean isDeleted = false;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Indexed
+    @NotNull(message = "Created at is required")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Indexed
     private LocalDateTime updatedAt;
+
+    // Additional MongoDB-specific fields for enhanced social features
+    private String authorName; // Cached author name for performance
+
+    private String authorAvatar; // Cached author avatar URL
+
+    private List<String> mentionedUserIds; // Users mentioned in the comment
+
+    private List<String> hashtags; // Hashtags in the comment
+
+    private String language = "en"; // Language of the comment
+
+    private String sentiment = "NEUTRAL"; // AI-detected sentiment: POSITIVE, NEGATIVE, NEUTRAL
+
+    private Map<String, Object> metadata; // For additional custom fields
+
+    private String commentType = "TEXT"; // TEXT, RICH_TEXT, VOICE, VIDEO
+
+    private Integer reportCount = 0; // Number of times reported
+
+    private String lastModeratedBy; // Last moderator ID
+
+    private LocalDateTime lastModeratedAt; // Last moderation timestamp
+
+    private String moderationReason; // Reason for moderation action
 
     // Default constructor
     public Comment() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    // Constructor with all fields
-    public Comment(Long id, Long postId, Long userId, Long parentCommentId, String content, 
-                  Integer likesCount, Integer repliesCount, Boolean isFlagged, String moderationStatus, 
-                  Boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
+    // Constructor with core fields
+    public Comment(String postId, String userId, String content) {
+        this();
         this.postId = postId;
         this.userId = userId;
-        this.parentCommentId = parentCommentId;
         this.content = content;
-        this.likesCount = likesCount;
-        this.repliesCount = repliesCount;
-        this.isFlagged = isFlagged;
-        this.moderationStatus = moderationStatus;
-        this.isDeleted = isDeleted;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getPostId() {
+    public String getPostId() {
         return postId;
     }
 
-    public void setPostId(Long postId) {
+    public void setPostId(String postId) {
         this.postId = postId;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public Long getParentCommentId() {
+    public String getParentCommentId() {
         return parentCommentId;
     }
 
-    public void setParentCommentId(Long parentCommentId) {
+    public void setParentCommentId(String parentCommentId) {
         this.parentCommentId = parentCommentId;
     }
 
@@ -166,14 +205,102 @@ public class Comment {
         this.updatedAt = updatedAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    // New MongoDB-specific getters and setters
+    public String getAuthorName() {
+        return authorName;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
     }
+
+    public String getAuthorAvatar() {
+        return authorAvatar;
+    }
+
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
+    }
+
+    public List<String> getMentionedUserIds() {
+        return mentionedUserIds;
+    }
+
+    public void setMentionedUserIds(List<String> mentionedUserIds) {
+        this.mentionedUserIds = mentionedUserIds;
+    }
+
+    public List<String> getHashtags() {
+        return hashtags;
+    }
+
+    public void setHashtags(List<String> hashtags) {
+        this.hashtags = hashtags;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getSentiment() {
+        return sentiment;
+    }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getCommentType() {
+        return commentType;
+    }
+
+    public void setCommentType(String commentType) {
+        this.commentType = commentType;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(Integer reportCount) {
+        this.reportCount = reportCount;
+    }
+
+    public String getLastModeratedBy() {
+        return lastModeratedBy;
+    }
+
+    public void setLastModeratedBy(String lastModeratedBy) {
+        this.lastModeratedBy = lastModeratedBy;
+    }
+
+    public LocalDateTime getLastModeratedAt() {
+        return lastModeratedAt;
+    }
+
+    public void setLastModeratedAt(LocalDateTime lastModeratedAt) {
+        this.lastModeratedAt = lastModeratedAt;
+    }
+
+    public String getModerationReason() {
+        return moderationReason;
+    }
+
+    public void setModerationReason(String moderationReason) {
+        this.moderationReason = moderationReason;
+    }
+
+
 }

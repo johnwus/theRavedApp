@@ -1,0 +1,36 @@
+nameOverride: api-gateway
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8080
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+    - host: api.raved.app
+      path: /
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+secretEnv:
+  JWT_SECRET:
+    name: raved-jwt
+    key: jwt-secret
+secrets:
+  - name: raved-jwt
+    absoluteName: true
+    data:
+      jwt-secret: ${JWT_SECRET}
+

@@ -65,7 +65,7 @@ public class TrendingServiceImpl implements TrendingService {
         List<TrendingContentResponse> trendingContent = new ArrayList<>();
         
         for (Object[] metrics : contentMetrics) {
-            Long contentId = (Long) metrics[0];
+            String contentId = (String) metrics[0];
             Long viewCount = (Long) metrics[1];
             Long likeCount = (Long) metrics[2];
             Long commentCount = (Long) metrics[3];
@@ -124,7 +124,8 @@ public class TrendingServiceImpl implements TrendingService {
         
         // Get trending hashtags/topics from recent events
         LocalDateTime since = LocalDateTime.now().minusHours(6); // Last 6 hours for topics
-        List<Object[]> topicData = eventRepository.getTrendingTopics(since, limit * 2);
+        LocalDateTime now = LocalDateTime.now();
+        List<Object[]> topicData = eventRepository.getTrendingTopics(since, now, limit * 2);
         
         List<TrendingTopicResponse> trendingTopics = new ArrayList<>();
         
@@ -199,7 +200,7 @@ public class TrendingServiceImpl implements TrendingService {
             
             if (trendingScore > 0) {
                 TrendingContentResponse content = new TrendingContentResponse();
-                content.setContentId(contentId);
+                content.setContentId(String.valueOf(contentId));
                 content.setTrendingScore(trendingScore);
                 content.setViewCount(viewCount);
                 content.setLikeCount(likeCount);
@@ -251,7 +252,7 @@ public class TrendingServiceImpl implements TrendingService {
             
             if (trendingScore > 0) {
                 TrendingContentResponse content = new TrendingContentResponse();
-                content.setContentId(contentId);
+                content.setContentId(String.valueOf(contentId));
                 content.setTrendingScore(trendingScore);
                 content.setViewCount(viewCount);
                 content.setLikeCount(likeCount);
@@ -312,7 +313,8 @@ public class TrendingServiceImpl implements TrendingService {
         double avgTrendingVelocity = calculateAverageTrendingVelocity(last7Days);
         
         // Peak trending hours
-        List<Object[]> peakHours = eventRepository.getPeakEngagementHours(last7Days);
+        LocalDateTime now = LocalDateTime.now();
+        List<Object[]> peakHours = eventRepository.getPeakEngagementHours(last7Days, now);
         Map<String, Long> peakHoursMap = new HashMap<>();
         for (Object[] hour : peakHours) {
             peakHoursMap.put(hour[0].toString(), (Long) hour[1]);
@@ -349,15 +351,15 @@ public class TrendingServiceImpl implements TrendingService {
     }
 
     @Override
-    public List<Long> predictTrendingContent(int hours) {
+    public List<String> predictTrendingContent(int hours) {
         logger.debug("Predicting trending content for next {} hours", hours);
         
         // Get recent high-engagement content that might become trending
         LocalDateTime since = LocalDateTime.now().minusHours(2);
         List<Object[]> candidates = contentMetricsRepository.getHighEngagementContent(since, 50);
         
-        List<Long> predictions = new ArrayList<>();
-        
+        List<String> predictions = new ArrayList<>();
+
         for (Object[] candidate : candidates) {
             Long contentId = (Long) candidate[0];
             Long viewCount = (Long) candidate[1];
@@ -365,16 +367,16 @@ public class TrendingServiceImpl implements TrendingService {
             Long commentCount = (Long) candidate[3];
             Long shareCount = (Long) candidate[4];
             LocalDateTime createdAt = (LocalDateTime) candidate[5];
-            
+
             // Use algorithm to predict trending potential
             double trendingPotential = trendingAlgorithm.predictTrendingPotential(
                     viewCount, likeCount, commentCount, shareCount, createdAt, hours);
-            
+
             if (trendingPotential > 0.7) { // 70% threshold for prediction
-                predictions.add(contentId);
+                predictions.add(String.valueOf(contentId));
             }
         }
-        
+
         logger.info("Predicted {} content items to become trending", predictions.size());
         return predictions;
     }
@@ -399,7 +401,7 @@ public class TrendingServiceImpl implements TrendingService {
                     viewCount, likeCount, commentCount, shareCount, createdAt);
             
             // Update trending score in database
-            contentMetricsRepository.updateTrendingScore(contentId, trendingScore);
+            contentMetricsRepository.updateTrendingScore(String.valueOf(contentId), trendingScore);
             updatedCount++;
         }
         

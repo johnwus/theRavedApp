@@ -3,9 +3,8 @@ package com.raved.notification.repository;
 import com.raved.notification.model.DeviceToken;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -13,10 +12,11 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * DeviceTokenRepository for TheRavedApp
+ * DeviceTokenRepository for TheRavedApp MongoDB Converted from JPA to MongoDB
+ * repository
  */
 @Repository
-public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> {
+public interface DeviceTokenRepository extends MongoRepository<DeviceToken, String> {
 
     /**
      * Find device token by token string
@@ -26,12 +26,12 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     /**
      * Find active device tokens by user ID
      */
-    List<DeviceToken> findByUserIdAndIsActiveTrue(Long userId);
+    List<DeviceToken> findByUserIdAndIsActiveTrue(String userId);
 
     /**
      * Find all device tokens by user ID
      */
-    List<DeviceToken> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<DeviceToken> findByUserIdOrderByCreatedAtDesc(String userId);
 
     /**
      * Find device tokens by platform
@@ -41,12 +41,12 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     /**
      * Find device tokens by user ID and platform
      */
-    List<DeviceToken> findByUserIdAndPlatformAndIsActiveTrue(Long userId, DeviceToken.Platform platform);
+    List<DeviceToken> findByUserIdAndPlatformAndIsActiveTrue(String userId, DeviceToken.Platform platform);
 
     /**
      * Check if token exists for user
      */
-    boolean existsByUserIdAndToken(Long userId, String token);
+    boolean existsByUserIdAndToken(String userId, String token);
 
     /**
      * Delete device token by token string
@@ -56,7 +56,7 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     /**
      * Delete device tokens by user ID
      */
-    void deleteByUserId(Long userId);
+    void deleteByUserId(String userId);
 
     /**
      * Find inactive device tokens
@@ -76,7 +76,7 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     /**
      * Count active device tokens by user
      */
-    long countByUserIdAndIsActiveTrue(Long userId);
+    long countByUserIdAndIsActiveTrue(String userId);
 
     /**
      * Count device tokens by platform
@@ -84,61 +84,45 @@ public interface DeviceTokenRepository extends JpaRepository<DeviceToken, Long> 
     long countByPlatformAndIsActiveTrue(DeviceToken.Platform platform);
 
     /**
-     * Find device tokens by app version
+     * Find device tokens for bulk operations (MongoDB query)
      */
-    List<DeviceToken> findByAppVersionAndIsActiveTrue(String appVersion);
+    @Query("{'userId': {'$in': ?0}, 'isActive': true}")
+    List<DeviceToken> findByUserIdsAndIsActiveTrue(List<String> userIds);
 
     /**
-     * Find device tokens for bulk operations
+     * Get device token statistics (MongoDB aggregation - simplified)
      */
-    @Query("SELECT dt FROM DeviceToken dt WHERE dt.userId IN :userIds AND dt.isActive = true")
-    List<DeviceToken> findByUserIdsAndIsActiveTrue(@Param("userIds") List<Long> userIds);
+    @Query(value = "{'isActive': true}", fields = "{'platform': 1}")
+    List<DeviceToken> getActiveDeviceTokensForStats();
 
     /**
-     * Find device tokens by platform and app version
+     * Find device tokens that need cleanup (MongoDB query)
      */
-    List<DeviceToken> findByPlatformAndAppVersionAndIsActiveTrue(DeviceToken.Platform platform, String appVersion);
-
-    /**
-     * Get device token statistics
-     */
-    @Query("SELECT dt.platform as platform, COUNT(dt) as count " +
-           "FROM DeviceToken dt WHERE dt.isActive = true " +
-           "GROUP BY dt.platform")
-    List<Object[]> getDeviceTokenStatsByPlatform();
-
-    /**
-     * Find device tokens that need cleanup
-     */
-    @Query("SELECT dt FROM DeviceToken dt WHERE " +
-           "(dt.isActive = false AND dt.updatedAt < :inactiveThreshold) OR " +
-           "(dt.lastUsedAt IS NOT NULL AND dt.lastUsedAt < :unusedThreshold)")
-    List<DeviceToken> findTokensForCleanup(@Param("inactiveThreshold") LocalDateTime inactiveThreshold,
-                                          @Param("unusedThreshold") LocalDateTime unusedThreshold);
-
-    /**
-     * Update last used timestamp
-     */
-    @Query("UPDATE DeviceToken dt SET dt.lastUsedAt = :lastUsedAt, dt.updatedAt = :updatedAt " +
-           "WHERE dt.token = :token")
-    void updateLastUsedAt(@Param("token") String token, 
-                         @Param("lastUsedAt") LocalDateTime lastUsedAt,
-                         @Param("updatedAt") LocalDateTime updatedAt);
-
-    /**
-     * Deactivate device tokens by user ID
-     */
-    @Query("UPDATE DeviceToken dt SET dt.isActive = false, dt.updatedAt = :updatedAt " +
-           "WHERE dt.userId = :userId")
-    void deactivateTokensByUserId(@Param("userId") Long userId, @Param("updatedAt") LocalDateTime updatedAt);
+    @Query("{'$or': [{'isActive': false, 'updatedAt': {'$lt': ?0}}, {'lastUsedAt': {'$lt': ?1, '$ne': null}}]}")
+    List<DeviceToken> findTokensForCleanup(LocalDateTime inactiveThreshold, LocalDateTime unusedThreshold);
 
     /**
      * Find paginated device tokens by user
      */
-    Page<DeviceToken> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<DeviceToken> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
     /**
      * Find device tokens by creation date range
      */
     List<DeviceToken> findByCreatedAtBetweenAndIsActiveTrue(LocalDateTime startDate, LocalDateTime endDate);
+
+    /**
+     * Additional MongoDB-specific methods for better performance
+     */
+
+    /**
+     * Find device tokens by multiple platforms
+     */
+    @Query("{'platform': {'$in': ?0}, 'isActive': true}")
+    List<DeviceToken> findByPlatformsAndIsActiveTrue(List<DeviceToken.Platform> platforms);
+
+    /**
+     * Count device tokens by user and platform
+     */
+    long countByUserIdAndPlatformAndIsActiveTrue(String userId, DeviceToken.Platform platform);
 }

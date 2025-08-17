@@ -4,12 +4,13 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for Comment responses
+ * Updated for MongoDB compatibility with String IDs
  */
 public class CommentResponse {
-    private Long id;
-    private Long postId;
-    private Long userId;
-    private Long parentCommentId;
+    private String id;
+    private String postId;
+    private String userId;
+    private String parentCommentId;
     private String content;
     private Integer likesCount;
     private Integer repliesCount;
@@ -30,7 +31,7 @@ public class CommentResponse {
     }
     
     // Constructor with all fields
-    public CommentResponse(Long id, Long postId, Long userId, Long parentCommentId, String content, 
+    public CommentResponse(String id, String postId, String userId, String parentCommentId, String content,
                          Integer likesCount, Integer repliesCount, Boolean isFlagged, String moderationStatus, 
                          Boolean isDeleted, LocalDateTime createdAt, LocalDateTime updatedAt, 
                          String userName, String userAvatar, Boolean isLikedByCurrentUser, String flaggedReason) {
@@ -53,35 +54,35 @@ public class CommentResponse {
     }
     
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     
-    public Long getPostId() {
+    public String getPostId() {
         return postId;
     }
     
-    public void setPostId(Long postId) {
+    public void setPostId(String postId) {
         this.postId = postId;
     }
     
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     
-    public Long getParentCommentId() {
+    public String getParentCommentId() {
         return parentCommentId;
     }
     
-    public void setParentCommentId(Long parentCommentId) {
+    public void setParentCommentId(String parentCommentId) {
         this.parentCommentId = parentCommentId;
     }
     

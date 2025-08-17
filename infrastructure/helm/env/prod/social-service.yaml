@@ -1,0 +1,32 @@
+nameOverride: social-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8083
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+ingress:
+  enabled: false
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+  - name: SOCIAL_SERVICE_DB_URL
+    value: ${SOCIAL_SERVICE_DB_URL}
+secretEnv:
+  DATABASE_USERNAME:
+    name: raved-db
+    key: username
+  DATABASE_PASSWORD:
+    name: raved-db
+    key: password
+

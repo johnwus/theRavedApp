@@ -1,22 +1,30 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
- * Notification Entity for TheRavedApp
+ * Notification Document for TheRavedApp MongoDB
  *
  * Represents individual notifications sent to users.
- * Based on the notifications table schema.
+ * Converted from JPA entity
+ * to MongoDB document.
  */
-@Entity
-@Table(name = "notifications", indexes = {
-        @Index(name = "idx_notifications_user", columnList = "user_id"),
-        @Index(name = "idx_notifications_type", columnList = "notification_type"),
-        @Index(name = "idx_notifications_read", columnList = "is_read"),
-        @Index(name = "idx_notifications_created_at", columnList = "created_at"),
-        @Index(name = "idx_notifications_delivery_status", columnList = "delivery_status"),
-        @Index(name = "idx_notifications_scheduled", columnList = "scheduled_at")
+@Document(collection = "notifications")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_user_type", def = "{'userId': 1, 'notificationType': 1}"),
+    @CompoundIndex(name = "idx_user_read", def = "{'userId': 1, 'isRead': 1}"),
+    @CompoundIndex(name = "idx_user_created", def = "{'userId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "idx_delivery_scheduled", def = "{'deliveryStatus': 1, 'scheduledAt': 1}")
 })
 public class Notification {
 
@@ -37,73 +45,83 @@ public class Notification {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    @Field("userId")
+    @Indexed
+    @NotNull
+    private String userId; // Reference to user service (changed to String for MongoDB)
 
-    @Column(name = "notification_type", nullable = false, length = 50)
+    @Field("notificationType")
+    @Indexed
+    @NotBlank
     private String notificationType; // LIKE, COMMENT, FOLLOW, ORDER_UPDATE, etc.
 
-    @Column(nullable = false, length = 255)
+    @Field("title")
+    @NotBlank
     private String title;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Field("body")
+    @NotBlank
     private String body;
 
     // Notification Data
-    @Column(columnDefinition = "JSONB")
-    private String data; // Additional notification data
+    @Field("data")
+    private Map<String, Object> data; // Additional notification data (changed to Map for MongoDB)
 
-    @Column(name = "action_url", columnDefinition = "TEXT")
+    @Field("actionUrl")
     private String actionUrl; // Deep link URL
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
+    @Field("imageUrl")
     private String imageUrl;
 
     // Delivery Status
-    @Column(name = "is_read")
+    @Field("isRead")
+    @Indexed
     private Boolean isRead = false;
 
-    @Column(name = "is_sent")
+    @Field("isSent")
     private Boolean isSent = false;
 
-    @Column(name = "delivery_status", length = 20)
-    private String deliveryStatus = "PENDING"; // PENDING, SENT, FAILED
+    @Field("deliveryStatus")
+    @Indexed
+    private DeliveryStatus deliveryStatus = DeliveryStatus.PENDING;
 
     // Channels
-    @Column(name = "push_sent")
+    @Field("pushSent")
     private Boolean pushSent = false;
 
-    @Column(name = "email_sent")
+    @Field("emailSent")
     private Boolean emailSent = false;
 
-    @Column(name = "sms_sent")
+    @Field("smsSent")
     private Boolean smsSent = false;
 
     // Timeline
-    @Column(name = "scheduled_at")
+    @Field("scheduledAt")
+    @Indexed
     private LocalDateTime scheduledAt;
 
-    @Column(name = "sent_at")
+    @Field("sentAt")
     private LocalDateTime sentAt;
 
-    @Column(name = "read_at")
+    @Field("readAt")
     private LocalDateTime readAt;
 
-    @Column(name = "expires_at")
+    @Field("expiresAt")
     private LocalDateTime expiresAt;
 
-    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Field("createdAt")
+    @Indexed
     private LocalDateTime createdAt;
 
     // Constructors
     public Notification() {
         this.createdAt = LocalDateTime.now();
+        this.deliveryStatus = DeliveryStatus.PENDING;
     }
 
-    public Notification(Long userId, String notificationType, String title, String body) {
+    public Notification(String userId, String notificationType, String title, String body) {
         this();
         this.userId = userId;
         this.notificationType = notificationType;
@@ -112,19 +130,19 @@ public class Notification {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -152,11 +170,11 @@ public class Notification {
         this.body = body;
     }
 
-    public String getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 
@@ -192,11 +210,11 @@ public class Notification {
         this.isSent = isSent;
     }
 
-    public String getDeliveryStatus() {
+    public DeliveryStatus getDeliveryStatus() {
         return deliveryStatus;
     }
 
-    public void setDeliveryStatus(String deliveryStatus) {
+    public void setDeliveryStatus(DeliveryStatus deliveryStatus) {
         this.deliveryStatus = deliveryStatus;
     }
 
@@ -268,7 +286,7 @@ public class Notification {
     public void markAsSent() {
         this.isSent = true;
         this.sentAt = LocalDateTime.now();
-        this.deliveryStatus = "SENT";
+        this.deliveryStatus = DeliveryStatus.SENT;
     }
 
     public void markAsRead() {
@@ -277,15 +295,15 @@ public class Notification {
     }
 
     public boolean isPending() {
-        return "PENDING".equals(this.deliveryStatus);
+        return DeliveryStatus.PENDING.equals(this.deliveryStatus);
     }
 
     public boolean isSent() {
-        return "SENT".equals(this.deliveryStatus);
+        return DeliveryStatus.SENT.equals(this.deliveryStatus);
     }
 
     public boolean isFailed() {
-        return "FAILED".equals(this.deliveryStatus);
+        return DeliveryStatus.FAILED.equals(this.deliveryStatus);
     }
 
     @Override

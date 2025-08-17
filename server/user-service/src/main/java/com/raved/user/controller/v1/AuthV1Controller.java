@@ -2,17 +2,23 @@ package com.raved.user.controller.v1;
 
 import com.raved.user.dto.request.LoginRequest;
 import com.raved.user.dto.request.RegisterRequest;
+import com.raved.user.dto.request.RegisterStepRequest;
 import com.raved.user.dto.response.AuthResponse;
+import com.raved.user.dto.response.RegisterStepResponse;
 import com.raved.user.service.AuthService;
+import com.raved.user.service.RegistrationService;
 import com.raved.user.service.VerificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-
-import com.raved.user.service.VerificationService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -25,19 +31,38 @@ public class AuthV1Controller {
     @Autowired
     private VerificationService verificationService;
 
+    @Autowired
+    private RegistrationService registrationService;
+
+    @Operation(summary = "Login", description = "Authenticate a user and return access/refresh tokens")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Authenticated",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class)))
+    })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @Operation(summary = "Register (multi-step)", description = "Handle a registration step; returns nextStep and sessionToken")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Step handled",
+            content = @Content(schema = @Schema(implementation = RegisterStepResponse.class)))
+    })
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.register(request));
+    public ResponseEntity<RegisterStepResponse> register(@Valid @RequestBody RegisterStepRequest request) {
+        return ResponseEntity.ok(registrationService.handleStep(request));
     }
 
+    @Operation(summary = "Refresh token", description = "Accepts refreshToken via query param or JSON body")
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(@RequestParam String refreshToken) {
-        return ResponseEntity.ok(authService.refreshToken(refreshToken));
+    public ResponseEntity<AuthResponse> refreshToken(@RequestParam(required = false) String refreshToken,
+                                                     @RequestBody(required = false) Map<String, String> body) {
+        String token = refreshToken;
+        if ((token == null || token.isBlank()) && body != null) {
+            token = body.get("refreshToken");
+        }
+        return ResponseEntity.ok(authService.refreshToken(token));
     }
 
     @PostMapping("/logout")
@@ -47,7 +72,7 @@ public class AuthV1Controller {
         return ResponseEntity.ok().build();
     }
 
-    // Placeholders for verification flows to be implemented in next phase
+    // Verification flows
     @PostMapping("/verify-email")
     public ResponseEntity<Map<String, Object>> verifyEmail(@RequestBody Map<String, String> payload) {
         String email = payload.getOrDefault("email", "");
@@ -80,4 +105,3 @@ public class AuthV1Controller {
         return ResponseEntity.ok(Map.of("success", true));
     }
 }
-

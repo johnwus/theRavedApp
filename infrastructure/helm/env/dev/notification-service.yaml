@@ -1,0 +1,16 @@
+nameOverride: notification-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: dev
+service:
+  port: 8086
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: local
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.raved-dev.svc.cluster.local:9092
+  - name: REDIS_HOST
+    value: redis-master.raved-dev.svc.cluster.local
+

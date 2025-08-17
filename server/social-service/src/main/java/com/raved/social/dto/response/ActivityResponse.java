@@ -4,14 +4,15 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for Activity responses
+ * Updated for MongoDB compatibility with String IDs
  */
 public class ActivityResponse {
-    private Long id;
-    private Long userId;
+    private String id;
+    private String userId;
     private String activityType;
-    private Long targetUserId;
-    private Long postId;
-    private Long commentId;
+    private String targetUserId;
+    private String postId;
+    private String commentId;
     private LocalDateTime createdAt;
     
     // Default constructor
@@ -19,7 +20,7 @@ public class ActivityResponse {
     }
     
     // Constructor with all fields
-    public ActivityResponse(Long id, Long userId, String activityType, Long targetUserId, Long postId, Long commentId, LocalDateTime createdAt) {
+    public ActivityResponse(String id, String userId, String activityType, String targetUserId, String postId, String commentId, LocalDateTime createdAt) {
         this.id = id;
         this.userId = userId;
         this.activityType = activityType;
@@ -28,53 +29,53 @@ public class ActivityResponse {
         this.commentId = commentId;
         this.createdAt = createdAt;
     }
-    
+
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
-    
-    public void setId(Long id) {
+
+    public void setId(String id) {
         this.id = id;
     }
-    
-    public Long getUserId() {
+
+    public String getUserId() {
         return userId;
     }
-    
-    public void setUserId(Long userId) {
+
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     
     public String getActivityType() {
         return activityType;
     }
-    
+
     public void setActivityType(String activityType) {
         this.activityType = activityType;
     }
-    
-    public Long getTargetUserId() {
+
+    public String getTargetUserId() {
         return targetUserId;
     }
-    
-    public void setTargetUserId(Long targetUserId) {
+
+    public void setTargetUserId(String targetUserId) {
         this.targetUserId = targetUserId;
     }
-    
-    public Long getPostId() {
+
+    public String getPostId() {
         return postId;
     }
-    
-    public void setPostId(Long postId) {
+
+    public void setPostId(String postId) {
         this.postId = postId;
     }
-    
-    public Long getCommentId() {
+
+    public String getCommentId() {
         return commentId;
     }
-    
-    public void setCommentId(Long commentId) {
+
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
     

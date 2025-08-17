@@ -3,52 +3,84 @@ package com.raved.social.repository;
 import com.raved.social.model.Follow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for Follow entities
+ * Repository for Follow MongoDB documents
  */
 @Repository
-public interface FollowRepository extends JpaRepository<Follow, Long> {
+public interface FollowRepository extends MongoRepository<Follow, String> {
     
-    Optional<Follow> findByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    Optional<Follow> findByFollowerIdAndFollowingIdAndStatus(String followerId, String followingId, String status);
     
-    Page<Follow> findByFollowerIdOrderByCreatedAtDesc(Long followerId, Pageable pageable);
+    Page<Follow> findByFollowerIdAndStatusOrderByCreatedAtDesc(String followerId, String status, Pageable pageable);
+
+    Page<Follow> findByFollowingIdAndStatusOrderByCreatedAtDesc(String followingId, String status, Pageable pageable);
+
+    boolean existsByFollowerIdAndFollowingIdAndStatus(String followerId, String followingId, String status);
+
+    long countByFollowerIdAndStatus(String followerId, String status);
+
+    long countByFollowingIdAndStatus(String followingId, String status);
+
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowerIdAndStatusActive(String followerId);
+
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowingIdAndStatusActive(String followingId);
+
+    @Query("{'followerId': ?0, 'followingId': ?1, 'status': 'ACTIVE'}")
+    Optional<Follow> findByFollowerIdAndFollowingIdAndStatusActive(String followerId, String followingId);
+
+    @Query("{'$or': [{'followerId': ?0}, {'followingId': ?0}], 'status': 'ACTIVE'}")
+    List<Follow> findByUserIdInvolved(String userId);
+
+    @Query("{'followerId': ?0, 'status': 'BLOCKED'}")
+    List<Follow> findBlockedByUser(String userId);
+
+    @Query("{'followingId': ?0, 'status': 'BLOCKED'}")
+    List<Follow> findBlockedUsers(String userId);
+
+    @Query("{'followerId': ?0, 'isMutual': true, 'status': 'ACTIVE'}")
+    List<Follow> findMutualFollows(String userId);
+
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowerIdOrderByCreatedAtDesc(String followerId);
     
-    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(Long followingId, Pageable pageable);
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowingIdOrderByCreatedAtDesc(String followingId);
     
-    boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    long countByFollowerId(String followerId);
     
-    long countByFollowerId(Long followerId);
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    long countByFollowingId(String followingId);
     
-    long countByFollowingId(Long followingId);
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findRecentFollowers(String userId, int limit);
     
-    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :userId")
-    List<Long> findFollowingIds(@Param("userId") Long userId);
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findRecentFollowing(String userId, int limit);
     
-    @Query("SELECT f.followerId FROM Follow f WHERE f.followingId = :userId")
-    List<Long> findFollowerIds(@Param("userId") Long userId);
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findSuggestedFollows(String userId, int limit);
     
-    @Query("SELECT f.followingId FROM Follow f WHERE f.followerId = :userId1 AND f.followingId IN (SELECT f2.followerId FROM Follow f2 WHERE f2.followingId = :userId2)")
-    List<Long> findMutualFollows(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
-    
-    @Query("SELECT COUNT(f) FROM Follow f WHERE f.followerId = :userId1 AND f.followingId IN (SELECT f2.followerId FROM Follow f2 WHERE f2.followingId = :userId2)")
-    long countMutualFollows(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
-    
-    @Query(value = "SELECT f.* FROM follows f WHERE f.following_id = :userId ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<Follow> findRecentFollowers(@Param("userId") Long userId, @Param("limit") int limit);
-    
-    @Query(value = "SELECT f.* FROM follows f WHERE f.follower_id = :userId ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<Follow> findRecentFollowing(@Param("userId") Long userId, @Param("limit") int limit);
-    
-    @Query(value = "SELECT f.* FROM follows f WHERE f.follower_id != :userId AND f.following_id != :userId AND f.following_id NOT IN (SELECT f2.following_id FROM follows f2 WHERE f2.follower_id = :userId) ORDER BY f.created_at DESC LIMIT :limit", nativeQuery = true)
-    List<Follow> findSuggestedFollows(@Param("userId") Long userId, @Param("limit") int limit);
-    
-    void deleteByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    void deleteByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    // Methods for backward compatibility with service layer
+    boolean existsByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    Optional<Follow> findByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(String followingId, Pageable pageable);
+
+    Page<Follow> findByFollowerIdOrderByCreatedAtDesc(String followerId, Pageable pageable);
+
+    @Query("{'followerId': ?0, 'followingId': ?1, 'status': 'ACTIVE'}")
+    List<Follow> findMutualFollows(String userId1, String userId2);
 }

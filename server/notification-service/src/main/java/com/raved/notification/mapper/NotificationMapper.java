@@ -32,11 +32,11 @@ public class NotificationMapper {
         notification.setScheduledAt(request.getScheduledAt());
         notification.setExpiresAt(request.getExpiresAt());
         
-        // Set initial status
+        // Set initial status (using enum for MongoDB)
         if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
-            notification.setDeliveryStatus("SCHEDULED");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING); // MongoDB uses PENDING for scheduled
         } else {
-            notification.setDeliveryStatus("PENDING");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         }
 
         return notification;
@@ -61,7 +61,8 @@ public class NotificationMapper {
         response.setImageUrl(notification.getImageUrl());
         response.setIsRead(notification.getIsRead());
         response.setIsSent(notification.getIsSent());
-        response.setDeliveryStatus(notification.getDeliveryStatus());
+        response.setDeliveryStatus(notification.getDeliveryStatus() != null
+                ? notification.getDeliveryStatus().name() : null);
         response.setPushSent(notification.getPushSent());
         response.setEmailSent(notification.getEmailSent());
         response.setSmsSent(notification.getSmsSent());

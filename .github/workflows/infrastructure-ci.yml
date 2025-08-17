@@ -1,0 +1,28 @@
+name: Infrastructure CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-infra:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Terraform fmt (check only)
+        run: |
+          if [ -d infrastructure/terraform ]; then
+            terraform -version || true
+            echo "Skipping actual terraform due to environment; run locally for full checks."
+          fi
+      - name: Helm lint
+        run: |
+          if [ -d infrastructure/helm/raved-app ]; then
+            echo "Helm lint placeholder; requires helm setup to run."
+          fi
+

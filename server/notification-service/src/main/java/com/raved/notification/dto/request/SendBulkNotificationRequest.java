@@ -14,7 +14,7 @@ import java.util.Map;
 public class SendBulkNotificationRequest {
 
     @NotEmpty(message = "Recipient user IDs are required")
-    private List<Long> recipientUserIds;
+    private List<String> recipientUserIds;
 
     @NotBlank(message = "Notification type is required")
     @Size(max = 50, message = "Notification type must not exceed 50 characters")
@@ -44,7 +44,7 @@ public class SendBulkNotificationRequest {
     // Constructors
     public SendBulkNotificationRequest() {}
 
-    public SendBulkNotificationRequest(List<Long> recipientUserIds, String notificationType, 
+    public SendBulkNotificationRequest(List<String> recipientUserIds, String notificationType,
                                      String title, String body) {
         this.recipientUserIds = recipientUserIds;
         this.notificationType = notificationType;
@@ -53,11 +53,11 @@ public class SendBulkNotificationRequest {
     }
 
     // Getters and Setters
-    public List<Long> getRecipientUserIds() {
+    public List<String> getRecipientUserIds() {
         return recipientUserIds;
     }
 
-    public void setRecipientUserIds(List<Long> recipientUserIds) {
+    public void setRecipientUserIds(List<String> recipientUserIds) {
         this.recipientUserIds = recipientUserIds;
     }
 

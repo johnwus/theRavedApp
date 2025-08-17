@@ -1,0 +1,17 @@
+workload:
+  nameOverride: eureka-server
+  image:
+    repository: ghcr.io/theravedapp
+    tag: latest
+  service:
+    port: 8761
+  autoscaling:
+    enabled: false
+  probes:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 30
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 10
+

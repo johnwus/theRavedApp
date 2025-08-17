@@ -9,6 +9,7 @@ import com.raved.social.mapper.CommentMapper;
 import com.raved.social.model.Comment;
 import com.raved.social.repository.CommentRepository;
 import com.raved.social.service.CommentService;
+import com.raved.social.util.MongoIdConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
     public Optional<CommentResponse> getCommentById(Long id) {
         logger.debug("Getting comment by ID: {}", id);
         
-        Optional<Comment> commentOpt = commentRepository.findById(id);
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(id));
         if (commentOpt.isPresent() && commentOpt.get().getIsDeleted()) {
             return Optional.empty();
         }
@@ -66,50 +67,50 @@ public class CommentServiceImpl implements CommentService {
     public CommentResponse updateComment(Long id, UpdateCommentRequest request) {
         logger.info("Updating comment with ID: {}", id);
         
-        Optional<Comment> commentOpt = commentRepository.findById(id);
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(id));
         if (commentOpt.isEmpty()) {
             throw new CommentNotFoundException("Comment not found with ID: " + id);
         }
-        
+
         Comment comment = commentOpt.get();
-        
+
         // Check if comment is deleted
         if (comment.getIsDeleted()) {
             throw new CommentNotFoundException("Comment is deleted");
         }
-        
+
         // Note: This method doesn't have userId parameter, so we can't check authorization
         // In a real implementation, you'd want to get the current user from security context
-        
+
         commentMapper.updateCommentFromRequest(comment, request);
         // The Comment entity has @PreUpdate annotation, so updatedAt is handled automatically
-        
+
         Comment savedComment = commentRepository.save(comment);
         logger.info("Comment updated successfully with ID: {}", id);
-        
+
         return commentMapper.toCommentResponse(savedComment);
     }
 
     @Override
     public void deleteComment(Long id) {
         logger.info("Deleting comment with ID: {}", id);
-        
-        Optional<Comment> commentOpt = commentRepository.findById(id);
+
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(id));
         if (commentOpt.isEmpty()) {
             throw new CommentNotFoundException("Comment not found with ID: " + id);
         }
-        
+
         Comment comment = commentOpt.get();
-        
+
         // Check if comment is deleted
         if (comment.getIsDeleted()) {
             throw new CommentNotFoundException("Comment is already deleted");
         }
-        
+
         // Note: This method doesn't have userId parameter, so we can't check authorization
         // In a real implementation, you'd want to get the current user from security context
-        
-        commentRepository.softDeleteById(id);
+
+        commentRepository.softDeleteById(MongoIdConverter.toStringId(id));
         logger.info("Comment deleted successfully with ID: {}", id);
     }
 
@@ -117,8 +118,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByPost(Long postId, Pageable pageable) {
         logger.debug("Getting comments for post ID: {}", postId);
-        
-        Page<Comment> comments = commentRepository.findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(postId, pageable);
+
+        Page<Comment> comments = commentRepository.findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(MongoIdConverter.toStringId(postId), pageable);
         return comments.map(commentMapper::toCommentResponse);
     }
 
@@ -126,8 +127,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public Page<CommentResponse> getCommentsByUser(Long userId, Pageable pageable) {
         logger.debug("Getting comments for user ID: {}", userId);
-        
-        Page<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+
+        Page<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return comments.map(commentMapper::toCommentResponse);
     }
 
@@ -135,8 +136,8 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponse> getCommentReplies(Long parentCommentId) {
         logger.debug("Getting replies for comment ID: {}", parentCommentId);
-        
-        List<Comment> replies = commentRepository.findByParentCommentIdOrderByCreatedAtAsc(parentCommentId);
+
+        List<Comment> replies = commentRepository.findByParentCommentIdOrderByCreatedAtAsc(MongoIdConverter.toStringId(parentCommentId));
         return replies.stream()
                 .filter(comment -> !comment.getIsDeleted())
                 .map(commentMapper::toCommentResponse)
@@ -146,16 +147,16 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void likeComment(Long commentId, Long userId) {
         logger.info("User {} liking comment {}", userId, commentId);
-        
-        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(commentId));
         if (commentOpt.isPresent() && !commentOpt.get().getIsDeleted()) {
             Comment comment = commentOpt.get();
-            
+
             // For now, we'll use a simple approach. In a real implementation,
             // you'd want to check if the user already liked this comment
             // using a separate CommentLike entity or similar mechanism
-            
-            commentRepository.incrementLikesCount(commentId);
+
+            commentRepository.incrementLikesCount(MongoIdConverter.toStringId(commentId));
             logger.info("Comment liked successfully");
         } else {
             logger.warn("Comment not found or is deleted");
@@ -165,16 +166,16 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void unlikeComment(Long commentId, Long userId) {
         logger.info("User {} unliking comment {}", userId, commentId);
-        
-        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(commentId));
         if (commentOpt.isPresent() && !commentOpt.get().getIsDeleted()) {
             Comment comment = commentOpt.get();
-            
+
             // For now, we'll use a simple approach. In a real implementation,
             // you'd want to check if the user has liked this comment
             // using a separate CommentLike entity or similar mechanism
-            
-            commentRepository.decrementLikesCount(commentId);
+
+            commentRepository.decrementLikesCount(MongoIdConverter.toStringId(commentId));
             logger.info("Comment unliked successfully");
         } else {
             logger.warn("Comment not found or is deleted");
@@ -184,7 +185,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     @Transactional(readOnly = true)
     public long getCommentLikeCount(Long commentId) {
-        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(commentId));
         if (commentOpt.isPresent() && !commentOpt.get().getIsDeleted()) {
             return commentOpt.get().getLikesCount();
         }
@@ -203,12 +204,12 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void reportComment(Long commentId, Long reporterId, String reason) {
         logger.info("Reporting comment ID: {} by user: {} for reason: {}", commentId, reporterId, reason);
-        
-        Optional<Comment> commentOpt = commentRepository.findById(commentId);
+
+        Optional<Comment> commentOpt = commentRepository.findById(MongoIdConverter.toStringId(commentId));
         if (commentOpt.isPresent() && !commentOpt.get().getIsDeleted()) {
             // Note: flaggedReason is not stored in the database, only isFlagged is set
             // In a real implementation, you might want to store reports in a separate table
-            commentRepository.flagComment(commentId, reason);
+            commentRepository.flagComment(MongoIdConverter.toStringId(commentId), reason);
             logger.info("Comment reported successfully");
         } else {
             logger.warn("Comment not found or is deleted");
@@ -219,11 +220,11 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponse> getRecentCommentsForUser(Long userId, int limit) {
         logger.debug("Getting recent comments for user: {} with limit: {}", userId, limit);
-        
+
         // This method would need a custom repository method
         // For now, we'll get user's comments and limit them
         Pageable pageable = Pageable.ofSize(limit);
-        Page<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<Comment> comments = commentRepository.findByUserIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return comments.getContent().stream()
                 .filter(comment -> !comment.getIsDeleted())
                 .map(commentMapper::toCommentResponse)

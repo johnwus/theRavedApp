@@ -66,7 +66,7 @@ public class NotificationServiceImpl implements NotificationService {
         
         Notification notification = notificationMapper.toNotification(request);
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setDeliveryStatus("PENDING");
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         
         Notification savedNotification = notificationRepository.save(notification);
         
@@ -89,7 +89,7 @@ public class NotificationServiceImpl implements NotificationService {
                     notification.setTitle(request.getTitle());
                     notification.setBody(request.getBody());
                     notification.setCreatedAt(LocalDateTime.now());
-                    notification.setDeliveryStatus("PENDING");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
                     return notification;
                 })
                 .collect(Collectors.toList());
@@ -107,7 +107,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<NotificationResponse> getNotificationById(Long id) {
+    public Optional<NotificationResponse> getNotificationById(String id) {
         logger.debug("Getting notification by ID: {}", id);
         
         Optional<Notification> notificationOpt = notificationRepository.findById(id);
@@ -116,7 +116,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> getUserNotifications(Long userId, Pageable pageable) {
+    public Page<NotificationResponse> getUserNotifications(String userId, Pageable pageable) {
         logger.debug("Getting notifications for user: {}", userId);
         
         Page<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
@@ -125,7 +125,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> getUnreadNotifications(Long userId, Pageable pageable) {
+    public Page<NotificationResponse> getUnreadNotifications(String userId, Pageable pageable) {
         logger.debug("Getting unread notifications for user: {}", userId);
 
         Page<Notification> notifications = notificationRepository.findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(userId, pageable);
@@ -133,7 +133,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationResponse markAsRead(Long notificationId) {
+    public NotificationResponse markAsRead(String notificationId) {
         logger.info("Marking notification as read: {}", notificationId);
         
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
@@ -151,7 +151,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void markAllAsRead(Long userId) {
+    public void markAllAsRead(String userId) {
         logger.info("Marking all notifications as read for user: {}", userId);
         
         List<Notification> unreadNotifications = notificationRepository.findByUserIdAndReadAtIsNull(userId);
@@ -162,7 +162,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void deleteNotification(Long notificationId) {
+    public void deleteNotification(String notificationId) {
         logger.info("Deleting notification: {}", notificationId);
         
         if (!notificationRepository.existsById(notificationId)) {
@@ -175,7 +175,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public NotificationStats getNotificationStats(Long userId) {
+    public NotificationStats getNotificationStats(String userId) {
         logger.debug("Getting notification stats for user: {}", userId);
         
         long totalNotifications = notificationRepository.countByUserId(userId);
@@ -192,7 +192,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationMapper.toNotification(request);
         notification.setScheduledAt(scheduledAt);
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setDeliveryStatus("SCHEDULED");
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         
         Notification savedNotification = notificationRepository.save(notification);
         
@@ -201,7 +201,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void cancelScheduledNotification(Long notificationId) {
+    public void cancelScheduledNotification(String notificationId) {
         logger.info("Cancelling scheduled notification: {}", notificationId);
         
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
@@ -210,8 +210,8 @@ public class NotificationServiceImpl implements NotificationService {
         }
         
         Notification notification = notificationOpt.get();
-        if ("SCHEDULED".equals(notification.getDeliveryStatus())) {
-            notification.setDeliveryStatus("CANCELLED");
+        if (Notification.DeliveryStatus.PENDING.equals(notification.getDeliveryStatus()) && notification.getScheduledAt() != null) {
+            notification.setDeliveryStatus(Notification.DeliveryStatus.FAILED);
             notificationRepository.save(notification);
             logger.info("Scheduled notification cancelled: {}", notificationId);
         } else {
@@ -223,10 +223,10 @@ public class NotificationServiceImpl implements NotificationService {
     public void processScheduledNotifications() {
         logger.info("Processing scheduled notifications");
         
-        List<Notification> scheduledNotifications = notificationRepository.findByDeliveryStatusAndScheduledAtBefore("SCHEDULED", LocalDateTime.now());
+        List<Notification> scheduledNotifications = notificationRepository.findByDeliveryStatusAndScheduledAtBefore(Notification.DeliveryStatus.PENDING, LocalDateTime.now());
         
         scheduledNotifications.forEach(notification -> {
-            notification.setDeliveryStatus("PENDING");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
             notificationRepository.save(notification);
             sendNotificationAsync(notification);
         });
@@ -235,7 +235,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationResponse sendNotificationByType(Long userId, String notificationType, Map<String, Object> templateData) {
+    public NotificationResponse sendNotificationByType(String userId, String notificationType, Map<String, Object> templateData) {
         logger.info("Sending notification of type: {} to user: {}", notificationType, userId);
         
         // Generate content based on notification type
@@ -248,7 +248,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setTitle(title);
         notification.setBody(body);
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setDeliveryStatus("PENDING");
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         
         Notification savedNotification = notificationRepository.save(notification);
         
@@ -261,7 +261,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NotificationResponse> getNotificationsByType(Long userId, String notificationType, Pageable pageable) {
+    public Page<NotificationResponse> getNotificationsByType(String userId, String notificationType, Pageable pageable) {
         logger.debug("Getting notifications of type: {} for user: {}", notificationType, userId);
         
         Page<Notification> notifications = notificationRepository.findByUserIdAndNotificationTypeOrderByCreatedAtDesc(userId, notificationType, pageable);
@@ -269,7 +269,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationResponse resendNotification(Long notificationId) {
+    public NotificationResponse resendNotification(String notificationId) {
         logger.info("Resending notification: {}", notificationId);
         
         Optional<Notification> notificationOpt = notificationRepository.findById(notificationId);
@@ -278,7 +278,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
         
         Notification notification = notificationOpt.get();
-        notification.setDeliveryStatus("PENDING");
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         notification.setIsSent(false);
         notification.setSentAt(null);
         
@@ -316,14 +316,14 @@ public class NotificationServiceImpl implements NotificationService {
             // For now, just mark as sent
             notification.setIsSent(true);
             notification.setSentAt(LocalDateTime.now());
-            notification.setDeliveryStatus("SENT");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.SENT);
             notificationRepository.save(notification);
             
             logger.info("Notification sent successfully: {}", notification.getId());
             
         } catch (Exception e) {
             logger.error("Error sending notification: {}", notification.getId(), e);
-            notification.setDeliveryStatus("FAILED");
+            notification.setDeliveryStatus(Notification.DeliveryStatus.FAILED);
             notificationRepository.save(notification);
         }
     }

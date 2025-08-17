@@ -1,0 +1,50 @@
+# Global defaults
+image:
+  repository: ghcr.io/theravedapp
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: nginx
+  hosts: []
+  tls: []
+
+resources: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
+
+env: []
+envFrom: []
+secrets: []
+secretEnv: {}
+configMap: {}
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 30
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 15
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+fullnameOverride: ""
+nameOverride: ""
+

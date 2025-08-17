@@ -1,8 +1,14 @@
 spring:
-  datasource:
-    url: ${ANALYTICS_DB_URL}
-    username: ${ANALYTICS_DB_USERNAME}
-    password: ${ANALYTICS_DB_PASSWORD}
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE:raved_analytics}
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS}
+    consumer:
+      group-id: analytics-service
+      auto-offset-reset: earliest
 
 logging:
   level:

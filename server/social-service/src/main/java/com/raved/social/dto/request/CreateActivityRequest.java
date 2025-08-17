@@ -1,20 +1,28 @@
 package com.raved.social.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * DTO for creating an activity
+ * Updated for MongoDB compatibility with String
+ * IDs
  */
 public class CreateActivityRequest {
-    private Long userId;
+    @NotBlank(message = "User ID is required")
+    private String userId;
+
+    @NotBlank(message = "Activity type is required")
     private String activityType;
-    private Long targetUserId;
-    private Long postId;
-    private Long commentId;
+
+    private String targetUserId;
+    private String postId;
+    private String commentId;
     
     // Constructors
     public CreateActivityRequest() {
     }
     
-    public CreateActivityRequest(Long userId, String activityType, Long targetUserId, Long postId, Long commentId) {
+    public CreateActivityRequest(String userId, String activityType, String targetUserId, String postId, String commentId) {
         this.userId = userId;
         this.activityType = activityType;
         this.targetUserId = targetUserId;
@@ -23,11 +31,11 @@ public class CreateActivityRequest {
     }
     
     // Getters and Setters
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
     
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
     
@@ -39,27 +47,27 @@ public class CreateActivityRequest {
         this.activityType = activityType;
     }
     
-    public Long getTargetUserId() {
+    public String getTargetUserId() {
         return targetUserId;
     }
     
-    public void setTargetUserId(Long targetUserId) {
+    public void setTargetUserId(String targetUserId) {
         this.targetUserId = targetUserId;
     }
     
-    public Long getPostId() {
+    public String getPostId() {
         return postId;
     }
     
-    public void setPostId(Long postId) {
+    public void setPostId(String postId) {
         this.postId = postId;
     }
     
-    public Long getCommentId() {
+    public String getCommentId() {
         return commentId;
     }
     
-    public void setCommentId(Long commentId) {
+    public void setCommentId(String commentId) {
         this.commentId = commentId;
     }
 }

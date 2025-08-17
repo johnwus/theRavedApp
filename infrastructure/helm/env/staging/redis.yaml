@@ -1,0 +1,19 @@
+architecture: standalone
+auth:
+  enabled: true
+  existingSecret: raved-redis
+  existingSecretPasswordKey: redis-password
+master:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+persistence:
+  enabled: true
+  size: 5Gi
+service:
+  type: ClusterIP
+

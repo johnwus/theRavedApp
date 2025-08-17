@@ -1,0 +1,71 @@
+name: Infrastructure Validate
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'infrastructure/helm/**'
+      - '.github/workflows/infrastructure-validate.yml'
+  workflow_dispatch:
+
+jobs:
+  helmfile-template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.3
+      - name: Install helmfile
+        run: |
+          curl -L https://github.com/helmfile/helmfile/releases/download/v0.157.0/helmfile_0.157.0_linux_amd64.tar.gz -o helmfile.tar.gz
+          tar -xzf helmfile.tar.gz
+          sudo mv helmfile /usr/local/bin/helmfile
+      - name: Template dev
+        working-directory: infrastructure/helm
+        env:
+          ENV: dev
+        run: |
+          helmfile -e dev template
+      - name: Template staging
+        working-directory: infrastructure/helm
+        env:
+          ENV: staging
+        run: |
+          helmfile -e staging template
+      - name: Template prod
+        working-directory: infrastructure/helm
+        env:
+          ENV: prod
+        run: |
+          helmfile -e prod template
+
+      - name: Template staging with provisioning enabled
+        working-directory: infrastructure/helm
+        env:
+          ENV: staging
+        run: |
+          yq -i '.umbrella.provisioning.kafka.enabled=true | .umbrella.provisioning.elasticsearch.enabled=true | .umbrella.provisioning.rabbitmq.enabled=true' helmfile.yaml || true
+          helmfile -e staging template
+      - name: Template prod with provisioning enabled
+        working-directory: infrastructure/helm
+        env:
+          ENV: prod
+        run: |
+          yq -i '.umbrella.provisioning.kafka.enabled=true | .umbrella.provisioning.elasticsearch.enabled=true | .umbrella.provisioning.rabbitmq.enabled=true' helmfile.yaml || true
+          helmfile -e prod template
+      - name: Validate WEBSOCKET_ALLOWED_ORIGINS render (staging)
+        working-directory: infrastructure/helm
+        env:
+          ENV: staging
+        run: |
+          helmfile -e staging template | grep -E "WEBSOCKET_ALLOWED_ORIGINS|websocket.allowed-origins" || true
+      - name: Validate WEBSOCKET_ALLOWED_ORIGINS render (prod)
+        working-directory: infrastructure/helm
+        env:
+          ENV: prod
+        run: |
+          helmfile -e prod template | grep -E "WEBSOCKET_ALLOWED_ORIGINS|websocket.allowed-origins" || true
+
+

@@ -9,3 +9,4 @@ ALTER TABLE products
 -- Create indexes for the new counter fields for better performance
 CREATE INDEX IF NOT EXISTS idx_products_saves_count ON products(saves_count);
 CREATE INDEX IF NOT EXISTS idx_products_orders_count ON products(orders_count);
+

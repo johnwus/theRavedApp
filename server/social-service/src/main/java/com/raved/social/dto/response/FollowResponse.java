@@ -4,11 +4,12 @@ import java.time.LocalDateTime;
 
 /**
  * DTO for Follow responses
+ * Updated for MongoDB compatibility with String IDs
  */
 public class FollowResponse {
-    private Long id;
-    private Long followerId;
-    private Long followingId;
+    private String id;
+    private String followerId;
+    private String followingId;
     private LocalDateTime createdAt;
     
     // Additional fields for responses
@@ -23,8 +24,8 @@ public class FollowResponse {
     }
     
     // Constructor with all fields
-    public FollowResponse(Long id, Long followerId, Long followingId, LocalDateTime createdAt, 
-                        String followerName, String followerAvatar, String followingName, 
+    public FollowResponse(String id, String followerId, String followingId, LocalDateTime createdAt,
+            String followerName, String followerAvatar, String followingName,
                         String followingAvatar, Boolean isFollowingBack) {
         this.id = id;
         this.followerId = followerId;
@@ -36,29 +37,29 @@ public class FollowResponse {
         this.followingAvatar = followingAvatar;
         this.isFollowingBack = isFollowingBack;
     }
-    
+
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
-    
-    public void setId(Long id) {
+
+    public void setId(String id) {
         this.id = id;
     }
-    
-    public Long getFollowerId() {
+
+    public String getFollowerId() {
         return followerId;
     }
-    
-    public void setFollowerId(Long followerId) {
+
+    public void setFollowerId(String followerId) {
         this.followerId = followerId;
     }
-    
-    public Long getFollowingId() {
+
+    public String getFollowingId() {
         return followingId;
     }
-    
-    public void setFollowingId(Long followingId) {
+
+    public void setFollowingId(String followingId) {
         this.followingId = followingId;
     }
     

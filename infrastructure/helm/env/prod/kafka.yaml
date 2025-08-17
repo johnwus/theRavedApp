@@ -1,0 +1,16 @@
+replicaCount: 5
+zookeeper:
+  replicaCount: 5
+resources:
+  requests:
+    cpu: 1000m
+    memory: 2Gi
+  limits:
+    cpu: 3000m
+    memory: 6Gi
+persistence:
+  enabled: true
+  size: 50Gi
+service:
+  type: ClusterIP
+

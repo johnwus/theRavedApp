@@ -1,48 +1,63 @@
 package com.raved.social.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
 /**
- * Entity representing a leaderboard score for a user in a season
+ * LeaderboardScore Document for TheRavedApp MongoDB
+ *
+ * Represents a leaderboard score for a user in a season. Converted from JPA
+ * entity to MongoDB document.
  */
-@Entity
-@Table(name = "leaderboard_scores", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"season_id", "user_id"}),
-       indexes = {
-           @Index(name = "idx_leaderboard_season", columnList = "season_id, score DESC")
-       })
+@Document(collection = "leaderboard_scores")
+@CompoundIndexes({
+    @CompoundIndex(name = "season_user_idx", def = "{'seasonId': 1, 'userId': 1}", unique = true),
+    @CompoundIndex(name = "season_score_idx", def = "{'seasonId': 1, 'score': -1}"),
+    @CompoundIndex(name = "season_rank_idx", def = "{'seasonId': 1, 'rank': 1}")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class LeaderboardScore {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(name = "season_id", nullable = false)
-    private Long seasonId;
-    
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-    
-    @Column(name = "score", nullable = false)
+    private String id;
+
+    @Indexed
+    @NotBlank(message = "Season ID is required")
+    private String seasonId;
+
+    @Indexed
+    @NotBlank(message = "User ID is required")
+    private String userId;
+
+    @NotNull(message = "Score is required")
     private Integer score = 0;
-    
-    @Column(name = "rank")
+
     private Integer rank;
-    
-    @Column(name = "updated_at", nullable = false)
+
     private LocalDateTime updatedAt;
-    
-    @PrePersist
-    @PreUpdate
+
+    private LocalDateTime createdAt;
+
+    /**
+     * Sets timestamps before saving
+     */
     public void prePersist() {
-        this.updatedAt = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        this.updatedAt = now;
     }
 }

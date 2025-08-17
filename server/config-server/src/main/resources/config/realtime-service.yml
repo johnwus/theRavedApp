@@ -3,9 +3,9 @@ spring:
   application:
     name: realtime-service
   datasource:
-    url: ${REALTIME_DB_URL:jdbc:postgresql://localhost:5432/raved_realtime}
-    username: ${REALTIME_DB_USER:realtime_user}
-    password: ${REALTIME_DB_PASSWORD:realtime_pass}
+    url: ${REALTIME_DB_URL:jdbc:postgresql://localhost:5432/raved_realtime_db}
+    username: ${REALTIME_DB_USER:raved_user}
+    password: ${REALTIME_DB_PASSWORD:raved_password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -27,6 +27,15 @@ websocket:
   max-text-message-size: ${WEBSOCKET_MAX_TEXT_SIZE:8192}
   max-binary-message-size: ${WEBSOCKET_MAX_BINARY_SIZE:8192}
   idle-timeout: ${WEBSOCKET_IDLE_TIMEOUT:300000}
+  ratelimit:
+    window-seconds: ${WEBSOCKET_RATELIMIT_WINDOW_SECONDS:5}
+    send-limit: ${WEBSOCKET_RATELIMIT_SEND_LIMIT:30}
+    subscribe-limit: ${WEBSOCKET_RATELIMIT_SUBSCRIBE_LIMIT:30}
+    enabled: ${WEBSOCKET_RATELIMIT_ENABLED:true}
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:}
 
 # Socket.IO configuration
 socketio:

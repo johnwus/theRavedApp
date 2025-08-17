@@ -17,14 +17,14 @@ import java.util.Optional;
 public interface TemplateService {
 
     /**
-     * Process template with data
+     * Process template with data by name
      */
-    String processTemplate(String templateName, Map<String, Object> templateData);
+    String processTemplateByName(String templateName, Map<String, Object> templateData);
 
     /**
      * Process template by ID with data
      */
-    String processTemplate(Long templateId, Map<String, Object> templateData);
+    String processTemplate(String templateId, Map<String, Object> templateData);
 
     /**
      * Create new template
@@ -34,12 +34,12 @@ public interface TemplateService {
     /**
      * Update existing template
      */
-    NotificationTemplateResponse updateTemplate(Long templateId, UpdateTemplateRequest request);
+    NotificationTemplateResponse updateTemplate(String templateId, UpdateTemplateRequest request);
 
     /**
      * Get template by ID
      */
-    Optional<NotificationTemplateResponse> getTemplateById(Long templateId);
+    Optional<NotificationTemplateResponse> getTemplateById(String templateId);
 
     /**
      * Get template by name
@@ -64,12 +64,12 @@ public interface TemplateService {
     /**
      * Delete template
      */
-    void deleteTemplate(Long templateId);
+    void deleteTemplate(String templateId);
 
     /**
      * Activate/Deactivate template
      */
-    NotificationTemplateResponse toggleTemplateStatus(Long templateId, boolean isActive);
+    NotificationTemplateResponse toggleTemplateStatus(String templateId, boolean isActive);
 
     /**
      * Validate template syntax
@@ -84,5 +84,5 @@ public interface TemplateService {
     /**
      * Clone template
      */
-    NotificationTemplateResponse cloneTemplate(Long templateId, String newName);
+    NotificationTemplateResponse cloneTemplate(String templateId, String newName);
 }

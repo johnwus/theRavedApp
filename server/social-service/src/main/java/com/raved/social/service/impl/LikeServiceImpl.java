@@ -7,6 +7,7 @@ import com.raved.social.mapper.LikeMapper;
 import com.raved.social.model.Like;
 import com.raved.social.repository.LikeRepository;
 import com.raved.social.service.LikeService;
+import com.raved.social.util.MongoIdConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,7 @@ public class LikeServiceImpl implements LikeService {
         logger.info("User {} unliking target {} of type {}", userId, targetId, targetType);
         
         Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
-        Optional<Like> likeOpt = likeRepository.findByUserIdAndTargetIdAndTargetType(userId, targetId, targetTypeEnum);
+        Optional<Like> likeOpt = likeRepository.findByUserIdAndTargetIdAndTargetType(MongoIdConverter.toStringId(userId), MongoIdConverter.toStringId(targetId), targetTypeEnum);
         if (likeOpt.isPresent()) {
             likeRepository.delete(likeOpt.get());
             logger.info("Like removed successfully");
@@ -77,16 +78,16 @@ public class LikeServiceImpl implements LikeService {
     @Transactional(readOnly = true)
     public boolean hasUserLikedTarget(Long userId, Long targetId, String targetType) {
         Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
-        return likeRepository.existsByUserIdAndTargetIdAndTargetType(userId, targetId, targetTypeEnum);
+        return likeRepository.existsByUserIdAndTargetIdAndTargetType(MongoIdConverter.toStringId(userId), MongoIdConverter.toStringId(targetId), targetTypeEnum);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<LikeResponse> getTargetLikes(Long targetId, String targetType, Pageable pageable) {
         logger.debug("Getting likes for target: {} of type: {}", targetId, targetType);
-        
+
         Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
-        Page<Like> likes = likeRepository.findByTargetIdAndTargetTypeOrderByCreatedAtDesc(targetId, targetTypeEnum, pageable);
+        Page<Like> likes = likeRepository.findByTargetIdAndTargetTypeOrderByCreatedAtDesc(MongoIdConverter.toStringId(targetId), targetTypeEnum, pageable);
         return likes.map(likeMapper::toLikeResponse);
     }
 
@@ -94,8 +95,8 @@ public class LikeServiceImpl implements LikeService {
     @Transactional(readOnly = true)
     public Page<LikeResponse> getUserLikes(Long userId, Pageable pageable) {
         logger.debug("Getting likes for user: {}", userId);
-        
-        Page<Like> likes = likeRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+
+        Page<Like> likes = likeRepository.findByUserIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return likes.map(likeMapper::toLikeResponse);
     }
 
@@ -103,15 +104,15 @@ public class LikeServiceImpl implements LikeService {
     @Transactional(readOnly = true)
     public long getLikeCount(Long targetId, String targetType) {
         Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
-        return likeRepository.countByTargetIdAndTargetType(targetId, targetTypeEnum);
+        return likeRepository.countByTargetIdAndTargetType(MongoIdConverter.toStringId(targetId), targetTypeEnum);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<LikeResponse> getRecentLikesForUser(Long userId, int limit) {
         logger.debug("Getting recent likes for user: {} with limit: {}", userId, limit);
-        
-        List<Like> likes = likeRepository.findRecentLikesForUserPosts(userId, limit);
+
+        List<Like> likes = likeRepository.findRecentLikesForUserPosts(MongoIdConverter.toStringId(userId), limit);
         return likes.stream()
                 .map(likeMapper::toLikeResponse)
                 .collect(Collectors.toList());

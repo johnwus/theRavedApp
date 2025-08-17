@@ -1,17 +1,18 @@
 package com.raved.notification.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
- * DTO for Notification responses
+ * DTO for Notification responses (MongoDB compatible)
  */
 public class NotificationResponse {
-    private Long id;
-    private Long userId;
+    private String id; // Changed to String for MongoDB
+    private String userId; // Changed to String for MongoDB
     private String notificationType;
     private String title;
     private String body;
-    private String data;
+    private Map<String, Object> data; // Changed to Map for MongoDB
     private String actionUrl;
     private String imageUrl;
     private Boolean isRead;
@@ -27,19 +28,19 @@ public class NotificationResponse {
     private LocalDateTime createdAt;
 
     // Getters and setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -67,11 +68,11 @@ public class NotificationResponse {
         this.body = body;
     }
 
-    public String getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 

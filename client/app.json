@@ -1,43 +1,62 @@
 {
-  "expo": {
-    "name": "Raved",
-    "slug": "raved-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./src/assets/images/logos/app-icon.png",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "resizeMode": "contain",
+  "name": "Trendlio",
+  "slug": "Trendlio",
+  "scheme": "trendlio",
+  "version": "1.0.0",
+  "orientation": "portrait",
+  "userInterfaceStyle": "automatic",
+  "icon": "./assets/images/app-icon-all.png",
+  "updates": {
+    "fallbackToCacheTimeout": 0
+  },
+  "newArchEnabled": true,
+  "jsEngine": "hermes",
+  "assetBundlePatterns": [
+    "**/*"
+  ],
+  "android": {
+    "icon": "./assets/images/app-icon-android-legacy.png",
+    "package": "com.tndl",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.raved.app",
-      "buildNumber": "1.0.0"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./src/assets/images/logos/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.raved.app",
-      "versionCode": 1
-    },
-    "web": {
-      "bundler": "webpack"
-    },
-    "plugins": [
-      "expo-camera",
-      "expo-image-picker",
-      "expo-notifications"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id"
+    "allowBackup": false,
+    "edgeToEdgeEnabled": true
+  },
+  "ios": {
+    "icon": "./assets/images/app-icon-ios.png",
+    "supportsTablet": true,
+    "bundleIdentifier": "com.tndl"
+  },
+  "web": {
+    "favicon": "./assets/images/app-icon-web-favicon.png",
+    "bundler": "metro"
+  },
+  "plugins": [
+    "expo-localization",
+    "expo-font",
+    [
+      "expo-splash-screen",
+      {
+        "image": "./assets/images/app-icon-android-adaptive-foreground.png",
+        "imageWidth": 85,
+        "resizeMode": "contain",
+        "backgroundColor": "#191015"
       }
-    }
+    ],
+    [
+      "react-native-edge-to-edge",
+      {
+        "android": {
+          "parentTheme": "Light",
+          "enforceNavigationBarContrast": false
+        }
+      }
+    ]
+  ],
+  "experiments": {
+    "tsconfigPaths": true
   }
+
 }
