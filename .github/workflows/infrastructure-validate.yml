@@ -22,6 +22,12 @@ jobs:
           curl -L https://github.com/helmfile/helmfile/releases/download/v0.157.0/helmfile_0.157.0_linux_amd64.tar.gz -o helmfile.tar.gz
           tar -xzf helmfile.tar.gz
           sudo mv helmfile /usr/local/bin/helmfile
+      - name: Install yq
+        run: |
+          YQ_VERSION=v4.45.1
+          curl -L https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -o yq
+          chmod +x yq
+          sudo mv yq /usr/local/bin/yq
       - name: Template dev
         working-directory: infrastructure/helm
         env:
