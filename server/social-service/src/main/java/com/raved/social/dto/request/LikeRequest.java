@@ -4,39 +4,52 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Request DTO for liking/unliking content
+ * DTO for like requests
+ * Updated for MongoDB compatibility with String IDs
  */
 public class LikeRequest {
+    @NotBlank(message = "User ID is required")
+    private String userId;
 
-    @NotNull(message = "Entity ID is required")
-    private Long entityId;
+    @NotBlank(message = "Target ID is required")
+    private String targetId;
 
-    @NotBlank(message = "Entity type is required")
-    private String entityType; // "post" or "comment"
-
-    // Constructors
+    @NotBlank(message = "Target type is required")
+    private String targetType; // "POST", "COMMENT", or "PRODUCT"
+    
+    // Default constructor
     public LikeRequest() {
     }
-
-    public LikeRequest(Long entityId, String entityType) {
-        this.entityId = entityId;
-        this.entityType = entityType;
+    
+    // Constructor with all fields
+    public LikeRequest(String userId, String targetId, String targetType) {
+        this.userId = userId;
+        this.targetId = targetId;
+        this.targetType = targetType;
     }
-
+    
     // Getters and Setters
-    public Long getEntityId() {
-        return entityId;
+    public String getUserId() {
+        return userId;
     }
-
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
+    
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
-
-    public String getEntityType() {
-        return entityType;
+    
+    public String getTargetId() {
+        return targetId;
     }
-
-    public void setEntityType(String entityType) {
-        this.entityType = entityType;
+    
+    public void setTargetId(String targetId) {
+        this.targetId = targetId;
+    }
+    
+    public String getTargetType() {
+        return targetType;
+    }
+    
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
     }
 }

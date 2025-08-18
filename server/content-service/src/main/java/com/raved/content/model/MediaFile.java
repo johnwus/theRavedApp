@@ -1,74 +1,123 @@
 package com.raved.content.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 
 /**
- * MediaFile Entity for TheRavedApp
+ * MediaFile Document for TheRavedApp MongoDB
  *
  * Represents media files attached to posts.
- * Based on the media_files table schema.
+ * Converted from JPA entity to MongoDB document.
  */
-@Entity
-@Table(name = "media_files", indexes = {
-        @Index(name = "idx_media_files_post", columnList = "post_id"),
-        @Index(name = "idx_media_files_type", columnList = "media_type"),
-        @Index(name = "idx_media_files_order", columnList = "post_id, display_order")
-})
+@Document(collection = "media_files")
 public class MediaFile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @Indexed
+    private String postId; // Reference to post instead of embedded object
 
     @NotBlank(message = "File URL is required")
-    @Column(name = "file_url", columnDefinition = "TEXT", nullable = false)
     private String fileUrl;
 
     @NotBlank(message = "File name is required")
     @Size(max = 255, message = "File name must not exceed 255 characters")
-    @Column(name = "file_name", nullable = false)
+    @TextIndexed(weight = 3)
     private String fileName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "media_type", nullable = false)
+    @Indexed
     private MediaType mediaType;
 
-    @Column(name = "file_size")
+    @Indexed
     private Long fileSize; // in bytes
 
     @Size(max = 10, message = "File extension must not exceed 10 characters")
-    @Column(name = "file_extension")
     private String fileExtension;
 
-    @Column(name = "display_order", nullable = false)
+    @Indexed
     private Integer displayOrder = 0;
 
     // Image/Video specific fields
-    @Column
     private Integer width;
 
-    @Column
     private Integer height;
 
-    @Column(name = "duration_seconds")
     private Integer durationSeconds; // for videos
 
-    @Column(name = "thumbnail_url", columnDefinition = "TEXT")
     private String thumbnailUrl;
 
     @Size(max = 500, message = "Alt text must not exceed 500 characters")
-    @Column(name = "alt_text")
     private String altText;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Indexed
     private LocalDateTime createdAt;
+
+    @Indexed
+    private LocalDateTime updatedAt;
+
+    // Additional MongoDB-specific fields for better media management
+    private String originalFileName;
+
+    @Indexed
+    private String mimeType;
+
+    @Indexed
+    private String status = "UPLOADING"; // UPLOADING, PROCESSING, READY, FAILED
+
+    private String storagePath;
+
+    private String uploaderId;
+
+    @Indexed
+    private LocalDateTime uploadedAt;
+
+    private LocalDateTime processedAt;
+
+    // Processing metadata
+    private String processingStatus;
+    private String errorMessage;
+    private Map<String, Object> processingMetadata;
+
+    // Media-specific metadata
+    private Map<String, Object> metadata;
+
+    // Video-specific fields
+    private String resolution;
+    private String codec;
+    private String format;
+
+    // Document-specific fields
+    private Integer pageCount;
+    private String language;
+
+    // Content analysis
+    private String contentHash;
+    private String exifData;
+
+    // Access control
+    @Indexed
+    private String accessLevel = "PUBLIC";
+
+    private Boolean isPublic = true;
+    private List<String> allowedUserIds;
+
+    // Analytics
+    @Indexed
+    private Integer viewCount = 0;
+
+    @Indexed
+    private Integer downloadCount = 0;
+
+    @Indexed
+    private Integer shareCount = 0;
 
     // Enums
     public enum MediaType {
@@ -78,31 +127,32 @@ public class MediaFile {
     // Constructors
     public MediaFile() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public MediaFile(Post post, String fileUrl, String fileName, MediaType mediaType) {
+    public MediaFile(String postId, String fileUrl, String fileName, MediaType mediaType) {
         this();
-        this.post = post;
+        this.postId = postId;
         this.fileUrl = fileUrl;
         this.fileName = fileName;
         this.mediaType = mediaType;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Post getPost() {
-        return post;
+    public String getPostId() {
+        return postId;
     }
 
-    public void setPost(Post post) {
-        this.post = post;
+    public void setPostId(String postId) {
+        this.postId = postId;
     }
 
     public String getFileUrl() {
@@ -201,20 +251,240 @@ public class MediaFile {
         this.createdAt = createdAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // New MongoDB-specific getters and setters
+    public String getOriginalFileName() {
+        return originalFileName;
+    }
+
+    public void setOriginalFileName(String originalFileName) {
+        this.originalFileName = originalFileName;
+    }
+
+    public String getMimeType() {
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
+    }
+
+    public String getUploaderId() {
+        return uploaderId;
+    }
+
+    public void setUploaderId(String uploaderId) {
+        this.uploaderId = uploaderId;
+    }
+
+    public LocalDateTime getUploadedAt() {
+        return uploadedAt;
+    }
+
+    public void setUploadedAt(LocalDateTime uploadedAt) {
+        this.uploadedAt = uploadedAt;
+    }
+
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
+    }
+
+    public String getProcessingStatus() {
+        return processingStatus;
+    }
+
+    public void setProcessingStatus(String processingStatus) {
+        this.processingStatus = processingStatus;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
+    public Map<String, Object> getProcessingMetadata() {
+        return processingMetadata;
+    }
+
+    public void setProcessingMetadata(Map<String, Object> processingMetadata) {
+        this.processingMetadata = processingMetadata;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public void setResolution(String resolution) {
+        this.resolution = resolution;
+    }
+
+    public String getCodec() {
+        return codec;
+    }
+
+    public void setCodec(String codec) {
+        this.codec = codec;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public Integer getPageCount() {
+        return pageCount;
+    }
+
+    public void setPageCount(Integer pageCount) {
+        this.pageCount = pageCount;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getContentHash() {
+        return contentHash;
+    }
+
+    public void setContentHash(String contentHash) {
+        this.contentHash = contentHash;
+    }
+
+    public String getExifData() {
+        return exifData;
+    }
+
+    public void setExifData(String exifData) {
+        this.exifData = exifData;
+    }
+
+    public String getAccessLevel() {
+        return accessLevel;
+    }
+
+    public void setAccessLevel(String accessLevel) {
+        this.accessLevel = accessLevel;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public List<String> getAllowedUserIds() {
+        return allowedUserIds;
+    }
+
+    public void setAllowedUserIds(List<String> allowedUserIds) {
+        this.allowedUserIds = allowedUserIds;
+    }
+
+    public Integer getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Integer viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public Integer getDownloadCount() {
+        return downloadCount;
+    }
+
+    public void setDownloadCount(Integer downloadCount) {
+        this.downloadCount = downloadCount;
+    }
+
+    public Integer getShareCount() {
+        return shareCount;
+    }
+
+    public void setShareCount(Integer shareCount) {
+        this.shareCount = shareCount;
+    }
+
+    // Business logic methods
+    public void incrementViewCount() {
+        if (this.viewCount == null) {
+            this.viewCount = 0;
+        }
+        this.viewCount++;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementDownloadCount() {
+        if (this.downloadCount == null) {
+            this.downloadCount = 0;
+        }
+        this.downloadCount++;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementShareCount() {
+        if (this.shareCount == null) {
+            this.shareCount = 0;
+        }
+        this.shareCount++;
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Override
     public String toString() {
         return "MediaFile{" +
-                "id=" + id +
+                "id='" + id + '\'' +
                 ", fileName='" + fileName + '\'' +
                 ", mediaType=" + mediaType +
-                ", fileSize=" + fileSize +
-                ", displayOrder=" + displayOrder +
-                ", createdAt=" + createdAt +
+                ", fileUrl='" + fileUrl + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 }

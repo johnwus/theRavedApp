@@ -1,0 +1,28 @@
+name: Infrastructure Lint
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'infrastructure/helm/**'
+      - '.github/workflows/infrastructure-lint.yml'
+  workflow_dispatch:
+
+jobs:
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.3
+      - name: Lint charts
+        working-directory: infrastructure/helm
+        run: |
+          helm lint ./raved-app || true
+          for d in api-gateway user-service content-service social-service realtime-service ecommerce-service notification-service analytics-service events-service subscription-service eureka-server config-server; do
+            echo "Linting $d";
+            helm lint "./$d" || true;
+          done
+

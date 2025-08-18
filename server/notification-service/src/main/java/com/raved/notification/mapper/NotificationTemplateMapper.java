@@ -23,18 +23,12 @@ public class NotificationTemplateMapper {
         }
 
         NotificationTemplate template = new NotificationTemplate();
-        template.setName(request.getName());
-        template.setType(request.getType());
-        template.setLanguage(request.getLanguage() != null ? request.getLanguage() : "en");
-        template.setSubject(request.getSubject());
-        template.setContent(request.getContent());
-        template.setDescription(request.getDescription());
-        template.setTags(request.getTags());
-        template.setCategory(request.getCategory());
-        
-        // Set defaults
-        template.setIsActive(true);
-        template.setVersion("1.0");
+        template.setTemplateName(request.getTemplateName());
+        template.setTemplateType(request.getTemplateType());
+        template.setSubjectTemplate(request.getSubjectTemplate());
+        template.setBodyTemplate(request.getBodyTemplate());
+        template.setVariables(request.getVariables());
+        template.setIsActive(request.getIsActive());
         
         LocalDateTime now = LocalDateTime.now();
         template.setCreatedAt(now);
@@ -53,16 +47,12 @@ public class NotificationTemplateMapper {
 
         NotificationTemplateResponse response = new NotificationTemplateResponse();
         response.setId(template.getId());
-        response.setName(template.getName());
-        response.setType(template.getType());
-        response.setLanguage(template.getLanguage());
-        response.setSubject(template.getSubject());
-        response.setContent(template.getContent());
-        response.setDescription(template.getDescription());
+        response.setTemplateName(template.getTemplateName());
+        response.setTemplateType(template.getTemplateType());
+        response.setSubjectTemplate(template.getSubjectTemplate());
+        response.setBodyTemplate(template.getBodyTemplate());
+        response.setVariables(template.getVariables());
         response.setIsActive(template.getIsActive());
-        response.setVersion(template.getVersion());
-        response.setTags(template.getTags());
-        response.setCategory(template.getCategory());
         response.setCreatedAt(template.getCreatedAt());
         response.setUpdatedAt(template.getUpdatedAt());
 
@@ -77,44 +67,28 @@ public class NotificationTemplateMapper {
             return;
         }
 
-        if (request.getName() != null) {
-            template.setName(request.getName());
+        if (request.getTemplateName() != null) {
+            template.setTemplateName(request.getTemplateName());
         }
         
-        if (request.getType() != null) {
-            template.setType(request.getType());
+        if (request.getTemplateType() != null) {
+            template.setTemplateType(request.getTemplateType());
         }
         
-        if (request.getLanguage() != null) {
-            template.setLanguage(request.getLanguage());
+        if (request.getSubjectTemplate() != null) {
+            template.setSubjectTemplate(request.getSubjectTemplate());
         }
         
-        if (request.getSubject() != null) {
-            template.setSubject(request.getSubject());
+        if (request.getBodyTemplate() != null) {
+            template.setBodyTemplate(request.getBodyTemplate());
         }
         
-        if (request.getContent() != null) {
-            template.setContent(request.getContent());
-        }
-        
-        if (request.getDescription() != null) {
-            template.setDescription(request.getDescription());
+        if (request.getVariables() != null) {
+            template.setVariables(request.getVariables());
         }
         
         if (request.getIsActive() != null) {
             template.setIsActive(request.getIsActive());
-        }
-        
-        if (request.getVersion() != null) {
-            template.setVersion(request.getVersion());
-        }
-        
-        if (request.getTags() != null) {
-            template.setTags(request.getTags());
-        }
-        
-        if (request.getCategory() != null) {
-            template.setCategory(request.getCategory());
         }
         
         template.setUpdatedAt(LocalDateTime.now());
@@ -129,16 +103,12 @@ public class NotificationTemplateMapper {
         }
 
         NotificationTemplate clone = new NotificationTemplate();
-        clone.setName(newName);
-        clone.setType(original.getType());
-        clone.setLanguage(original.getLanguage());
-        clone.setSubject(original.getSubject());
-        clone.setContent(original.getContent());
-        clone.setDescription("Cloned from: " + original.getName());
+        clone.setTemplateName(newName);
+        clone.setTemplateType(original.getTemplateType());
+        clone.setSubjectTemplate(original.getSubjectTemplate());
+        clone.setBodyTemplate(original.getBodyTemplate());
+        clone.setVariables(original.getVariables());
         clone.setIsActive(true);
-        clone.setVersion("1.0");
-        clone.setTags(original.getTags());
-        clone.setCategory(original.getCategory());
         
         LocalDateTime now = LocalDateTime.now();
         clone.setCreatedAt(now);

@@ -1,0 +1,24 @@
+workload:
+  nameOverride: api-gateway
+  image:
+    repository: ghcr.io/theravedapp
+    tag: latest
+  service:
+    port: 8080
+  autoscaling:
+    enabled: false
+  probes:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 30
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 10
+  envFrom:
+    - configMapRef:
+        name: common-config
+    - configMapRef:
+        name: api-gateway-config
+    - secretRef:
+        name: api-gateway-secrets
+

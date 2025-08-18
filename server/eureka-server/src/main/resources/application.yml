@@ -24,7 +24,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: always
@@ -42,7 +46,9 @@ logging:
 
 ---
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   
 eureka:
   server:

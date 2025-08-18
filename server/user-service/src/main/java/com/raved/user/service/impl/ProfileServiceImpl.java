@@ -7,6 +7,7 @@ import com.raved.user.mapper.UserMapper;
 import com.raved.user.model.User;
 import com.raved.user.repository.UserRepository;
 import com.raved.user.service.ProfileService;
+import com.raved.user.event.UserEventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Implementation of ProfileService
@@ -31,6 +34,9 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserEventPublisher userEventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -57,12 +63,28 @@ public class ProfileServiceImpl implements ProfileService {
         User user = userOpt.get();
         
         // Update user fields using mapper
-        userMapper.updateUserFromRequest(user, request);
-        user.setUpdatedAt(LocalDateTime.now());
+        userMapper.updateUserFromUpdateProfileRequest(request, user);
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile updated successfully for user ID: {}", userId);
-        
+
+        // Publish user.updated event
+        try {
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("username", savedUser.getUsername());
+            profile.put("displayName", savedUser.getDisplayName());
+            profile.put("firstName", savedUser.getFirstName());
+            profile.put("lastName", savedUser.getLastName());
+            profile.put("email", savedUser.getEmail());
+            profile.put("bio", savedUser.getBio());
+            profile.put("phoneNumber", savedUser.getPhoneNumber());
+            profile.put("profilePictureUrl", savedUser.getProfilePictureUrl());
+            userEventPublisher.publishUserUpdated(savedUser.getId(), profile);
+        } catch (Exception e) {
+            logger.warn("Failed to publish user.updated for {}: {}", userId, e.getMessage());
+        }
+
         return userMapper.toUserResponse(savedUser);
     }
 
@@ -82,7 +104,7 @@ public class ProfileServiceImpl implements ProfileService {
         String profilePictureUrl = "/uploads/profiles/" + userId + "/" + file.getOriginalFilename();
         
         user.setProfilePictureUrl(profilePictureUrl);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile picture uploaded successfully for user ID: {}", userId);
@@ -101,7 +123,7 @@ public class ProfileServiceImpl implements ProfileService {
         
         User user = userOpt.get();
         user.setProfilePictureUrl(null);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         
         User savedUser = userRepository.save(user);
         logger.info("Profile picture deleted successfully for user ID: {}", userId);
@@ -128,7 +150,7 @@ public class ProfileServiceImpl implements ProfileService {
         // 4. Manual review if needed
         
         user.setStudentId(studentId);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
         
         logger.info("Student ID verification initiated for user ID: {}", userId);
@@ -146,7 +168,7 @@ public class ProfileServiceImpl implements ProfileService {
         
         User user = userOpt.get();
         int completedFields = 0;
-        int totalFields = 10; // Total number of profile fields
+        int totalFields = 9; // Total number of profile fields
         
         // Check required fields
         if (user.getFirstName() != null && !user.getFirstName().trim().isEmpty()) completedFields++;
@@ -159,7 +181,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (user.getProfilePictureUrl() != null && !user.getProfilePictureUrl().trim().isEmpty()) completedFields++;
         if (user.getUniversityId() != null) completedFields++;
         if (user.getFacultyId() != null) completedFields++;
-        if (user.getDepartmentId() != null) completedFields++;
+
         if (user.getStudentId() != null && !user.getStudentId().trim().isEmpty()) completedFields++;
         
         int percentage = (completedFields * 100) / totalFields;

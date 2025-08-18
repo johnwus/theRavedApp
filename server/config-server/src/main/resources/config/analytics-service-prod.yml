@@ -1,0 +1,15 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: ${MONGODB_DATABASE:raved_analytics}
+      auto-index-creation: true
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS}
+    consumer:
+      group-id: analytics-service
+      auto-offset-reset: earliest
+
+logging:
+  level:
+    com.raved.analytics: INFO

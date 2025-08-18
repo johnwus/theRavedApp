@@ -1,25 +1,22 @@
 package com.raved.user.service.impl;
 
+import com.raved.security.jwt.JwtUtils;
 import com.raved.user.model.User;
 import com.raved.user.security.JwtTokenProvider;
 import com.raved.user.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
-import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -47,10 +44,7 @@ public class JwtServiceImpl implements JwtService {
     @Value("${jwt.refresh-expiration:604800000}") // 7 days in milliseconds
     private long refreshExpirationMs;
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+    // Signing handled via shared JwtUtils using raw secret
 
     @Override
     public String generateToken(User user) {
@@ -60,7 +54,7 @@ public class JwtServiceImpl implements JwtService {
         claims.put("userId", user.getId());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
-        claims.put("role", user.getRole().name());
+        claims.put("role", user.getRole().toString());
         claims.put("isVerified", user.getIsVerified());
         claims.put("facultyId", user.getFacultyId());
         claims.put("universityId", user.getUniversityId());
@@ -68,7 +62,6 @@ public class JwtServiceImpl implements JwtService {
         return createToken(claims, user.getUsername(), jwtExpirationMs);
     }
 
-    @Override
     public String generateToken(Authentication authentication) {
         logger.debug("Generating JWT token for authentication: {}", authentication.getName());
         
@@ -93,7 +86,6 @@ public class JwtServiceImpl implements JwtService {
         return createToken(claims, user.getUsername(), refreshExpirationMs);
     }
 
-    @Override
     public String generateTokenWithCustomExpiration(User user, long expirationMs) {
         logger.debug("Generating JWT token with custom expiration for user: {}", user.getUsername());
         
@@ -101,21 +93,17 @@ public class JwtServiceImpl implements JwtService {
         claims.put("userId", user.getId());
         claims.put("username", user.getUsername());
         claims.put("email", user.getEmail());
-        claims.put("role", user.getRole().name());
+        claims.put("role", user.getRole().toString());
         
         return createToken(claims, user.getUsername(), expirationMs);
     }
 
     @Override
-    public String getUsernameFromToken(String token) {
+    public String extractUsername(String token) {
         logger.debug("Extracting username from token");
         
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
             
             return claims.getSubject();
         } catch (Exception e) {
@@ -125,15 +113,11 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Long getUserIdFromToken(String token) {
+    public Long extractUserId(String token) {
         logger.debug("Extracting user ID from token");
         
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
             
             Object userIdObj = claims.get("userId");
             if (userIdObj instanceof Number) {
@@ -146,16 +130,11 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public Date getExpirationDateFromToken(String token) {
         logger.debug("Extracting expiration date from token");
         
         try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
             
             return claims.getExpiration();
         } catch (Exception e) {
@@ -164,16 +143,11 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public Claims getAllClaimsFromToken(String token) {
         logger.debug("Extracting all claims from token");
         
         try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+            return JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
         } catch (Exception e) {
             logger.error("Error extracting claims from token", e);
             return null;
@@ -193,15 +167,11 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public boolean validateToken(String token) {
         logger.debug("Validating JWT token");
         
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
+            JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
             
             return !isTokenExpired(token);
         } catch (ExpiredJwtException e) {
@@ -222,12 +192,11 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public boolean validateToken(String token, String username) {
         logger.debug("Validating JWT token for username: {}", username);
         
         try {
-            String tokenUsername = getUsernameFromToken(token);
+            String tokenUsername = extractUsername(token);
             return username.equals(tokenUsername) && validateToken(token);
         } catch (Exception e) {
             logger.error("Error validating token for username: {}", username, e);
@@ -258,7 +227,7 @@ public class JwtServiceImpl implements JwtService {
             }
             
             String username = claims.getSubject();
-            Long userId = getUserIdFromToken(refreshToken);
+            Long userId = extractUserId(refreshToken);
             
             // Create new access token
             Map<String, Object> newClaims = new HashMap<>();
@@ -271,7 +240,6 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    @Override
     public LocalDateTime getTokenExpirationAsLocalDateTime(String token) {
         Date expiration = getExpirationDateFromToken(token);
         if (expiration != null) {
@@ -289,7 +257,6 @@ public class JwtServiceImpl implements JwtService {
         return 0;
     }
 
-    @Override
     public boolean isRefreshToken(String token) {
         try {
             Claims claims = getAllClaimsFromToken(token);
@@ -303,16 +270,56 @@ public class JwtServiceImpl implements JwtService {
         return false;
     }
 
+    @Override
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    @Override
+    public void invalidateToken(String token) {
+        // Implementation for token invalidation (could use Redis blacklist)
+        logger.debug("Invalidating token");
+    }
+
+    @Override
+    public void invalidateAllUserTokens(Long userId) {
+        // Implementation for invalidating all user tokens
+        logger.debug("Invalidating all tokens for user: {}", userId);
+    }
+
+    @Override
+    public String extractRole(String token) {
+        try {
+            Claims claims = JwtUtils.parseClaimsWithRawSecret(token, jwtSecret);
+            
+            return claims.get("role", String.class);
+        } catch (Exception e) {
+            logger.error("Error extracting role from token", e);
+            return null;
+        }
+    }
+
+    @Override
+    public boolean validateRefreshToken(String refreshToken) {
+        return validateToken(refreshToken) && isRefreshToken(refreshToken);
+    }
+
+    @Override
+    public Long getTokenExpirationTime(String token) {
+        Date expiration = getExpirationDateFromToken(token);
+        return expiration != null ? expiration.getTime() : null;
+    }
+
+    @Override
+    public boolean isRefreshTokenExpired(String refreshToken) {
+        return isTokenExpired(refreshToken);
+    }
+
     private String createToken(Map<String, Object> claims, String subject, long expirationMs) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMs);
         
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+        return JwtUtils.generateTokenWithRawSecret(subject, claims, jwtSecret, expirationMs);
     }
 }

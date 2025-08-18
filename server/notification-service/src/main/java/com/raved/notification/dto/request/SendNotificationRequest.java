@@ -3,6 +3,7 @@ package com.raved.notification.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -12,52 +13,50 @@ import java.util.Map;
 public class SendNotificationRequest {
 
     @NotEmpty(message = "Recipient user IDs are required")
-    private List<Long> recipientUserIds;
+    private List<String> recipientUserIds; // Changed to String for MongoDB
 
     @NotBlank(message = "Notification type is required")
-    private String notificationType; // "push", "email", "sms", "in_app"
+    @Size(max = 50, message = "Notification type must not exceed 50 characters")
+    private String notificationType; // LIKE, COMMENT, FOLLOW, ORDER_UPDATE, etc.
 
     @NotBlank(message = "Title is required")
     @Size(max = 255, message = "Title must not exceed 255 characters")
     private String title;
 
-    @NotBlank(message = "Message is required")
-    @Size(max = 1000, message = "Message must not exceed 1000 characters")
-    private String message;
+    @NotBlank(message = "Body is required")
+    private String body;
 
-    private String templateId; // Optional: use template instead of title/message
+    private Map<String, Object> data; // Changed to Map for MongoDB
+
+    private String actionUrl; // Deep link URL
+
+    private String imageUrl;
+
+    private String templateId; // Changed to String for MongoDB
 
     private Map<String, Object> templateVariables; // Variables for template substitution
 
-    private String priority; // "low", "normal", "high", "urgent"
+    private LocalDateTime scheduledAt; // For scheduled notifications
 
-    private String category; // "social", "ecommerce", "system", "marketing"
-
-    private Map<String, Object> data; // Additional data payload
-
-    private String actionUrl; // URL to navigate when notification is clicked
-
-    private Boolean sendImmediately = true;
-
-    private String scheduledAt; // ISO datetime string for scheduled notifications
+    private LocalDateTime expiresAt; // When notification expires
 
     // Constructors
     public SendNotificationRequest() {
     }
 
-    public SendNotificationRequest(List<Long> recipientUserIds, String notificationType, String title, String message) {
+    public SendNotificationRequest(List<String> recipientUserIds, String notificationType, String title, String body) {
         this.recipientUserIds = recipientUserIds;
         this.notificationType = notificationType;
         this.title = title;
-        this.message = message;
+        this.body = body;
     }
 
     // Getters and Setters
-    public List<Long> getRecipientUserIds() {
+    public List<String> getRecipientUserIds() {
         return recipientUserIds;
     }
 
-    public void setRecipientUserIds(List<Long> recipientUserIds) {
+    public void setRecipientUserIds(List<String> recipientUserIds) {
         this.recipientUserIds = recipientUserIds;
     }
 
@@ -77,44 +76,12 @@ public class SendNotificationRequest {
         this.title = title;
     }
 
-    public String getMessage() {
-        return message;
+    public String getBody() {
+        return body;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getTemplateId() {
-        return templateId;
-    }
-
-    public void setTemplateId(String templateId) {
-        this.templateId = templateId;
-    }
-
-    public Map<String, Object> getTemplateVariables() {
-        return templateVariables;
-    }
-
-    public void setTemplateVariables(Map<String, Object> templateVariables) {
-        this.templateVariables = templateVariables;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
+    public void setBody(String body) {
+        this.body = body;
     }
 
     public Map<String, Object> getData() {
@@ -133,19 +100,55 @@ public class SendNotificationRequest {
         this.actionUrl = actionUrl;
     }
 
-    public Boolean getSendImmediately() {
-        return sendImmediately;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setSendImmediately(Boolean sendImmediately) {
-        this.sendImmediately = sendImmediately;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
-    public String getScheduledAt() {
+    public String getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(String templateId) {
+        this.templateId = templateId;
+    }
+
+    public Map<String, Object> getTemplateVariables() {
+        return templateVariables;
+    }
+
+    public void setTemplateVariables(Map<String, Object> templateVariables) {
+        this.templateVariables = templateVariables;
+    }
+
+    public LocalDateTime getScheduledAt() {
         return scheduledAt;
     }
 
-    public void setScheduledAt(String scheduledAt) {
+    public void setScheduledAt(LocalDateTime scheduledAt) {
         this.scheduledAt = scheduledAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    @Override
+    public String toString() {
+        return "SendNotificationRequest{" +
+                "recipientUserIds=" + recipientUserIds +
+                ", notificationType='" + notificationType + '\'' +
+                ", title='" + title + '\'' +
+                ", body='" + body + '\'' +
+                ", templateId=" + templateId +
+                ", scheduledAt=" + scheduledAt +
+                '}';
     }
 }

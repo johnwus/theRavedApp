@@ -1,0 +1,10 @@
+spring:
+  data:
+    elasticsearch:
+      cluster-nodes: ${ELASTICSEARCH_CLUSTER_NODES}
+      username: ${ELASTICSEARCH_USERNAME}
+      password: ${ELASTICSEARCH_PASSWORD}
+
+logging:
+  level:
+    com.raved.search: INFO

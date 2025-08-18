@@ -224,8 +224,7 @@ public class SmsServiceImpl implements SmsService {
     }
 
     private void initializeTwilio() {
-        if (!Twilio.getUsername().equals(accountSid)) {
-            Twilio.init(accountSid, authToken);
-        }
+        // Initialize Twilio if not already initialized
+        Twilio.init(accountSid, authToken);
     }
 }

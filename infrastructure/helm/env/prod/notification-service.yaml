@@ -1,0 +1,36 @@
+nameOverride: notification-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: prod
+service:
+  port: 8086
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+ingress:
+  enabled: false
+resources:
+  requests:
+    cpu: 300m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: production
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.raved-prod.svc.cluster.local:9092
+  - name: REDIS_HOST
+    value: redis-master.raved-prod.svc.cluster.local
+secretEnv:
+  REDIS_PASSWORD:
+    name: raved-redis
+    key: redis-password
+secrets:
+  - name: raved-redis
+    absoluteName: true
+    data:
+      redis-password: ${REDIS_PASSWORD}
+

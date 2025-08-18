@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: realtime-service-config
+  namespace: raved-dev
+data:
+  SPRING_PROFILES_ACTIVE: "staging"
+  EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/raved_realtime_db"
+  DATABASE_USERNAME: "raved_admin"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+

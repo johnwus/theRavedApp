@@ -56,8 +56,9 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         User user = userOpt.get();
         
         // Check if verification already exists
-        Optional<StudentVerification> existingVerification = 
-                verificationRepository.findByUserIdAndStatus(request.getUserId(), StudentVerification.VerificationStatus.PENDING);
+        Optional<StudentVerification> existingVerification
+                =
+ verificationRepository.findByUser_IdAndVerificationStatus(request.getUserId(), StudentVerification.VerificationStatus.PENDING);
         
         if (existingVerification.isPresent()) {
             throw new VerificationFailedException("Verification already pending for user: " + request.getUserId());
@@ -65,10 +66,8 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         
         // Create new verification
         StudentVerification verification = verificationMapper.toStudentVerification(request);
-        verification.setVerificationToken(generateVerificationToken());
-        verification.setStatus(StudentVerification.VerificationStatus.PENDING);
+        verification.setVerificationStatus(StudentVerification.VerificationStatus.PENDING);
         verification.setSubmittedAt(LocalDateTime.now());
-        verification.setCreatedAt(LocalDateTime.now());
         verification.setUpdatedAt(LocalDateTime.now());
         
         StudentVerification savedVerification = verificationRepository.save(verification);
@@ -90,25 +89,25 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         }
         
         StudentVerification verification = verificationOpt.get();
-        if (verification.getStatus() != StudentVerification.VerificationStatus.PENDING) {
+        if (verification.getVerificationStatus() != StudentVerification.VerificationStatus.PENDING) {
             throw new VerificationFailedException("Verification is not pending: " + verificationId);
         }
         
         // Update verification status
-        verification.setStatus(StudentVerification.VerificationStatus.APPROVED);
-        verification.setReviewedBy(adminId);
-        verification.setReviewedAt(LocalDateTime.now());
+        verification.setVerificationStatus(StudentVerification.VerificationStatus.APPROVED);
+        verification.setVerifiedByUserId(adminId);
+        verification.setVerifiedAt(LocalDateTime.now());
         verification.setUpdatedAt(LocalDateTime.now());
         
         StudentVerification savedVerification = verificationRepository.save(verification);
         
         // Update user status
-        Optional<User> userOpt = userRepository.findById(verification.getUserId());
+        Optional<User> userOpt = userRepository.findById(verification.getUser().getId());
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             user.setIsVerified(true);
-            user.setUpdatedAt(LocalDateTime.now());
-            userRepository.save(user);
+                    user.setUpdatedAt(java.time.Instant.now());
+        userRepository.save(user);
             
             // Publish event
             eventPublisher.publishStudentVerificationApprovedEvent(user.getId(), verificationId);
@@ -128,21 +127,21 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         }
         
         StudentVerification verification = verificationOpt.get();
-        if (verification.getStatus() != StudentVerification.VerificationStatus.PENDING) {
+        if (verification.getVerificationStatus() != StudentVerification.VerificationStatus.PENDING) {
             throw new VerificationFailedException("Verification is not pending: " + verificationId);
         }
         
         // Update verification status
-        verification.setStatus(StudentVerification.VerificationStatus.REJECTED);
-        verification.setReviewedBy(adminId);
-        verification.setReviewedAt(LocalDateTime.now());
+        verification.setVerificationStatus(StudentVerification.VerificationStatus.REJECTED);
+        verification.setVerifiedByUserId(adminId);
+        verification.setVerifiedAt(LocalDateTime.now());
         verification.setRejectionReason(reason);
         verification.setUpdatedAt(LocalDateTime.now());
         
         StudentVerification savedVerification = verificationRepository.save(verification);
         
         // Publish event
-        eventPublisher.publishStudentVerificationRejectedEvent(verification.getUserId(), verificationId, reason);
+        eventPublisher.publishStudentVerificationRejectedEvent(verification.getUser().getId(), verificationId, reason);
         
         logger.info("Student verification rejected: {}", verificationId);
         return verificationMapper.toStudentVerificationResponse(savedVerification);
@@ -162,7 +161,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
     public Optional<StudentVerificationResponse> getVerificationByUserId(Long userId) {
         logger.debug("Getting verification by user ID: {}", userId);
         
-        Optional<StudentVerification> verificationOpt = verificationRepository.findByUserId(userId);
+        Optional<StudentVerification> verificationOpt = verificationRepository.findByUser_Id(userId);
         return verificationOpt.map(verificationMapper::toStudentVerificationResponse);
     }
 
@@ -172,7 +171,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         logger.debug("Getting pending verifications");
         
         Page<StudentVerification> verifications = verificationRepository
-                .findByStatusOrderBySubmittedAtAsc(StudentVerification.VerificationStatus.PENDING, pageable);
+                .findByVerificationStatusOrderBySubmittedAtAsc(StudentVerification.VerificationStatus.PENDING, pageable);
         
         return verifications.map(verificationMapper::toStudentVerificationResponse);
     }
@@ -184,7 +183,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         logger.debug("Getting verifications by status: {}", status);
         
         Page<StudentVerification> verifications = verificationRepository
-                .findByStatusOrderBySubmittedAtDesc(status, pageable);
+                .findByVerificationStatusOrderBySubmittedAtDesc(status, pageable);
         
         return verifications.map(verificationMapper::toStudentVerificationResponse);
     }
@@ -203,7 +202,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
     public long getVerificationCount(StudentVerification.VerificationStatus status) {
         logger.debug("Getting verification count for status: {}", status);
         
-        return verificationRepository.countByStatus(status);
+        return verificationRepository.countByVerificationStatus(status);
     }
 
     @Override
@@ -216,17 +215,16 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         }
         
         StudentVerification verification = verificationOpt.get();
-        if (verification.getStatus() != StudentVerification.VerificationStatus.PENDING) {
+        if (verification.getVerificationStatus() != StudentVerification.VerificationStatus.PENDING) {
             throw new VerificationFailedException("Cannot resend email for non-pending verification");
         }
         
-        // Generate new token
-        verification.setVerificationToken(generateVerificationToken());
+        // Update verification
         verification.setUpdatedAt(LocalDateTime.now());
         verificationRepository.save(verification);
         
         // Publish event to send email
-        eventPublisher.publishVerificationEmailResendEvent(verification.getUserId(), verification.getVerificationToken());
+        eventPublisher.publishVerificationEmailResendEvent(verification.getUser().getId(), null);
         
         logger.info("Verification email resent for: {}", verificationId);
     }
@@ -242,7 +240,7 @@ public class StudentVerificationServiceImpl implements StudentVerificationServic
         }
         
         StudentVerification verification = verificationOpt.get();
-        if (verification.getStatus() != StudentVerification.VerificationStatus.PENDING) {
+        if (verification.getVerificationStatus() != StudentVerification.VerificationStatus.PENDING) {
             throw new VerificationFailedException("Cannot update non-pending verification");
         }
         

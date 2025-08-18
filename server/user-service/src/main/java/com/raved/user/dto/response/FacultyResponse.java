@@ -22,7 +22,7 @@ public class FacultyResponse {
     private String imageUrl;
     private Boolean isActive;
     private Integer studentCount;
-    private Integer departmentCount;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -150,13 +150,7 @@ public class FacultyResponse {
         this.studentCount = studentCount;
     }
 
-    public Integer getDepartmentCount() {
-        return departmentCount;
-    }
 
-    public void setDepartmentCount(Integer departmentCount) {
-        this.departmentCount = departmentCount;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

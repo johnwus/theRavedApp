@@ -1,0 +1,29 @@
+nameOverride: notification-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: staging
+service:
+  port: 8086
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: staging
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.raved-staging.svc.cluster.local:9092
+  - name: REDIS_HOST
+    value: redis-master.raved-staging.svc.cluster.local
+secretEnv:
+  REDIS_PASSWORD:
+    name: raved-redis
+    key: redis-password
+secrets:
+  - name: raved-redis
+    absoluteName: true
+    data:
+      redis-password: ${REDIS_PASSWORD}
+

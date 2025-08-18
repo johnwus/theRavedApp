@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
  */
 public class TrendingContentResponse {
 
-    private Long contentId;
+    private String contentId;
     private String title;
     private String category;
-    private Long authorId;
+    private String authorId;
     private String authorName;
     private Double trendingScore;
     private Integer trendingRank;
@@ -24,18 +24,18 @@ public class TrendingContentResponse {
     // Constructors
     public TrendingContentResponse() {}
 
-    public TrendingContentResponse(Long contentId, Double trendingScore, Integer trendingRank) {
+    public TrendingContentResponse(String contentId, Double trendingScore, Integer trendingRank) {
         this.contentId = contentId;
         this.trendingScore = trendingScore;
         this.trendingRank = trendingRank;
     }
 
     // Getters and Setters
-    public Long getContentId() {
+    public String getContentId() {
         return contentId;
     }
 
-    public void setContentId(Long contentId) {
+    public void setContentId(String contentId) {
         this.contentId = contentId;
     }
 
@@ -55,11 +55,11 @@ public class TrendingContentResponse {
         this.category = category;
     }
 
-    public Long getAuthorId() {
+    public String getAuthorId() {
         return authorId;
     }
 
-    public void setAuthorId(Long authorId) {
+    public void setAuthorId(String authorId) {
         this.authorId = authorId;
     }
 

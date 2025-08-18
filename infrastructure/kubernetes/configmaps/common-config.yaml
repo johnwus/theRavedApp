@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-config
+  namespace: raved-dev
+data:
+  SPRING_PROFILES_ACTIVE: "dev"
+  EUREKA_SERVER_URL: "http://eureka-server:8761/eureka/"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  KAFKA_SERVERS: "kafka:9092"
+  ELASTICSEARCH_URIS: "http://elasticsearch:9200"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+

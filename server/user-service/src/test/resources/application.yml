@@ -1,0 +1,30 @@
+# Test-specific overrides for user-service
+# Provide required JWT properties to satisfy @Value placeholders in JwtConfig
+
+jwt:
+  # At least 32 bytes (256 bits) for HS256
+  secret: bXktdGVzdC1zZWNyZXQtbXktdGVzdC1zZWNyZXQtbXktdGVzdC1zZWNyZXQ=
+  expiration: 86400000 # 24 hours
+  refresh-expiration: 604800000 # 7 days
+
+# Keep tests fast and isolated
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  cloud:
+    config:
+      enabled: false
+      import-check:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+
+

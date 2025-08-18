@@ -1,0 +1,8 @@
+spring:
+  redis:
+    host: ${REDIS_HOST}
+    password: ${REDIS_PASSWORD}
+
+logging:
+  level:
+    com.raved.realtime: INFO

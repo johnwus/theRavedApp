@@ -1,123 +1,144 @@
 package com.raved.social.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.TextIndexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Comment Entity for TheRavedApp
+ * Comment Document for TheRavedApp MongoDB
  *
- * Represents comments on posts and replies to other comments.
- * Based on the comments table schema.
+ * Represents a comment on a post or another comment. Converted from JPA entity
+ * to MongoDB document.
  */
-@Entity
-@Table(name = "comments", indexes = {
-        @Index(name = "idx_comments_post", columnList = "post_id"),
-        @Index(name = "idx_comments_user", columnList = "user_id"),
-        @Index(name = "idx_comments_parent", columnList = "parent_comment_id"),
-        @Index(name = "idx_comments_created", columnList = "created_at"),
-        @Index(name = "idx_comments_thread", columnList = "post_id, parent_comment_id, created_at")
+@Document(collection = "comments")
+@CompoundIndexes({
+    @CompoundIndex(name = "post_created_idx", def = "{'postId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "user_created_idx", def = "{'userId': 1, 'createdAt': -1}"),
+    @CompoundIndex(name = "parent_created_idx", def = "{'parentCommentId': 1, 'createdAt': -1}")
 })
 public class Comment {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @Column(name = "post_id", nullable = false)
-    private Long postId; // Reference to content service
+    @Indexed
+    @NotBlank(message = "Post ID is required")
+    private String postId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
+    @Indexed
+    @NotBlank(message = "User ID is required")
+    private String userId;
 
-    @NotBlank(message = "Comment content is required")
-    @Size(max = 2000, message = "Comment must not exceed 2000 characters")
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Indexed
+    private String parentCommentId;
+
+    @TextIndexed(weight = 5)
+    @NotBlank(message = "Content is required")
+    @Size(max = 2000, message = "Comment content must not exceed 2000 characters")
     private String content;
 
-    @Column(name = "parent_comment_id")
-    private Long parentCommentId; // For nested comments/replies
-
-    // Engagement Metrics (denormalized for performance)
-    @Column(name = "likes_count", nullable = false)
+    @Indexed
     private Integer likesCount = 0;
 
-    @Column(name = "replies_count", nullable = false)
+    @Indexed
     private Integer repliesCount = 0;
 
-    // Content Moderation
-    @Column(name = "is_flagged", nullable = false)
+    @Indexed
     private Boolean isFlagged = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "moderation_status", nullable = false)
-    private ModerationStatus moderationStatus = ModerationStatus.APPROVED;
+    @Indexed
+    private String moderationStatus = "APPROVED";
 
-    @Column(name = "flagged_reason", columnDefinition = "TEXT")
-    private String flaggedReason;
-
-    // System Fields
-    @Column(name = "is_deleted", nullable = false)
+    @Indexed
     private Boolean isDeleted = false;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Indexed
+    @NotNull(message = "Created at is required")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Indexed
     private LocalDateTime updatedAt;
 
-    // Relationships (for convenience, but be careful with N+1 queries)
-    @OneToMany(mappedBy = "parentCommentId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Comment> replies;
+    // Additional MongoDB-specific fields for enhanced social features
+    private String authorName; // Cached author name for performance
 
-    // Enums
-    public enum ModerationStatus {
-        PENDING, APPROVED, REJECTED
-    }
+    private String authorAvatar; // Cached author avatar URL
 
-    // Constructors
+    private List<String> mentionedUserIds; // Users mentioned in the comment
+
+    private List<String> hashtags; // Hashtags in the comment
+
+    private String language = "en"; // Language of the comment
+
+    private String sentiment = "NEUTRAL"; // AI-detected sentiment: POSITIVE, NEGATIVE, NEUTRAL
+
+    private Map<String, Object> metadata; // For additional custom fields
+
+    private String commentType = "TEXT"; // TEXT, RICH_TEXT, VOICE, VIDEO
+
+    private Integer reportCount = 0; // Number of times reported
+
+    private String lastModeratedBy; // Last moderator ID
+
+    private LocalDateTime lastModeratedAt; // Last moderation timestamp
+
+    private String moderationReason; // Reason for moderation action
+
+    // Default constructor
     public Comment() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Comment(Long postId, Long userId, String content) {
+    // Constructor with core fields
+    public Comment(String postId, String userId, String content) {
         this();
         this.postId = postId;
         this.userId = userId;
         this.content = content;
     }
 
-    public Comment(Long postId, Long userId, String content, Long parentCommentId) {
-        this(postId, userId, content);
-        this.parentCommentId = parentCommentId;
-    }
-
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getPostId() {
+    public String getPostId() {
         return postId;
     }
 
-    public void setPostId(Long postId) {
+    public void setPostId(String postId) {
         this.postId = postId;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getParentCommentId() {
+        return parentCommentId;
+    }
+
+    public void setParentCommentId(String parentCommentId) {
+        this.parentCommentId = parentCommentId;
     }
 
     public String getContent() {
@@ -126,14 +147,6 @@ public class Comment {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public Long getParentCommentId() {
-        return parentCommentId;
-    }
-
-    public void setParentCommentId(Long parentCommentId) {
-        this.parentCommentId = parentCommentId;
     }
 
     public Integer getLikesCount() {
@@ -160,20 +173,12 @@ public class Comment {
         this.isFlagged = isFlagged;
     }
 
-    public ModerationStatus getModerationStatus() {
+    public String getModerationStatus() {
         return moderationStatus;
     }
 
-    public void setModerationStatus(ModerationStatus moderationStatus) {
+    public void setModerationStatus(String moderationStatus) {
         this.moderationStatus = moderationStatus;
-    }
-
-    public String getFlaggedReason() {
-        return flaggedReason;
-    }
-
-    public void setFlaggedReason(String flaggedReason) {
-        this.flaggedReason = flaggedReason;
     }
 
     public Boolean getIsDeleted() {
@@ -200,64 +205,102 @@ public class Comment {
         this.updatedAt = updatedAt;
     }
 
-    public List<Comment> getReplies() {
-        return replies;
+    // New MongoDB-specific getters and setters
+    public String getAuthorName() {
+        return authorName;
     }
 
-    public void setReplies(List<Comment> replies) {
-        this.replies = replies;
+    public void setAuthorName(String authorName) {
+        this.authorName = authorName;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    public String getAuthorAvatar() {
+        return authorAvatar;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    public void setAuthorAvatar(String authorAvatar) {
+        this.authorAvatar = authorAvatar;
     }
 
-    // Utility methods
-    public void incrementLikes() {
-        this.likesCount++;
+    public List<String> getMentionedUserIds() {
+        return mentionedUserIds;
     }
 
-    public void decrementLikes() {
-        if (this.likesCount > 0) {
-            this.likesCount--;
-        }
+    public void setMentionedUserIds(List<String> mentionedUserIds) {
+        this.mentionedUserIds = mentionedUserIds;
     }
 
-    public void incrementReplies() {
-        this.repliesCount++;
+    public List<String> getHashtags() {
+        return hashtags;
     }
 
-    public void decrementReplies() {
-        if (this.repliesCount > 0) {
-            this.repliesCount--;
-        }
+    public void setHashtags(List<String> hashtags) {
+        this.hashtags = hashtags;
     }
 
-    public boolean isReply() {
-        return parentCommentId != null;
+    public String getLanguage() {
+        return language;
     }
 
-    public boolean isTopLevel() {
-        return parentCommentId == null;
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
-    @Override
-    public String toString() {
-        return "Comment{" +
-                "id=" + id +
-                ", postId=" + postId +
-                ", userId=" + userId +
-                ", parentCommentId=" + parentCommentId +
-                ", likesCount=" + likesCount +
-                ", repliesCount=" + repliesCount +
-                ", createdAt=" + createdAt +
-                '}';
+    public String getSentiment() {
+        return sentiment;
     }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getCommentType() {
+        return commentType;
+    }
+
+    public void setCommentType(String commentType) {
+        this.commentType = commentType;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public void setReportCount(Integer reportCount) {
+        this.reportCount = reportCount;
+    }
+
+    public String getLastModeratedBy() {
+        return lastModeratedBy;
+    }
+
+    public void setLastModeratedBy(String lastModeratedBy) {
+        this.lastModeratedBy = lastModeratedBy;
+    }
+
+    public LocalDateTime getLastModeratedAt() {
+        return lastModeratedAt;
+    }
+
+    public void setLastModeratedAt(LocalDateTime lastModeratedAt) {
+        this.lastModeratedAt = lastModeratedAt;
+    }
+
+    public String getModerationReason() {
+        return moderationReason;
+    }
+
+    public void setModerationReason(String moderationReason) {
+        this.moderationReason = moderationReason;
+    }
+
+
 }

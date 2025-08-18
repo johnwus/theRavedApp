@@ -2,6 +2,15 @@
 spring:
   profiles:
     active: production
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${CONFIG_GIT_URI:https://github.com/johnwus/theRavedApp-config}
+          default-label: ${CONFIG_GIT_BRANCH:main}
+          clone-on-start: true
+          username: ${CONFIG_GIT_USERNAME:}
+          password: ${CONFIG_GIT_PASSWORD:}
 logging:
   level:
-    com.raved: INFO
+    org.springframework.cloud.config: INFO

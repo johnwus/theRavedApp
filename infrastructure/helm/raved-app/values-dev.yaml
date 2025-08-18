@@ -1,0 +1,17 @@
+# Dev values
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: dev
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+service:
+  type: ClusterIP
+  port: 8080
+autoscaling:
+  enabled: false
+

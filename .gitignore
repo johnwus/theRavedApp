@@ -270,6 +270,7 @@ secrets/
 # Configuration with sensitive data
 application-secrets.yml
 application-secrets.properties
+config-export/*
 
 # ===================================
 # OPERATING SYSTEM

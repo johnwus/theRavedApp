@@ -1,44 +1,37 @@
 package com.raved.realtime.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 /**
- * MessageReaction Entity for TheRavedApp
- * 
- * Represents reactions to messages (emojis, likes, etc.).
- * Based on the message_reactions table schema.
+ * Entity representing a reaction to a message
  */
 @Entity
-@Table(name = "message_reactions", indexes = {
-    @Index(name = "idx_message_reactions_message", columnList = "message_id"),
-    @Index(name = "idx_message_reactions_user", columnList = "user_id"),
-    @Index(name = "idx_message_reactions_emoji", columnList = "emoji"),
-    @Index(name = "idx_message_reactions_created", columnList = "created_at")
-}, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_message_reaction", columnNames = {"message_id", "user_id", "emoji"})
-})
+@Table(name = "message_reactions", 
+       uniqueConstraints = @UniqueConstraint(columnNames = {"message_id", "user_id", "reaction_type"}),
+       indexes = {
+           @Index(name = "idx_message_reactions_message", columnList = "message_id"),
+           @Index(name = "idx_message_reactions_user", columnList = "user_id")
+       })
 public class MessageReaction {
-
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "message_id", nullable = false)
-    private Message message;
-
+    
+    @Column(name = "message_id", nullable = false)
+    private Long messageId;
+    
     @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
-
-    @NotBlank(message = "Emoji is required")
-    @Size(max = 10, message = "Emoji must not exceed 10 characters")
-    @Column(nullable = false)
-    private String emoji;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
+    private Long userId;
+    
+    @Column(name = "reaction_type", nullable = false, length = 20)
+    private String reactionType; // LIKE, LOVE, LAUGH, etc.
+    
+    @Column(name = "emoji", length = 10)
+    private String emoji; // Unicode emoji character
+    
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     // Constructors
@@ -46,14 +39,22 @@ public class MessageReaction {
         this.createdAt = LocalDateTime.now();
     }
 
-    public MessageReaction(Message message, Long userId, String emoji) {
+    public MessageReaction(Long messageId, Long userId, String reactionType) {
         this();
-        this.message = message;
+        this.messageId = messageId;
         this.userId = userId;
+        this.reactionType = reactionType;
+    }
+
+    public MessageReaction(Long messageId, Long userId, String reactionType, String emoji) {
+        this();
+        this.messageId = messageId;
+        this.userId = userId;
+        this.reactionType = reactionType;
         this.emoji = emoji;
     }
 
-    // Getters and Setters
+    // Getters and setters
     public Long getId() {
         return id;
     }
@@ -62,12 +63,12 @@ public class MessageReaction {
         this.id = id;
     }
 
-    public Message getMessage() {
-        return message;
+    public Long getMessageId() {
+        return messageId;
     }
 
-    public void setMessage(Message message) {
-        this.message = message;
+    public void setMessageId(Long messageId) {
+        this.messageId = messageId;
     }
 
     public Long getUserId() {
@@ -76,6 +77,14 @@ public class MessageReaction {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public String getReactionType() {
+        return reactionType;
+    }
+
+    public void setReactionType(String reactionType) {
+        this.reactionType = reactionType;
     }
 
     public String getEmoji() {
@@ -94,17 +103,13 @@ public class MessageReaction {
         this.createdAt = createdAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
     @Override
     public String toString() {
         return "MessageReaction{" +
                 "id=" + id +
-                ", messageId=" + (message != null ? message.getId() : null) +
+                ", messageId=" + messageId +
                 ", userId=" + userId +
+                ", reactionType='" + reactionType + '\'' +
                 ", emoji='" + emoji + '\'' +
                 ", createdAt=" + createdAt +
                 '}';

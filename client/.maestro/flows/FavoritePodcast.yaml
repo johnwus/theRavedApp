@@ -1,0 +1,14 @@
+appId: ${MAESTRO_APP_ID}
+onFlowStart:
+  - runFlow: ../shared/_OnFlowStart.yaml
+---
+# Example flow - tap on a visible text and assert it changed.
+# Replace this with your own app flow.
+- tapOn:
+    text: "Home"
+- waitForAnimationToEnd
+- assertVisible:
+    text: "Home"
+
+
+

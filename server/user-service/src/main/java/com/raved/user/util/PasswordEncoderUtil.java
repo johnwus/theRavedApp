@@ -1,7 +1,6 @@
 package com.raved.user.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.raved.security.encryption.EncryptionUtils;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,14 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class PasswordEncoderUtil {
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
     public String encode(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+        return EncryptionUtils.hashPassword(rawPassword);
     }
 
     public boolean matches(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+        return EncryptionUtils.matchesPassword(rawPassword, encodedPassword);
     }
 }

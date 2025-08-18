@@ -1,0 +1,25 @@
+nameOverride: analytics-service
+image:
+  repository: ghcr.io/theravedapp
+  tag: staging
+service:
+  port: 8087
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+ingress:
+  enabled: false
+env:
+  - name: SPRING_PROFILES_ACTIVE
+    value: staging
+  - name: SPRING_DATASOURCE_URL
+    value: ${SPRING_DATASOURCE_URL}
+secretEnv:
+  DATABASE_USERNAME:
+    name: raved-db
+    key: username
+  DATABASE_PASSWORD:
+    name: raved-db
+    key: password
+

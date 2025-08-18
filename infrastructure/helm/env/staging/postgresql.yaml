@@ -1,0 +1,19 @@
+auth:
+  username: ${DATABASE_USERNAME}
+  password: ${DATABASE_PASSWORD}
+  database: raved_staging
+primary:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+persistence:
+  enabled: true
+  size: 20Gi
+service:
+  ports:
+    postgresql: 5432
+

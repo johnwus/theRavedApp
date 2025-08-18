@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Databases
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     environment:
       POSTGRES_DB: raved_db
       POSTGRES_USER: raved_user
@@ -15,6 +15,11 @@ services:
       - ./infrastructure/docker/development/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raved_user -d raved_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
@@ -24,6 +29,11 @@ services:
       - redis_data:/data
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # Message Queues
   zookeeper:
@@ -66,6 +76,12 @@ services:
       - "8761:8761"
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # Configuration Server
   config-server:
@@ -73,9 +89,16 @@ services:
     ports:
       - "8888:8888"
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # API Gateway
   api-gateway:
@@ -83,10 +106,16 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - eureka-server
-      - config-server
+      config-server:
+        condition: service_healthy
     networks:
       - raved-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   # Microservices
   user-service:
@@ -94,9 +123,12 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - postgres
-      - redis
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
@@ -105,9 +137,12 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - postgres
-      - redis
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
@@ -116,9 +151,12 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - postgres
-      - redis
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
@@ -127,10 +165,14 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
@@ -139,9 +181,36 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - postgres
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
+
+  events-service:
+    build: ./server/events-service
+    ports:
+      - "8088:8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
+  subscription-service:
+    build: ./server/subscription-service
+    ports:
+      - "8089:8089"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - raved-network
+
       - raved-network
 
   notification-service:
@@ -149,9 +218,12 @@ services:
     ports:
       - "8086:8086"
     depends_on:
-      - postgres
-      - kafka
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
     networks:
       - raved-network
 
@@ -160,15 +232,92 @@ services:
     ports:
       - "8087:8087"
     depends_on:
-      - postgres
-      - redis
-      - eureka-server
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  loki:
+    image: grafana/loki:2.9.0
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./infrastructure/docker/monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+    ports:
+      - "3100:3100"
+    networks:
+      - raved-network
+
+  promtail:
+    image: grafana/promtail:2.9.0
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./infrastructure/docker/monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - raved-network
+
+  tempo:
+    image: grafana/tempo:2.3.1
+    command: ["-config.expand-env=true"]
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - raved-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.100.0
+    volumes:
+      - ./infrastructure/docker/monitoring/otel-collector.yml:/etc/otelcol/config.yaml:ro
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - raved-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - ./infrastructure/docker/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infrastructure/docker/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - raved-network
+
     networks:
       - raved-network
 
 volumes:
   postgres_data:
   redis_data:
+
+
+  # Monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infrastructure/docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - raved-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - raved-network
 
 networks:
   raved-network:

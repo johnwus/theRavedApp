@@ -150,15 +150,11 @@ public class EmailServiceImpl implements EmailService {
             return false;
         }
         
-        String subject = notification.getSubject();
-        String content = notification.getContent();
+        String subject = notification.getTitle();
+        String content = notification.getBody();
         
-        // If HTML content is available, use it
-        if (notification.getHtmlContent() != null && !notification.getHtmlContent().isEmpty()) {
-            return sendHtmlEmail(recipientEmail, subject, notification.getHtmlContent());
-        } else {
-            return sendEmail(recipientEmail, subject, content);
-        }
+        // Use the body content for email
+        return sendEmail(recipientEmail, subject, content);
     }
 
     @Override

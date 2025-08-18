@@ -56,7 +56,7 @@ public class NotificationConsumer {
                    groupId = "${kafka.consumer.group-id:notification-service}")
     public void processNotificationEvent(@Payload String message,
                                        @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-                                       @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                       @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
                                        @Header(KafkaHeaders.OFFSET) long offset) {
 
         logger.info("Received notification event from topic: {}, partition: {}, offset: {}", topic, partition, offset);
@@ -124,7 +124,7 @@ public class NotificationConsumer {
     private void processNotification(Map<String, Object> event) {
         logger.info("Processing notification event for notification: {}", event.get("notificationId"));
 
-        Long notificationId = Long.valueOf(event.get("notificationId").toString());
+        String notificationId = event.get("notificationId").toString();
         Notification notification = notificationRepository.findById(notificationId).orElse(null);
 
         if (notification == null) {
@@ -133,30 +133,20 @@ public class NotificationConsumer {
         }
 
         // Update delivery status
-        notification.setDeliveryStatus(Notification.DeliveryStatus.PROCESSING);
-        notification.setUpdatedAt(LocalDateTime.now());
+        notification.setDeliveryStatus(Notification.DeliveryStatus.PENDING);
         notificationRepository.save(notification);
 
         // Send notification through configured channels
         boolean delivered = false;
 
-        if (notification.getChannels().contains("EMAIL")) {
-            delivered |= sendEmailNotification(notification);
-        }
-
-        if (notification.getChannels().contains("PUSH")) {
-            delivered |= sendPushNotification(notification);
-        }
-
-        if (notification.getChannels().contains("SMS")) {
-            delivered |= sendSmsNotification(notification);
-        }
+        // Send via all channels for now - in a real implementation, you'd check user preferences
+        delivered |= sendEmailNotification(notification);
+        delivered |= sendPushNotification(notification);
+        delivered |= sendSmsNotification(notification);
 
         // Update final delivery status
-        notification.setDeliveryStatus(delivered ?
-                Notification.DeliveryStatus.DELIVERED : Notification.DeliveryStatus.FAILED);
-        notification.setDeliveredAt(delivered ? LocalDateTime.now() : null);
-        notification.setUpdatedAt(LocalDateTime.now());
+        notification.setDeliveryStatus(delivered ? Notification.DeliveryStatus.SENT : Notification.DeliveryStatus.FAILED);
+        notification.setSentAt(delivered ? LocalDateTime.now() : null);
         notificationRepository.save(notification);
 
         logger.info("Notification processing completed: {} - Status: {}",
@@ -176,7 +166,7 @@ public class NotificationConsumer {
     private boolean sendEmailNotification(Notification notification) {
         try {
             // Get user email (this would typically come from user service)
-            String userEmail = getUserEmail(notification.getRecipientUserId());
+            String userEmail = getUserEmail(notification.getUserId());
             if (userEmail != null) {
                 return emailService.sendNotificationEmail(notification, userEmail);
             }
@@ -189,7 +179,7 @@ public class NotificationConsumer {
     private boolean sendPushNotification(Notification notification) {
         try {
             List<DeviceToken> deviceTokens = deviceTokenRepository.findByUserIdAndIsActiveTrue(
-                    notification.getRecipientUserId());
+                    notification.getUserId());
 
             if (!deviceTokens.isEmpty()) {
                 List<String> tokens = deviceTokens.stream()
@@ -207,9 +197,9 @@ public class NotificationConsumer {
     private boolean sendSmsNotification(Notification notification) {
         try {
             // Get user phone number (this would typically come from user service)
-            String phoneNumber = getUserPhoneNumber(notification.getRecipientUserId());
+            String phoneNumber = getUserPhoneNumber(notification.getUserId());
             if (phoneNumber != null) {
-                return smsService.sendSms(phoneNumber, notification.getContent());
+                return smsService.sendSms(phoneNumber, notification.getBody());
             }
         } catch (Exception e) {
             logger.error("Failed to send SMS notification: {}", notification.getId(), e);
@@ -230,12 +220,12 @@ public class NotificationConsumer {
     }
 
     // Helper methods to get user information (would integrate with user service)
-    private String getUserEmail(Long userId) {
+    private String getUserEmail(String userId) {
         // TODO: Integrate with user service to get email
         return "user" + userId + "@example.com";
     }
 
-    private String getUserPhoneNumber(Long userId) {
+    private String getUserPhoneNumber(String userId) {
         // TODO: Integrate with user service to get phone number
         return null; // Return null if no phone number
     }

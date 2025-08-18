@@ -15,13 +15,11 @@ import com.raved.user.util.PasswordEncoderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Implementation of AuthService
@@ -39,10 +37,13 @@ public class AuthServiceImpl implements AuthService {
     private JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoderUtil passwordEncoderUtil;
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private com.raved.user.event.UserEventPublisher userEventPublisher;
 
     @Override
     public AuthResponse login(LoginRequest request) {
@@ -68,13 +69,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // Verify password
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (!passwordEncoderUtil.matches(request.getPassword(), user.getPasswordHash())) {
             logger.warn("Login failed: Invalid password for user - {}", request.getUsername());
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
         // Update last login
-        user.setLastLogin(LocalDateTime.now());
+        user.setLastLoginAt(Instant.now());
         userRepository.save(user);
 
         // Generate tokens
@@ -108,14 +109,21 @@ public class AuthServiceImpl implements AuthService {
 
         // Create new user
         User user = userMapper.toUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(passwordEncoderUtil.encode(request.getPassword()));
         user.setStatus(UserStatus.ACTIVE);
         user.setEmailVerified(false);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
 
         // Save user
         user = userRepository.save(user);
+
+        // Emit user.created event
+        try {
+            userEventPublisher.publishUserCreated(user.getId(), user.getUsername(), user.getEmail());
+        } catch (Exception e) {
+            logger.warn("Failed to publish user.created for {}: {}", user.getId(), e.getMessage());
+        }
 
         // Generate tokens
         String accessToken = jwtTokenProvider.generateAccessToken(user);
@@ -220,13 +228,13 @@ public class AuthServiceImpl implements AuthService {
         User user = userOpt.get();
 
         // Verify current password
-        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+        if (!passwordEncoderUtil.matches(currentPassword, user.getPasswordHash())) {
             throw new InvalidCredentialsException("Current password is incorrect");
         }
 
         // Update password
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setPasswordHash(passwordEncoderUtil.encode(newPassword));
+        user.setUpdatedAt(Instant.now());
         userRepository.save(user);
 
         logger.info("Password changed successfully for user: {}", user.getUsername());

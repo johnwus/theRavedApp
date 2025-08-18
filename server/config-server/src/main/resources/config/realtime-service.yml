@@ -1,0 +1,101 @@
+# Realtime Service Configuration
+spring:
+  application:
+    name: realtime-service
+  datasource:
+    url: ${REALTIME_DB_URL:jdbc:postgresql://localhost:5432/raved_realtime_db}
+    username: ${REALTIME_DB_USER:raved_user}
+    password: ${REALTIME_DB_PASSWORD:raved_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: ${REALTIME_DDL_AUTO:validate}
+    show-sql: ${REALTIME_SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    database: ${REALTIME_REDIS_DB:3}
+
+# WebSocket configuration
+websocket:
+  allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:3000,https://localhost:3000}
+  max-text-message-size: ${WEBSOCKET_MAX_TEXT_SIZE:8192}
+  max-binary-message-size: ${WEBSOCKET_MAX_BINARY_SIZE:8192}
+  idle-timeout: ${WEBSOCKET_IDLE_TIMEOUT:300000}
+  ratelimit:
+    window-seconds: ${WEBSOCKET_RATELIMIT_WINDOW_SECONDS:5}
+    send-limit: ${WEBSOCKET_RATELIMIT_SEND_LIMIT:30}
+    subscribe-limit: ${WEBSOCKET_RATELIMIT_SUBSCRIBE_LIMIT:30}
+    enabled: ${WEBSOCKET_RATELIMIT_ENABLED:true}
+
+# JWT configuration
+jwt:
+  secret: ${JWT_SECRET:}
+
+# Socket.IO configuration
+socketio:
+  host: ${SOCKETIO_HOST:0.0.0.0}
+  port: ${SOCKETIO_PORT:9092}
+  boss-count: ${SOCKETIO_BOSS_COUNT:1}
+  work-count: ${SOCKETIO_WORK_COUNT:100}
+  allow-custom-requests: ${SOCKETIO_ALLOW_CUSTOM:true}
+  upgrade-timeout: ${SOCKETIO_UPGRADE_TIMEOUT:10000}
+  ping-timeout: ${SOCKETIO_PING_TIMEOUT:60000}
+  ping-interval: ${SOCKETIO_PING_INTERVAL:25000}
+
+# Real-time event configuration
+realtime:
+  events:
+    chat: ${REALTIME_CHAT_EVENTS:true}
+    notifications: ${REALTIME_NOTIFICATION_EVENTS:true}
+    presence: ${REALTIME_PRESENCE_EVENTS:true}
+    typing: ${REALTIME_TYPING_EVENTS:true}
+  rooms:
+    max-participants: ${REALTIME_MAX_PARTICIPANTS:100}
+    cleanup-interval: ${REALTIME_CLEANUP_INTERVAL:300000}
+
+# Kafka configuration for real-time events
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  consumer:
+    group-id: ${REALTIME_KAFKA_GROUP:realtime-consumer}
+    auto-offset-reset: ${REALTIME_KAFKA_OFFSET:earliest}
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# RabbitMQ configuration for message queuing
+rabbitmq:
+  host: ${RABBITMQ_HOST:localhost}
+  port: ${RABBITMQ_PORT:5672}
+  username: ${RABBITMQ_USERNAME:guest}
+  password: ${RABBITMQ_PASSWORD:guest}
+  virtual-host: ${RABBITMQ_VHOST:/}
+
+# Metrics and monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+# Logging configuration
+logging:
+  level:
+    com.raved.realtime: ${REALTIME_LOG_LEVEL:INFO}
+    org.springframework.kafka: ${KAFKA_LOG_LEVEL:WARN}
+    io.netty: ${NETTY_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'spring-actuator'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+          - 'api-gateway:8080'
+          - 'user-service:8081'
+          - 'content-service:8082'
+          - 'social-service:8083'
+          - 'realtime-service:8084'
+          - 'ecommerce-service:8085'
+          - 'notification-service:8086'
+          - 'analytics-service:8087'
+          - 'eureka-server:8761'
+          - 'config-server:8888'
+

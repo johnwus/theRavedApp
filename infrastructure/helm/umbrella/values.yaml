@@ -1,0 +1,46 @@
+user-service:
+  workload:
+    image:
+      tag: dev
+api-gateway:
+  workload:
+    image:
+      tag: dev
+
+provisioning:
+  kafka:
+    enabled: false
+    bootstrap: kafka:9092
+    topics:
+      - name: user.created
+        partitions: 3
+        replicationFactor: 1
+      - name: user.updated
+        partitions: 3
+        replicationFactor: 1
+  elasticsearch:
+    enabled: false
+    url: http://elasticsearch:9200
+    indices:
+      - name: posts-v1
+      - name: analytics-metrics-v1
+  rabbitmq:
+    enabled: false
+    host: rabbitmq
+    username: guest
+    password: guest
+    exchanges:
+      - name: chat.exchange
+        type: direct
+      - name: notification.exchange
+        type: direct
+    queues:
+      - name: chat.queue
+      - name: notification.queue
+    bindings:
+      - exchange: chat.exchange
+        queue: chat.queue
+        routingKey: chat.message
+      - exchange: notification.exchange
+        queue: notification.queue
+        routingKey: notification.send

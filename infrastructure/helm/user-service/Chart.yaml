@@ -1,0 +1,12 @@
+apiVersion: v2
+name: user-service
+description: User Service chart (wraps raved-app)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: raved-app
+    alias: workload
+    repository: file://../raved-app
+    version: 0.1.0
+

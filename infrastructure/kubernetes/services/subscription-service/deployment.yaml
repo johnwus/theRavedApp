@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscription-service
+  namespace: raved-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: subscription-service }
+  template:
+    metadata:
+      labels: { app: subscription-service }
+    spec:
+      containers:
+        - name: subscription-service
+          image: raved/subscription-service:latest
+          ports:
+            - containerPort: 8089
+          envFrom:
+            - configMapRef:
+                name: common-config
+            - configMapRef:
+                name: subscription-service-config
+            - secretRef:
+                name: subscription-service-secrets
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8089
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8089
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 800m
+              memory: 768Mi
+

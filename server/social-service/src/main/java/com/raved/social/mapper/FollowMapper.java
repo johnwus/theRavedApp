@@ -19,7 +19,6 @@ public class FollowMapper {
         response.setId(follow.getId());
         response.setFollowerId(follow.getFollowerId());
         response.setFollowingId(follow.getFollowingId());
-        response.setIsBlocked(follow.getIsBlocked());
         response.setCreatedAt(follow.getCreatedAt());
 
         return response;

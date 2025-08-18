@@ -1,68 +1,72 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
- * DeviceToken Entity for TheRavedApp
- * 
+ * DeviceToken Document for TheRavedApp MongoDB
+ *
  * Represents device tokens for push notifications.
- * Based on the device_tokens table schema.
+ * Converted from JPA entity to
+ * MongoDB document.
  */
-@Entity
-@Table(name = "device_tokens", indexes = {
-    @Index(name = "idx_device_tokens_user", columnList = "user_id"),
-    @Index(name = "idx_device_tokens_token", columnList = "token"),
-    @Index(name = "idx_device_tokens_platform", columnList = "platform"),
-    @Index(name = "idx_device_tokens_active", columnList = "is_active"),
-    @Index(name = "idx_device_tokens_last_used", columnList = "last_used_at")
-}, uniqueConstraints = {
-    @UniqueConstraint(name = "uk_device_token", columnNames = {"user_id", "token"})
+@Document(collection = "device_tokens")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_user_token", def = "{'userId': 1, 'token': 1}", unique = true),
+    @CompoundIndex(name = "idx_user_active", def = "{'userId': 1, 'isActive': 1}"),
+    @CompoundIndex(name = "idx_platform_active", def = "{'platform': 1, 'isActive': 1}")
 })
 public class DeviceToken {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "user_id", nullable = false)
-    private Long userId; // Reference to user service
-
-    @NotBlank(message = "Token is required")
-    @Size(max = 500, message = "Token must not exceed 500 characters")
-    @Column(nullable = false)
-    private String token;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Platform platform;
-
-    @Size(max = 255, message = "Device info must not exceed 255 characters")
-    @Column(name = "device_info")
-    private String deviceInfo;
-
-    @Size(max = 100, message = "App version must not exceed 100 characters")
-    @Column(name = "app_version")
-    private String appVersion;
-
-    @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true;
-
-    @Column(name = "last_used_at")
-    private LocalDateTime lastUsedAt;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    // Enums
+    /**
+     * Enum representing the platform type
+     */
     public enum Platform {
         IOS, ANDROID, WEB
     }
+
+    @Id
+    private String id;
+
+    @Field("userId")
+    @Indexed
+    @NotNull
+    private String userId; // Reference to user service (changed to String for MongoDB)
+
+    @Field("token")
+    @NotBlank
+    private String token;
+
+    @Field("platform")
+    @Indexed
+    @NotNull
+    private Platform platform; // IOS, ANDROID, WEB
+
+    @Field("deviceInfo")
+    private Map<String, Object> deviceInfo; // Changed to Map for MongoDB
+
+    @Field("isActive")
+    @Indexed
+    private Boolean isActive = true;
+
+    @Field("lastUsedAt")
+    private LocalDateTime lastUsedAt;
+
+    @Field("createdAt")
+    @Indexed
+    private LocalDateTime createdAt;
+
+    @Field("updatedAt")
+    private LocalDateTime updatedAt;
 
     // Constructors
     public DeviceToken() {
@@ -71,7 +75,7 @@ public class DeviceToken {
         this.lastUsedAt = LocalDateTime.now();
     }
 
-    public DeviceToken(Long userId, String token, Platform platform) {
+    public DeviceToken(String userId, String token, Platform platform) {
         this();
         this.userId = userId;
         this.token = token;
@@ -79,19 +83,19 @@ public class DeviceToken {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -111,20 +115,12 @@ public class DeviceToken {
         this.platform = platform;
     }
 
-    public String getDeviceInfo() {
+    public Map<String, Object> getDeviceInfo() {
         return deviceInfo;
     }
 
-    public void setDeviceInfo(String deviceInfo) {
+    public void setDeviceInfo(Map<String, Object> deviceInfo) {
         this.deviceInfo = deviceInfo;
-    }
-
-    public String getAppVersion() {
-        return appVersion;
-    }
-
-    public void setAppVersion(String appVersion) {
-        this.appVersion = appVersion;
     }
 
     public Boolean getIsActive() {
@@ -159,19 +155,19 @@ public class DeviceToken {
         this.updatedAt = updatedAt;
     }
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-        this.lastUsedAt = LocalDateTime.now();
+    // Lifecycle methods for MongoDB
+    public void initializeTimestamps() {
+        LocalDateTime now = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        this.updatedAt = now;
+        if (this.lastUsedAt == null) {
+            this.lastUsedAt = now;
+        }
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    // Utility methods
+    // Business methods
     public void updateLastUsed() {
         this.lastUsedAt = LocalDateTime.now();
     }
@@ -185,20 +181,19 @@ public class DeviceToken {
     }
 
     public boolean isExpired(int daysThreshold) {
-        if (lastUsedAt == null) return false;
-        return lastUsedAt.isBefore(LocalDateTime.now().minusDays(daysThreshold));
+        return this.lastUsedAt.plusDays(daysThreshold).isBefore(LocalDateTime.now());
     }
 
     public boolean isIOS() {
-        return platform == Platform.IOS;
+        return Platform.IOS.equals(this.platform);
     }
 
     public boolean isAndroid() {
-        return platform == Platform.ANDROID;
+        return Platform.ANDROID.equals(this.platform);
     }
 
     public boolean isWeb() {
-        return platform == Platform.WEB;
+        return Platform.WEB.equals(this.platform);
     }
 
     @Override
@@ -206,8 +201,8 @@ public class DeviceToken {
         return "DeviceToken{" +
                 "id=" + id +
                 ", userId=" + userId +
+                ", token='" + token + '\'' +
                 ", platform=" + platform +
-                ", deviceInfo='" + deviceInfo + '\'' +
                 ", isActive=" + isActive +
                 ", lastUsedAt=" + lastUsedAt +
                 ", createdAt=" + createdAt +

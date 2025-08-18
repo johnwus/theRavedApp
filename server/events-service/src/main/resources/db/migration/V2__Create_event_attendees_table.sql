@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS event_attendees (
+  event_id   BIGINT NOT NULL,
+  user_id    BIGINT NOT NULL,
+  status     VARCHAR(20) DEFAULT 'INTERESTED', -- INTERESTED, GOING, CHECKED_IN, CANCELLED
+  joined_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (event_id, user_id)
+);
+
+

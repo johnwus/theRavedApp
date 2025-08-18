@@ -2,20 +2,23 @@ package com.raved.content.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Response DTO for Post entity
+ * Response DTO for Post MongoDB document
  */
 public class PostResponse {
 
-    private Long id;
-    private Long authorId;
+    private String id;
+    private String authorId;
     private String authorUsername;
     private String authorFullName;
     private String authorProfilePictureUrl;
+    private String title;
     private String content;
     private String contentType;
     private String visibility;
+    private String publishStatus;
     private String moderationStatus;
     private Boolean isEdited;
     private Boolean isPinned;
@@ -23,11 +26,22 @@ public class PostResponse {
     private Boolean allowComments;
     private Boolean allowSharing;
 
+    // MongoDB-specific fields
+    private String category;
+    private String language;
+    private String accessLevel;
+    private List<String> contentFlags;
+    private String sentiment;
+    private Double engagementScore;
+    private Double trendingScore;
+    private Double viralityScore;
+
     // Engagement metrics
     private Integer likesCount;
     private Integer commentsCount;
     private Integer sharesCount;
     private Integer viewsCount;
+    private Integer savesCount;
 
     // User interaction flags
     private Boolean isLikedByCurrentUser;
@@ -37,30 +51,48 @@ public class PostResponse {
     private List<MediaResponse> mediaFiles;
     private List<String> tags;
     private List<PostMentionResponse> mentions;
+    private List<String> mediaFileIds;
 
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime editedAt;
+    private LocalDateTime publishedAt;
+    private LocalDateTime expiresAt;
+    private LocalDateTime featuredAt;
+    private LocalDateTime pinnedAt;
+
+    // SEO and metadata
+    private String seoTitle;
+    private String seoDescription;
+    private List<String> seoKeywords;
+    private Map<String, Object> metadata;
+    private Map<String, Object> analytics;
+    private Map<String, Object> customFields;
+
+    // Moderation
+    private String moderatorId;
+    private String moderationReason;
+    private LocalDateTime moderatedAt;
 
     // Constructors
     public PostResponse() {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getAuthorId() {
+    public String getAuthorId() {
         return authorId;
     }
 
-    public void setAuthorId(Long authorId) {
+    public void setAuthorId(String authorId) {
         this.authorId = authorId;
     }
 
@@ -88,6 +120,14 @@ public class PostResponse {
         this.authorProfilePictureUrl = authorProfilePictureUrl;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getContent() {
         return content;
     }
@@ -110,6 +150,14 @@ public class PostResponse {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
+    }
+
+    public String getPublishStatus() {
+        return publishStatus;
+    }
+
+    public void setPublishStatus(String publishStatus) {
+        this.publishStatus = publishStatus;
     }
 
     public String getModerationStatus() {
@@ -160,6 +208,71 @@ public class PostResponse {
         this.allowSharing = allowSharing;
     }
 
+    // MongoDB-specific getters and setters
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getAccessLevel() {
+        return accessLevel;
+    }
+
+    public void setAccessLevel(String accessLevel) {
+        this.accessLevel = accessLevel;
+    }
+
+    public List<String> getContentFlags() {
+        return contentFlags;
+    }
+
+    public void setContentFlags(List<String> contentFlags) {
+        this.contentFlags = contentFlags;
+    }
+
+    public String getSentiment() {
+        return sentiment;
+    }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public Double getEngagementScore() {
+        return engagementScore;
+    }
+
+    public void setEngagementScore(Double engagementScore) {
+        this.engagementScore = engagementScore;
+    }
+
+    public Double getTrendingScore() {
+        return trendingScore;
+    }
+
+    public void setTrendingScore(Double trendingScore) {
+        this.trendingScore = trendingScore;
+    }
+
+    public Double getViralityScore() {
+        return viralityScore;
+    }
+
+    public void setViralityScore(Double viralityScore) {
+        this.viralityScore = viralityScore;
+    }
+
     public Integer getLikesCount() {
         return likesCount;
     }
@@ -190,6 +303,14 @@ public class PostResponse {
 
     public void setViewsCount(Integer viewsCount) {
         this.viewsCount = viewsCount;
+    }
+
+    public Integer getSavesCount() {
+        return savesCount;
+    }
+
+    public void setSavesCount(Integer savesCount) {
+        this.savesCount = savesCount;
     }
 
     public Boolean getIsLikedByCurrentUser() {
@@ -232,6 +353,14 @@ public class PostResponse {
         this.mentions = mentions;
     }
 
+    public List<String> getMediaFileIds() {
+        return mediaFileIds;
+    }
+
+    public void setMediaFileIds(List<String> mediaFileIds) {
+        this.mediaFileIds = mediaFileIds;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -254,5 +383,109 @@ public class PostResponse {
 
     public void setEditedAt(LocalDateTime editedAt) {
         this.editedAt = editedAt;
+    }
+
+    public LocalDateTime getPublishedAt() {
+        return publishedAt;
+    }
+
+    public void setPublishedAt(LocalDateTime publishedAt) {
+        this.publishedAt = publishedAt;
+    }
+
+    public LocalDateTime getExpiresAt() {
+        return expiresAt;
+    }
+
+    public void setExpiresAt(LocalDateTime expiresAt) {
+        this.expiresAt = expiresAt;
+    }
+
+    public LocalDateTime getFeaturedAt() {
+        return featuredAt;
+    }
+
+    public void setFeaturedAt(LocalDateTime featuredAt) {
+        this.featuredAt = featuredAt;
+    }
+
+    public LocalDateTime getPinnedAt() {
+        return pinnedAt;
+    }
+
+    public void setPinnedAt(LocalDateTime pinnedAt) {
+        this.pinnedAt = pinnedAt;
+    }
+
+    public String getSeoTitle() {
+        return seoTitle;
+    }
+
+    public void setSeoTitle(String seoTitle) {
+        this.seoTitle = seoTitle;
+    }
+
+    public String getSeoDescription() {
+        return seoDescription;
+    }
+
+    public void setSeoDescription(String seoDescription) {
+        this.seoDescription = seoDescription;
+    }
+
+    public List<String> getSeoKeywords() {
+        return seoKeywords;
+    }
+
+    public void setSeoKeywords(List<String> seoKeywords) {
+        this.seoKeywords = seoKeywords;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public Map<String, Object> getAnalytics() {
+        return analytics;
+    }
+
+    public void setAnalytics(Map<String, Object> analytics) {
+        this.analytics = analytics;
+    }
+
+    public Map<String, Object> getCustomFields() {
+        return customFields;
+    }
+
+    public void setCustomFields(Map<String, Object> customFields) {
+        this.customFields = customFields;
+    }
+
+    public String getModeratorId() {
+        return moderatorId;
+    }
+
+    public void setModeratorId(String moderatorId) {
+        this.moderatorId = moderatorId;
+    }
+
+    public String getModerationReason() {
+        return moderationReason;
+    }
+
+    public void setModerationReason(String moderationReason) {
+        this.moderationReason = moderationReason;
+    }
+
+    public LocalDateTime getModeratedAt() {
+        return moderatedAt;
+    }
+
+    public void setModeratedAt(LocalDateTime moderatedAt) {
+        this.moderatedAt = moderatedAt;
     }
 }

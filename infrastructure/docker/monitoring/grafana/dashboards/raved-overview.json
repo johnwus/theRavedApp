@@ -1,0 +1,10 @@
+{
+  "title": "Raved Overview",
+  "panels": [
+    {"type":"stat","title":"Gateway RPS","targets":[{"expr":"sum(rate(http_server_requests_seconds_count{job=\"spring-actuator\", uri!~\".*actuator.*\"}[1m]))"}]},
+    {"type":"graph","title":"Service Latency","targets":[{"expr":"histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"spring-actuator\"}[5m])) by (le))"}]}
+  ],
+  "schemaVersion": 36,
+  "version": 1
+}
+

@@ -9,16 +9,20 @@ import java.time.LocalDateTime;
 public class PaymentResponse {
 
     private Long id;
-    private String paymentMethod; // "credit_card", "paypal", "bank_transfer", "cash_on_delivery"
-    private String paymentStatus; // "pending", "processing", "completed", "failed", "cancelled", "refunded"
+    private String paymentId;
+    private Long orderId;
+    private Long userId;
     private BigDecimal amount;
     private String currency;
+    private String paymentMethod; // "credit_card", "paypal", "bank_transfer", "cash_on_delivery"
+    private String status; // "pending", "processing", "completed", "failed", "cancelled", "refunded"
     private String transactionId;
-    private String paymentGateway; // "stripe", "paypal", "square", etc.
-    private String gatewayTransactionId;
+    private String gatewayResponse;
     private String failureReason;
-    private LocalDateTime processedAt;
+    private Long parentPaymentId;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime processedAt;
 
     // Constructors
     public PaymentResponse() {
@@ -33,20 +37,28 @@ public class PaymentResponse {
         this.id = id;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
+    public String getPaymentId() {
+        return paymentId;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
+    public void setPaymentId(String paymentId) {
+        this.paymentId = paymentId;
     }
 
-    public String getPaymentStatus() {
-        return paymentStatus;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setPaymentStatus(String paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public BigDecimal getAmount() {
@@ -65,6 +77,22 @@ public class PaymentResponse {
         this.currency = currency;
     }
 
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public String getTransactionId() {
         return transactionId;
     }
@@ -73,20 +101,12 @@ public class PaymentResponse {
         this.transactionId = transactionId;
     }
 
-    public String getPaymentGateway() {
-        return paymentGateway;
+    public String getGatewayResponse() {
+        return gatewayResponse;
     }
 
-    public void setPaymentGateway(String paymentGateway) {
-        this.paymentGateway = paymentGateway;
-    }
-
-    public String getGatewayTransactionId() {
-        return gatewayTransactionId;
-    }
-
-    public void setGatewayTransactionId(String gatewayTransactionId) {
-        this.gatewayTransactionId = gatewayTransactionId;
+    public void setGatewayResponse(String gatewayResponse) {
+        this.gatewayResponse = gatewayResponse;
     }
 
     public String getFailureReason() {
@@ -97,12 +117,12 @@ public class PaymentResponse {
         this.failureReason = failureReason;
     }
 
-    public LocalDateTime getProcessedAt() {
-        return processedAt;
+    public Long getParentPaymentId() {
+        return parentPaymentId;
     }
 
-    public void setProcessedAt(LocalDateTime processedAt) {
-        this.processedAt = processedAt;
+    public void setParentPaymentId(Long parentPaymentId) {
+        this.parentPaymentId = parentPaymentId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -111,5 +131,21 @@ public class PaymentResponse {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getProcessedAt() {
+        return processedAt;
+    }
+
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
     }
 }

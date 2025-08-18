@@ -22,53 +22,68 @@ public interface StudentVerificationRepository extends JpaRepository<StudentVeri
     /**
      * Find verification by user ID
      */
-    Optional<StudentVerification> findByUserId(Long userId);
+    Optional<StudentVerification> findByUser_Id(Long userId);
+
+    /**
+     * Find verification by user ID and status
+     */
+    Optional<StudentVerification> findByUser_IdAndVerificationStatus(Long userId, VerificationStatus verificationStatus);
 
     /**
      * Find verification by user ID and university ID
      */
-    Optional<StudentVerification> findByUserIdAndUniversityId(Long userId, Long universityId);
+    Optional<StudentVerification> findByUser_IdAndUniversity_Id(Long userId, Long universityId);
 
     /**
      * Find verifications by status
      */
-    List<StudentVerification> findByStatus(VerificationStatus status);
+    List<StudentVerification> findByVerificationStatus(VerificationStatus verificationStatus);
 
     /**
      * Find verifications by status with pagination
      */
-    Page<StudentVerification> findByStatus(VerificationStatus status, Pageable pageable);
+    Page<StudentVerification> findByVerificationStatus(VerificationStatus verificationStatus, Pageable pageable);
+
+    /**
+     * Find verifications by status ordered by submitted date ascending
+     */
+    Page<StudentVerification> findByVerificationStatusOrderBySubmittedAtAsc(VerificationStatus verificationStatus, Pageable pageable);
+
+    /**
+     * Find verifications by status ordered by submitted date descending
+     */
+    Page<StudentVerification> findByVerificationStatusOrderBySubmittedAtDesc(VerificationStatus verificationStatus, Pageable pageable);
 
     /**
      * Find verifications by university ID
      */
-    List<StudentVerification> findByUniversityId(Long universityId);
+    List<StudentVerification> findByUniversity_Id(Long universityId);
 
     /**
      * Find verifications by university ID and status
      */
-    List<StudentVerification> findByUniversityIdAndStatus(Long universityId, VerificationStatus status);
+    List<StudentVerification> findByUniversity_IdAndVerificationStatus(Long universityId, VerificationStatus verificationStatus);
 
     /**
      * Find pending verifications older than specified date
      */
-    @Query("SELECT sv FROM StudentVerification sv WHERE sv.status = 'PENDING' AND sv.submittedAt < :date")
+    @Query("SELECT sv FROM StudentVerification sv WHERE sv.verificationStatus = 'PENDING' AND sv.submittedAt < :date")
     List<StudentVerification> findPendingVerificationsOlderThan(@Param("date") LocalDateTime date);
 
     /**
      * Count verifications by status
      */
-    long countByStatus(VerificationStatus status);
+    long countByVerificationStatus(VerificationStatus verificationStatus);
 
     /**
      * Count verifications by university and status
      */
-    long countByUniversityIdAndStatus(Long universityId, VerificationStatus status);
+    long countByUniversity_IdAndVerificationStatus(Long universityId, VerificationStatus verificationStatus);
 
     /**
      * Check if student ID exists for a university
      */
-    boolean existsByUniversityIdAndStudentId(Long universityId, String studentId);
+    boolean existsByUniversity_IdAndUser_StudentId(Long universityId, String studentId);
 
     /**
      * Find verifications submitted today

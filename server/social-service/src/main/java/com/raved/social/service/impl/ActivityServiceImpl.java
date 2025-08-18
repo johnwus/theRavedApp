@@ -8,6 +8,7 @@ import com.raved.social.model.Activity;
 import com.raved.social.model.ActivityType;
 import com.raved.social.repository.ActivityRepository;
 import com.raved.social.service.ActivityService;
+import com.raved.social.util.MongoIdConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +45,7 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Creating activity for user: {} of type: {}", request.getUserId(), request.getActivityType());
         
         Activity activity = activityMapper.toActivity(request);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -61,13 +61,11 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Recording like activity: user {} liked post {} by user {}", userId, postId, postAuthorId);
         
         Activity activity = new Activity();
-        activity.setUserId(userId);
-        activity.setActivityType(ActivityType.LIKE);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
-        activity.setTargetUserId(postAuthorId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        activity.setUserId(MongoIdConverter.toStringId(userId));
+        activity.setActivityType(ActivityType.LIKE.name());
+        activity.setPostId(MongoIdConverter.toStringId(postId));
+        activity.setTargetUserId(MongoIdConverter.toStringId(postAuthorId));
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -82,19 +80,17 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Recording comment activity: user {} commented on post {} by user {}", userId, postId, postAuthorId);
         
         Activity activity = new Activity();
-        activity.setUserId(userId);
-        activity.setActivityType(ActivityType.COMMENT);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
-        activity.setTargetUserId(postAuthorId);
-        activity.setReferenceId(commentId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        activity.setUserId(MongoIdConverter.toStringId(userId));
+        activity.setActivityType(ActivityType.COMMENT.name());
+        activity.setPostId(MongoIdConverter.toStringId(postId));
+        activity.setCommentId(MongoIdConverter.toStringId(commentId));
+        activity.setTargetUserId(MongoIdConverter.toStringId(postAuthorId));
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
         // Publish comment event
-        eventPublisher.publishCommentEvent(userId, postId, postAuthorId, commentId, "");
+        eventPublisher.publishCommentCreatedEvent(userId, postId, commentId, postAuthorId);
         
         logger.info("Comment activity recorded: {}", savedActivity.getId());
     }
@@ -104,18 +100,15 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Recording follow activity: user {} followed user {}", followerId, followingId);
         
         Activity activity = new Activity();
-        activity.setUserId(followerId);
-        activity.setActivityType(ActivityType.FOLLOW);
-        activity.setTargetId(followingId);
-        activity.setTargetType("USER");
-        activity.setTargetUserId(followingId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        activity.setUserId(MongoIdConverter.toStringId(followerId));
+        activity.setActivityType(ActivityType.FOLLOW.name());
+        activity.setTargetUserId(MongoIdConverter.toStringId(followingId));
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
         // Publish follow event
-        eventPublisher.publishFollowEvent(followerId, followingId);
+        eventPublisher.publishFollowCreatedEvent(followerId, followingId);
         
         logger.info("Follow activity recorded: {}", savedActivity.getId());
     }
@@ -125,19 +118,17 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Recording share activity: user {} shared post {} by user {}", userId, postId, postAuthorId);
         
         Activity activity = new Activity();
-        activity.setUserId(userId);
-        activity.setActivityType(ActivityType.SHARE);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
-        activity.setTargetUserId(postAuthorId);
-        activity.setMetadata("{\"shareType\":\"" + shareType + "\"}");
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        activity.setUserId(MongoIdConverter.toStringId(userId));
+        activity.setActivityType(ActivityType.SHARE.name());
+        activity.setPostId(MongoIdConverter.toStringId(postId));
+        activity.setTargetUserId(MongoIdConverter.toStringId(postAuthorId));
+        // Note: metadata field doesn't exist in the current Activity model
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
-        // Publish share event
-        eventPublisher.publishShareEvent(userId, postId, postAuthorId, shareType);
+        // Publish share event - using the available method
+        eventPublisher.publishActivityCreatedEvent(userId, ActivityType.SHARE.name(), postId, "POST");
         
         logger.info("Share activity recorded: {}", savedActivity.getId());
     }
@@ -147,13 +138,11 @@ public class ActivityServiceImpl implements ActivityService {
         logger.info("Recording post activity: user {} created post {}", userId, postId);
         
         Activity activity = new Activity();
-        activity.setUserId(userId);
-        activity.setActivityType(ActivityType.POST);
-        activity.setTargetId(postId);
-        activity.setTargetType("POST");
-        activity.setTargetUserId(userId);
-        activity.setCreatedAt(LocalDateTime.now());
-        activity.setUpdatedAt(LocalDateTime.now());
+        activity.setUserId(MongoIdConverter.toStringId(userId));
+        activity.setActivityType(ActivityType.POST.name());
+        activity.setPostId(MongoIdConverter.toStringId(postId));
+        activity.setTargetUserId(MongoIdConverter.toStringId(userId));
+        // createdAt is automatically set in the constructor and @PrePersist
         
         Activity savedActivity = activityRepository.save(activity);
         
@@ -165,7 +154,7 @@ public class ActivityServiceImpl implements ActivityService {
     public Page<ActivityResponse> getUserActivities(Long userId, Pageable pageable) {
         logger.debug("Getting activities for user: {}", userId);
         
-        Page<Activity> activities = activityRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        Page<Activity> activities = activityRepository.findByUserIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return activities.map(activityMapper::toActivityResponse);
     }
 
@@ -175,7 +164,7 @@ public class ActivityServiceImpl implements ActivityService {
         logger.debug("Getting activities for user: {} of type: {}", userId, activityType);
         
         Page<Activity> activities = activityRepository.findByUserIdAndActivityTypeOrderByCreatedAtDesc(
-                userId, activityType, pageable);
+                MongoIdConverter.toStringId(userId), activityType.name(), pageable);
         return activities.map(activityMapper::toActivityResponse);
     }
 
@@ -183,9 +172,11 @@ public class ActivityServiceImpl implements ActivityService {
     @Transactional(readOnly = true)
     public Page<ActivityResponse> getActivitiesForTarget(Long targetId, String targetType, Pageable pageable) {
         logger.debug("Getting activities for target: {} of type: {}", targetId, targetType);
-        
+
+        // Use the existing repository method that takes targetId and targetType
         Page<Activity> activities = activityRepository.findByTargetIdAndTargetTypeOrderByCreatedAtDesc(
-                targetId, targetType, pageable);
+                MongoIdConverter.toStringId(targetId), targetType, pageable);
+
         return activities.map(activityMapper::toActivityResponse);
     }
 
@@ -193,8 +184,8 @@ public class ActivityServiceImpl implements ActivityService {
     @Transactional(readOnly = true)
     public List<ActivityResponse> getRecentActivities(Long userId, int limit) {
         logger.debug("Getting recent activities for user: {} with limit: {}", userId, limit);
-        
-        List<Activity> activities = activityRepository.findTopByUserIdOrderByCreatedAtDesc(userId, limit);
+
+        List<Activity> activities = activityRepository.findTopByUserIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), limit);
         return activities.stream()
                 .map(activityMapper::toActivityResponse)
                 .collect(Collectors.toList());
@@ -204,16 +195,16 @@ public class ActivityServiceImpl implements ActivityService {
     @Transactional(readOnly = true)
     public long getActivityCount(Long userId, ActivityType activityType) {
         logger.debug("Getting activity count for user: {} of type: {}", userId, activityType);
-        
-        return activityRepository.countByUserIdAndActivityType(userId, activityType);
+
+        return activityRepository.countByUserIdAndActivityType(MongoIdConverter.toStringId(userId), activityType.name());
     }
 
     @Override
     @Transactional(readOnly = true)
     public long getTotalActivityCount(Long userId) {
         logger.debug("Getting total activity count for user: {}", userId);
-        
-        return activityRepository.countByUserId(userId);
+
+        return activityRepository.countByUserId(MongoIdConverter.toStringId(userId));
     }
 
     @Override
@@ -223,8 +214,8 @@ public class ActivityServiceImpl implements ActivityService {
         logger.debug("Getting activities for user: {} between {} and {}", userId, startDate, endDate);
         
         List<Activity> activities = activityRepository.findByUserIdAndCreatedAtBetweenOrderByCreatedAtDesc(
-                userId, startDate, endDate);
-        
+                MongoIdConverter.toStringId(userId), startDate, endDate);
+
         return activities.stream()
                 .map(activityMapper::toActivityResponse)
                 .collect(Collectors.toList());
@@ -233,8 +224,8 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public void deleteActivity(Long activityId) {
         logger.info("Deleting activity: {}", activityId);
-        
-        Optional<Activity> activityOpt = activityRepository.findById(activityId);
+
+        Optional<Activity> activityOpt = activityRepository.findById(MongoIdConverter.toStringId(activityId));
         if (activityOpt.isPresent()) {
             activityRepository.delete(activityOpt.get());
             logger.info("Activity deleted: {}", activityId);
@@ -246,8 +237,8 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public void deleteUserActivities(Long userId) {
         logger.info("Deleting all activities for user: {}", userId);
-        
-        long deletedCount = activityRepository.deleteByUserId(userId);
+
+        long deletedCount = activityRepository.deleteByUserId(MongoIdConverter.toStringId(userId));
         logger.info("Deleted {} activities for user: {}", deletedCount, userId);
     }
 
@@ -261,24 +252,20 @@ public class ActivityServiceImpl implements ActivityService {
 
     private void publishActivityEvent(Activity activity) {
         try {
-            switch (activity.getActivityType()) {
-                case LIKE:
-                    eventPublisher.publishLikeEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId());
-                    break;
-                case COMMENT:
-                    eventPublisher.publishCommentEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId(), activity.getReferenceId(), "");
-                    break;
-                case FOLLOW:
-                    eventPublisher.publishFollowEvent(activity.getUserId(), activity.getTargetUserId());
-                    break;
-                case SHARE:
-                    eventPublisher.publishShareEvent(activity.getUserId(), activity.getTargetId(), 
-                            activity.getTargetUserId(), "");
-                    break;
-                default:
-                    logger.debug("No event publishing for activity type: {}", activity.getActivityType());
+            String activityType = activity.getActivityType();
+            if (ActivityType.LIKE.name().equals(activityType)) {
+                eventPublisher.publishLikeEvent(MongoIdConverter.toLongId(activity.getUserId()), MongoIdConverter.toLongId(activity.getPostId()),
+                        MongoIdConverter.toLongId(activity.getTargetUserId()));
+            } else if (ActivityType.COMMENT.name().equals(activityType)) {
+                eventPublisher.publishCommentCreatedEvent(MongoIdConverter.toLongId(activity.getUserId()), MongoIdConverter.toLongId(activity.getPostId()),
+                        MongoIdConverter.toLongId(activity.getCommentId()), MongoIdConverter.toLongId(activity.getTargetUserId()));
+            } else if (ActivityType.FOLLOW.name().equals(activityType)) {
+                eventPublisher.publishFollowCreatedEvent(MongoIdConverter.toLongId(activity.getUserId()), MongoIdConverter.toLongId(activity.getTargetUserId()));
+            } else if (ActivityType.SHARE.name().equals(activityType)) {
+                eventPublisher.publishActivityCreatedEvent(MongoIdConverter.toLongId(activity.getUserId()), activityType,
+                        MongoIdConverter.toLongId(activity.getPostId()), "POST");
+            } else {
+                logger.debug("No event publishing for activity type: {}", activityType);
             }
         } catch (Exception e) {
             logger.error("Error publishing activity event", e);

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: raved-dev
+spec:
+  selector: { app: jaeger }
+  ports:
+    - port: 16686
+      targetPort: 16686
+  type: ClusterIP
+

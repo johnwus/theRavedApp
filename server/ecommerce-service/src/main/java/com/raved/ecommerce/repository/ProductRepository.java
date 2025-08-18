@@ -20,80 +20,66 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
     /**
-     * Find product by ID and not deleted
+     * Find product by ID and active
      */
-    Optional<Product> findByIdAndIsDeletedFalse(Long id);
+    Optional<Product> findByIdAndIsActiveTrue(Long id);
 
     /**
      * Find products by seller
      */
-    Page<Product> findBySellerIdAndIsDeletedFalseOrderByCreatedAtDesc(Long sellerId, Pageable pageable);
+    Page<Product> findBySellerIdAndIsActiveTrueOrderByCreatedAtDesc(Long sellerId, Pageable pageable);
 
     /**
      * Find products by category
      */
-    Page<Product> findByCategoryIdAndIsDeletedFalseAndStatusOrderByCreatedAtDesc(
-            Long categoryId, Product.ProductStatus status, Pageable pageable);
-
-    /**
-     * Find products by university
-     */
-    Page<Product> findByUniversityIdAndIsDeletedFalseAndStatusOrderByCreatedAtDesc(
-            Long universityId, Product.ProductStatus status, Pageable pageable);
+    Page<Product> findByCategoryIdAndIsActiveTrueOrderByCreatedAtDesc(Long categoryId, Pageable pageable);
 
     /**
      * Find products by price range
      */
-    Page<Product> findByPriceBetweenAndIsDeletedFalseAndStatusOrderByPriceAsc(
-            BigDecimal minPrice, BigDecimal maxPrice, Product.ProductStatus status, Pageable pageable);
+    Page<Product> findByPriceBetweenAndIsActiveTrueOrderByPriceAsc(
+            BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
 
     /**
      * Find featured products
      */
-    List<Product> findByIsFeaturedTrueAndIsDeletedFalseAndStatusAndFeaturedUntilAfterOrderByCreatedAtDesc(
-            Product.ProductStatus status, LocalDateTime now);
+    List<Product> findByIsFeaturedTrueAndIsActiveTrueAndFeaturedUntilAfterOrderByCreatedAtDesc(LocalDateTime now);
 
     /**
      * Find low stock products
      */
-    List<Product> findBySellerIdAndStockQuantityLessThanAndIsDeletedFalseAndStatus(
-            Long sellerId, int threshold, Product.ProductStatus status);
+    List<Product> findBySellerIdAndQuantityLessThanAndIsActiveTrue(Long sellerId, int threshold);
 
     /**
-     * Search products by name or description
+     * Search products by title or description
      */
-    @Query("SELECT p FROM Product p WHERE p.isDeleted = false AND p.status = 'ACTIVE' " +
-           "AND (LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+    @Query("SELECT p FROM Product p WHERE p.isActive = true " +
+           "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
            "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
            "ORDER BY p.createdAt DESC")
     Page<Product> searchProducts(@Param("query") String query, Pageable pageable);
 
     /**
-     * Find trending products based on orders and views
+     * Find trending products based on views and likes
      */
-    @Query("SELECT p FROM Product p WHERE p.isDeleted = false AND p.status = 'ACTIVE' " +
-           "ORDER BY (p.ordersCount * 5 + p.viewsCount * 0.1 + p.likesCount * 2) DESC")
+    @Query("SELECT p FROM Product p WHERE p.isActive = true " +
+           "ORDER BY (p.viewsCount * 0.1 + p.likesCount * 2) DESC")
     List<Product> findTrendingProducts(@Param("limit") int limit);
 
     /**
      * Count products by seller
      */
-    long countBySellerIdAndIsDeletedFalse(Long sellerId);
+    long countBySellerIdAndIsActiveTrue(Long sellerId);
 
     /**
      * Count products by category
      */
-    long countByCategoryIdAndIsDeletedFalseAndStatus(Long categoryId, Product.ProductStatus status);
-
-    /**
-     * Find products by status
-     */
-    List<Product> findByStatusAndIsDeletedFalse(Product.ProductStatus status);
+    long countByCategoryIdAndIsActiveTrue(Long categoryId);
 
     /**
      * Find recently added products
      */
-    @Query("SELECT p FROM Product p WHERE p.isDeleted = false AND p.status = 'ACTIVE' " +
+    @Query("SELECT p FROM Product p WHERE p.isActive = true " +
            "AND p.createdAt >= :since ORDER BY p.createdAt DESC")
     List<Product> findRecentProducts(@Param("since") LocalDateTime since, Pageable pageable);
 }

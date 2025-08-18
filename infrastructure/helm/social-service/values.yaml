@@ -1,0 +1,28 @@
+workload:
+  nameOverride: social-service
+  image:
+    repository: ghcr.io/theravedapp
+    tag: latest
+  service:
+    port: 8083
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+  probes:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 60
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 20
+  envFrom:
+    - configMapRef:
+        name: common-config
+    - configMapRef:
+        name: social-service-config
+    - configMapRef:
+        name: mongodb-config
+    - secretRef:
+        name: social-service-secrets
+

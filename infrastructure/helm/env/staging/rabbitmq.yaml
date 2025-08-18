@@ -1,0 +1,17 @@
+auth:
+  username: raved
+  password: ${RABBITMQ_PASSWORD}
+replicaCount: 2
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+persistence:
+  enabled: true
+  size: 8Gi
+service:
+  type: ClusterIP
+

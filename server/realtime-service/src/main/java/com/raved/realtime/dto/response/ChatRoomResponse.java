@@ -1,54 +1,42 @@
 package com.raved.realtime.dto.response;
 
+import com.raved.realtime.model.ChatRoomType;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Response DTO for ChatRoom entity
+ * DTO for ChatRoom responses
  */
 public class ChatRoomResponse {
-
     private Long id;
+    private String roomId;
     private String name;
     private String description;
-    private String roomType; // "direct", "group", "public", "private"
+    private ChatRoomType type;
+    private Long createdBy;
     private Boolean isPrivate;
-    private String avatarUrl;
-    private Long createdByUserId;
-    private String createdByUsername;
-    private Integer maxMembers;
-    private Integer currentMemberCount;
     private Boolean isActive;
-
-    // Last message info
-    private String lastMessageContent;
-    private String lastMessageSenderName;
-    private LocalDateTime lastMessageAt;
-
-    // User context
-    private Boolean isCurrentUserMember;
-    private Boolean isCurrentUserAdmin;
-    private Boolean hasUnreadMessages;
-    private Integer unreadMessageCount;
-
-    // Members (for small groups)
-    private List<ChatRoomMemberResponse> members;
-
-    // Timestamps
+    private Integer maxParticipants;
+    private Integer currentParticipants;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private LocalDateTime lastActivityAt;
+    private Integer unreadCount;
 
-    // Constructors
-    public ChatRoomResponse() {
-    }
-
-    // Getters and Setters
+    // Getters and setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
     public String getName() {
@@ -67,12 +55,20 @@ public class ChatRoomResponse {
         this.description = description;
     }
 
-    public String getRoomType() {
-        return roomType;
+    public ChatRoomType getType() {
+        return type;
     }
 
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
+    public void setType(ChatRoomType type) {
+        this.type = type;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
     }
 
     public Boolean getIsPrivate() {
@@ -83,46 +79,6 @@ public class ChatRoomResponse {
         this.isPrivate = isPrivate;
     }
 
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
-
-    public Long getCreatedByUserId() {
-        return createdByUserId;
-    }
-
-    public void setCreatedByUserId(Long createdByUserId) {
-        this.createdByUserId = createdByUserId;
-    }
-
-    public String getCreatedByUsername() {
-        return createdByUsername;
-    }
-
-    public void setCreatedByUsername(String createdByUsername) {
-        this.createdByUsername = createdByUsername;
-    }
-
-    public Integer getMaxMembers() {
-        return maxMembers;
-    }
-
-    public void setMaxMembers(Integer maxMembers) {
-        this.maxMembers = maxMembers;
-    }
-
-    public Integer getCurrentMemberCount() {
-        return currentMemberCount;
-    }
-
-    public void setCurrentMemberCount(Integer currentMemberCount) {
-        this.currentMemberCount = currentMemberCount;
-    }
-
     public Boolean getIsActive() {
         return isActive;
     }
@@ -131,59 +87,51 @@ public class ChatRoomResponse {
         this.isActive = isActive;
     }
 
-    public String getLastMessageContent() {
-        return lastMessageContent;
+    public Integer getMaxParticipants() {
+        return maxParticipants;
     }
 
-    public void setLastMessageContent(String lastMessageContent) {
-        this.lastMessageContent = lastMessageContent;
+    public void setMaxParticipants(Integer maxParticipants) {
+        this.maxParticipants = maxParticipants;
     }
 
-    public String getLastMessageSenderName() {
-        return lastMessageSenderName;
+    public Integer getCurrentParticipants() {
+        return currentParticipants;
     }
 
-    public void setLastMessageSenderName(String lastMessageSenderName) {
-        this.lastMessageSenderName = lastMessageSenderName;
+    public void setCurrentParticipants(Integer currentParticipants) {
+        this.currentParticipants = currentParticipants;
     }
 
-    public LocalDateTime getLastMessageAt() {
-        return lastMessageAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setLastMessageAt(LocalDateTime lastMessageAt) {
-        this.lastMessageAt = lastMessageAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public Boolean getIsCurrentUserMember() {
-        return isCurrentUserMember;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setIsCurrentUserMember(Boolean isCurrentUserMember) {
-        this.isCurrentUserMember = isCurrentUserMember;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
-    public Boolean getIsCurrentUserAdmin() {
-        return isCurrentUserAdmin;
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
     }
 
-    public void setIsCurrentUserAdmin(Boolean isCurrentUserAdmin) {
-        this.isCurrentUserAdmin = isCurrentUserAdmin;
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 
-    public Boolean getHasUnreadMessages() {
-        return hasUnreadMessages;
+    public Integer getUnreadCount() {
+        return unreadCount;
     }
 
-    public void setHasUnreadMessages(Boolean hasUnreadMessages) {
-        this.hasUnreadMessages = hasUnreadMessages;
-    }
-
-    public Integer getUnreadMessageCount() {
-        return unreadMessageCount;
-    }
-
-    public void setUnreadMessageCount(Integer unreadMessageCount) {
-        this.unreadMessageCount = unreadMessageCount;
+    public void setUnreadCount(Integer unreadCount) {
+        this.unreadCount = unreadCount;
     }
 }

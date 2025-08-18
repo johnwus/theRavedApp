@@ -62,7 +62,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserMetricsResponse getUserMetrics(Long userId) {
+    public UserMetricsResponse getUserMetrics(String userId) {
         logger.debug("Getting metrics for user: {}", userId);
         
         String cacheKey = METRICS_CACHE_PREFIX + "user:" + userId;
@@ -90,7 +90,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     @Transactional(readOnly = true)
-    public ContentMetricsResponse getContentMetrics(Long contentId) {
+    public ContentMetricsResponse getContentMetrics(String contentId) {
         logger.debug("Getting metrics for content: {}", contentId);
         
         String cacheKey = METRICS_CACHE_PREFIX + "content:" + contentId;
@@ -101,18 +101,17 @@ public class MetricsServiceImpl implements MetricsService {
             return cachedMetrics;
         }
         
-        Optional<ContentMetrics> metricsOpt = contentMetricsRepository.findByContentId(contentId);
-        if (metricsOpt.isEmpty()) {
+        List<ContentMetrics> metricsList = contentMetricsRepository.findByContentId(contentId);
+        if (metricsList.isEmpty()) {
             // Create default metrics
             ContentMetrics defaultMetrics = createDefaultContentMetrics(contentId);
             return contentMetricsMapper.toContentMetricsResponse(defaultMetrics);
         }
-        
-        ContentMetricsResponse response = contentMetricsMapper.toContentMetricsResponse(metricsOpt.get());
-        
-        // Cache the result
-        redisTemplate.opsForValue().set(cacheKey, response, CACHE_EXPIRATION_HOURS, TimeUnit.HOURS);
-        
+
+        // Get the most recent metrics (assuming the first one is the most recent)
+        ContentMetrics metrics = metricsList.get(0);
+        ContentMetricsResponse response = contentMetricsMapper.toContentMetricsResponse(metrics);
+
         return response;
     }
 
@@ -186,16 +185,20 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getUserEngagementTrends(Long userId, LocalDateTime startDate, LocalDateTime endDate) {
+    public Map<String, Object> getUserEngagementTrends(String userId, LocalDateTime startDate, LocalDateTime endDate) {
         logger.debug("Getting engagement trends for user: {} between {} and {}", userId, startDate, endDate);
         
         Map<String, Object> trends = new HashMap<>();
         
         // Get daily engagement data
-        List<Object[]> dailyLikes = eventRepository.getDailyEventCounts(userId, EventType.POST_LIKED, startDate, endDate);
-        List<Object[]> dailyComments = eventRepository.getDailyEventCounts(userId, EventType.COMMENT_CREATED, startDate, endDate);
-        List<Object[]> dailyShares = eventRepository.getDailyEventCounts(userId, EventType.POST_SHARED, startDate, endDate);
-        List<Object[]> dailyPosts = eventRepository.getDailyEventCounts(userId, EventType.POST_CREATED, startDate, endDate);
+        List<Object[]> dailyLikes = eventRepository.getDailyEventCounts(userId, EventType.POST_LIKE, startDate,
+                endDate);
+        List<Object[]> dailyComments = eventRepository.getDailyEventCounts(userId, EventType.POST_COMMENT, startDate,
+                endDate);
+        List<Object[]> dailyShares = eventRepository.getDailyEventCounts(userId, EventType.POST_SHARE, startDate,
+                endDate);
+        List<Object[]> dailyPosts = eventRepository.getDailyEventCounts(userId, EventType.POST_CREATE, startDate,
+                endDate);
         
         trends.put("dailyLikes", convertToMap(dailyLikes));
         trends.put("dailyComments", convertToMap(dailyComments));
@@ -218,16 +221,21 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> getContentPerformanceMetrics(Long contentId, LocalDateTime startDate, LocalDateTime endDate) {
+    public Map<String, Object> getContentPerformanceMetrics(String contentId, LocalDateTime startDate,
+            LocalDateTime endDate) {
         logger.debug("Getting performance metrics for content: {} between {} and {}", contentId, startDate, endDate);
         
         Map<String, Object> performance = new HashMap<>();
         
         // Get hourly performance data
-        List<Object[]> hourlyViews = eventRepository.getHourlyEventCounts(contentId, EventType.POST_VIEWED, startDate, endDate);
-        List<Object[]> hourlyLikes = eventRepository.getHourlyEventCounts(contentId, EventType.POST_LIKED, startDate, endDate);
-        List<Object[]> hourlyComments = eventRepository.getHourlyEventCounts(contentId, EventType.COMMENT_CREATED, startDate, endDate);
-        List<Object[]> hourlyShares = eventRepository.getHourlyEventCounts(contentId, EventType.POST_SHARED, startDate, endDate);
+        List<Object[]> hourlyViews = eventRepository.getHourlyEventCounts(contentId, EventType.POST_VIEW, startDate,
+                endDate);
+        List<Object[]> hourlyLikes = eventRepository.getHourlyEventCounts(contentId, EventType.POST_LIKE, startDate,
+                endDate);
+        List<Object[]> hourlyComments = eventRepository.getHourlyEventCounts(contentId, EventType.POST_COMMENT,
+                startDate, endDate);
+        List<Object[]> hourlyShares = eventRepository.getHourlyEventCounts(contentId, EventType.POST_SHARE, startDate,
+                endDate);
         
         performance.put("hourlyViews", convertToMap(hourlyViews));
         performance.put("hourlyLikes", convertToMap(hourlyLikes));
@@ -235,13 +243,13 @@ public class MetricsServiceImpl implements MetricsService {
         performance.put("hourlyShares", convertToMap(hourlyShares));
         
         // Calculate engagement rate over time
-        double engagementRate = engagementCalculator.calculateContentEngagementScore(contentId);
+        double engagementRate = engagementCalculator.calculateContentEngagementScore(contentId).doubleValue();
         performance.put("engagementRate", engagementRate);
         
         // Calculate reach and impressions
-        long uniqueViewers = eventRepository.countUniqueUsers(contentId, EventType.POST_VIEWED, startDate, endDate);
+        long uniqueViewers = eventRepository.countUniqueUsers(contentId, EventType.POST_VIEW, startDate, endDate);
         long totalImpressions = eventRepository.countByTargetIdAndEventTypeAndTimestampBetween(
-                contentId, EventType.POST_VIEWED, startDate, endDate);
+                contentId, EventType.POST_VIEW, startDate, endDate);
         
         performance.put("uniqueViewers", uniqueViewers);
         performance.put("totalImpressions", totalImpressions);
@@ -251,7 +259,7 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     @Override
-    public void recalculateUserMetrics(Long userId) {
+    public void recalculateUserMetrics(String userId) {
         logger.info("Recalculating metrics for user: {}", userId);
         
         try {
@@ -264,11 +272,11 @@ public class MetricsServiceImpl implements MetricsService {
             }
             
             // Recalculate all metrics from scratch
-            long totalPosts = eventRepository.countByUserIdAndEventType(userId, EventType.POST_CREATED);
-            long totalLikes = eventRepository.countByUserIdAndEventType(userId, EventType.POST_LIKED);
-            long totalComments = eventRepository.countByUserIdAndEventType(userId, EventType.COMMENT_CREATED);
-            long totalShares = eventRepository.countByUserIdAndEventType(userId, EventType.POST_SHARED);
-            long totalViews = eventRepository.countByUserIdAndEventType(userId, EventType.POST_VIEWED);
+            long totalPosts = eventRepository.countByUserIdAndEventType(userId, EventType.POST_CREATE);
+            long totalLikes = eventRepository.countByUserIdAndEventType(userId, EventType.POST_LIKE);
+            long totalComments = eventRepository.countByUserIdAndEventType(userId, EventType.POST_COMMENT);
+            long totalShares = eventRepository.countByUserIdAndEventType(userId, EventType.POST_SHARE);
+            long totalViews = eventRepository.countByUserIdAndEventType(userId, EventType.POST_VIEW);
             
             metrics.setTotalPosts(totalPosts);
             metrics.setTotalLikes(totalLikes);
@@ -293,23 +301,23 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     @Override
-    public void recalculateContentMetrics(Long contentId) {
+    public void recalculateContentMetrics(String contentId) {
         logger.info("Recalculating metrics for content: {}", contentId);
         
         try {
-            Optional<ContentMetrics> existingMetricsOpt = contentMetricsRepository.findByContentId(contentId);
-            ContentMetrics metrics = existingMetricsOpt.orElse(new ContentMetrics());
-            
-            if (existingMetricsOpt.isEmpty()) {
+            List<ContentMetrics> existingMetricsList = contentMetricsRepository.findByContentId(contentId);
+            ContentMetrics metrics = existingMetricsList.isEmpty() ? new ContentMetrics() : existingMetricsList.get(0);
+
+            if (existingMetricsList.isEmpty()) {
                 metrics.setContentId(contentId);
                 metrics.setCreatedAt(LocalDateTime.now());
             }
             
             // Recalculate all metrics from scratch
-            long viewCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_VIEWED);
-            long likeCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_LIKED);
-            long commentCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.COMMENT_CREATED);
-            long shareCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_SHARED);
+            long viewCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_VIEW);
+            long likeCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_LIKE);
+            long commentCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_COMMENT);
+            long shareCount = eventRepository.countByTargetIdAndEventType(contentId, EventType.POST_SHARE);
             
             metrics.setViewCount(viewCount);
             metrics.setLikeCount(likeCount);
@@ -319,9 +327,9 @@ public class MetricsServiceImpl implements MetricsService {
             
             // Calculate reach and impressions
             LocalDateTime last30Days = LocalDateTime.now().minusDays(30);
-            long reachCount = eventRepository.countUniqueUsers(contentId, EventType.POST_VIEWED, last30Days, LocalDateTime.now());
+            long reachCount = eventRepository.countUniqueUsers(contentId, EventType.POST_VIEW, last30Days, LocalDateTime.now());
             long impressionCount = eventRepository.countByTargetIdAndEventTypeAndTimestampAfter(
-                    contentId, EventType.POST_VIEWED, last30Days);
+                    contentId, EventType.POST_VIEW, last30Days);
             
             metrics.setReachCount(reachCount);
             metrics.setImpressionCount(impressionCount);
@@ -354,7 +362,7 @@ public class MetricsServiceImpl implements MetricsService {
         logger.info("Platform metrics refreshed");
     }
 
-    private UserMetrics createDefaultUserMetrics(Long userId) {
+    private UserMetrics createDefaultUserMetrics(String userId) {
         UserMetrics metrics = new UserMetrics();
         metrics.setUserId(userId);
         metrics.setTotalPosts(0L);
@@ -370,7 +378,7 @@ public class MetricsServiceImpl implements MetricsService {
         return metrics;
     }
 
-    private ContentMetrics createDefaultContentMetrics(Long contentId) {
+    private ContentMetrics createDefaultContentMetrics(String contentId) {
         ContentMetrics metrics = new ContentMetrics();
         metrics.setContentId(contentId);
         metrics.setViewCount(0L);
@@ -410,7 +418,7 @@ public class MetricsServiceImpl implements MetricsService {
         return ((double) (lastValue - firstValue) / firstValue) * 100.0;
     }
 
-    private LocalDateTime getLastActiveTime(Long userId) {
+    private LocalDateTime getLastActiveTime(String userId) {
         Optional<LocalDateTime> lastActive = eventRepository.findLastEventTimeForUser(userId);
         return lastActive.orElse(LocalDateTime.now());
     }

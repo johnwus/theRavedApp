@@ -45,7 +45,7 @@ public interface TrendingService {
     /**
      * Predict trending content
      */
-    List<Long> predictTrendingContent(int hours);
+    List<String> predictTrendingContent(int hours);
 
     /**
      * Update trending scores

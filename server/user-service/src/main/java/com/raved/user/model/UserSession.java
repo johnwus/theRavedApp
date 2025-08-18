@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * UserSession Entity for TheRavedApp
@@ -33,16 +35,17 @@ public class UserSession {
     @Column(name = "session_token", nullable = false, unique = true)
     private String sessionToken;
 
-    @Size(max = 255, message = "Device info must not exceed 255 characters")
-    @Column(name = "device_info")
+    @Column(name = "device_info", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String deviceInfo;
 
     @Size(max = 45, message = "IP address must not exceed 45 characters")
-    @Column(name = "ip_address")
+    @Column(name = "ip_address", columnDefinition = "inet")
+    @JdbcTypeCode(SqlTypes.OTHER)
     private String ipAddress;
 
     @Size(max = 500, message = "User agent must not exceed 500 characters")
-    @Column(name = "user_agent")
+    @Column(name = "user_agent", columnDefinition = "text")
     private String userAgent;
 
     @Column(name = "is_active", nullable = false)

@@ -1,66 +1,74 @@
 package com.raved.notification.repository;
 
 import com.raved.notification.model.Notification;
-import com.raved.notification.model.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
+
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
- * NotificationRepository for TheRavedApp
+ * NotificationRepository for TheRavedApp MongoDB Converted from JPA to MongoDB
+ * repository
  */
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends MongoRepository<Notification, String> {
 
     /**
-     * Find notifications by recipient user ID
+     * Find notifications by user ID
      */
-    Page<Notification> findByRecipientUserIdOrderByCreatedAtDesc(Long recipientUserId, Pageable pageable);
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
     /**
-     * Find unread notifications by recipient user ID
+     * Find unread notifications by user ID
      */
-    Page<Notification> findByRecipientUserIdAndReadAtIsNullOrderByCreatedAtDesc(Long recipientUserId, Pageable pageable);
+    Page<Notification> findByUserIdAndReadAtIsNullOrderByCreatedAtDesc(String userId, Pageable pageable);
 
     /**
      * Find unread notifications (using boolean field if exists)
      */
-    List<Notification> findByRecipientUserIdAndReadAtIsNull(Long recipientUserId);
+    List<Notification> findByUserIdAndReadAtIsNull(String userId);
 
     /**
      * Find notifications by type
      */
-    Page<Notification> findByRecipientUserIdAndNotificationTypeOrderByCreatedAtDesc(
-            Long recipientUserId, NotificationType notificationType, Pageable pageable);
+    Page<Notification> findByUserIdAndNotificationTypeOrderByCreatedAtDesc(
+            String userId, String notificationType, Pageable pageable);
 
     /**
-     * Find notifications by delivery status
+     * Find notifications by delivery status (MongoDB enum support)
      */
     Page<Notification> findByDeliveryStatusOrderByCreatedAtDesc(Notification.DeliveryStatus deliveryStatus, Pageable pageable);
 
     /**
-     * Find scheduled notifications that are due
+     * Find scheduled notifications that are due (MongoDB query)
      */
-    @Query("SELECT n FROM Notification n WHERE n.deliveryStatus = 'PENDING' " +
-           "AND n.scheduledAt IS NOT NULL AND n.scheduledAt <= :now")
-    List<Notification> findScheduledNotificationsDue(@Param("now") LocalDateTime now);
+    @Query("{'deliveryStatus': ?#{T(com.raved.notification.model.Notification.DeliveryStatus).PENDING}, 'scheduledAt': {'$lte': ?0, '$ne': null}}")
+    List<Notification> findScheduledNotificationsDue(LocalDateTime now);
 
     /**
-     * Count notifications by recipient user ID
+     * Find notifications by delivery status and scheduled time
      */
-    long countByRecipientUserId(Long recipientUserId);
+    List<Notification> findByDeliveryStatusAndScheduledAtBefore(Notification.DeliveryStatus deliveryStatus, LocalDateTime scheduledAt);
 
     /**
-     * Count unread notifications by recipient user ID
+     * Count notifications by user ID
      */
-    long countByRecipientUserIdAndReadAtIsNull(Long recipientUserId);
+    long countByUserId(String userId);
+
+    /**
+     * Count unread notifications by user ID
+     */
+    long countByUserIdAndReadAtIsNull(String userId);
+
+    /**
+     * Count sent notifications by user ID
+     */
+    long countByUserIdAndIsSentTrue(String userId);
 
     /**
      * Count notifications by delivery status and date range
@@ -74,36 +82,26 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     /**
-     * Get notification statistics by type for a user
+     * Count sent notifications by date range
      */
-    @Query("SELECT n.notificationType as type, COUNT(n) as count " +
-           "FROM Notification n WHERE n.recipientUserId = :userId " +
-           "GROUP BY n.notificationType")
-    List<Object[]> countNotificationsByTypeForUser(@Param("userId") Long userId);
+    long countByCreatedAtBetweenAndIsSentTrue(LocalDateTime startDate, LocalDateTime endDate);
 
     /**
-     * Get delivery statistics by channel
+     * Count read notifications by date range
      */
-    @Query("SELECT n.notificationType as channel, COUNT(n) as count " +
-           "FROM Notification n WHERE n.createdAt BETWEEN :startDate AND :endDate " +
-           "AND n.deliveryStatus = 'DELIVERED' " +
-           "GROUP BY n.notificationType")
-    List<Object[]> getDeliveryStatsByChannelAndDateRange(@Param("startDate") LocalDateTime startDate,
-                                                         @Param("endDate") LocalDateTime endDate);
+    long countByCreatedAtBetweenAndReadAtIsNotNull(LocalDateTime startDate, LocalDateTime endDate);
 
     /**
-     * Find failed notifications for retry
+     * Get notification statistics by type for a user (MongoDB aggregation)
      */
-    @Query("SELECT n FROM Notification n WHERE n.deliveryStatus = 'FAILED' " +
-           "AND n.retryCount < n.maxRetries " +
-           "AND n.createdAt >= :cutoffTime")
-    List<Notification> findFailedNotificationsForRetry(@Param("cutoffTime") LocalDateTime cutoffTime);
+    @Query(value = "{'userId': ?0}", fields = "{'notificationType': 1}")
+    List<Notification> findNotificationTypesForUser(String userId);
 
     /**
-     * Find notifications by priority
+     * Find failed notifications for retry (MongoDB query)
      */
-    List<Notification> findByPriorityAndDeliveryStatusOrderByCreatedAtAsc(
-            Notification.Priority priority, Notification.DeliveryStatus deliveryStatus);
+    @Query("{'deliveryStatus': ?#{T(com.raved.notification.model.Notification.DeliveryStatus).FAILED}, 'createdAt': {'$gte': ?0}}")
+    List<Notification> findFailedNotificationsForRetry(LocalDateTime cutoffTime);
 
     /**
      * Delete old notifications
@@ -111,8 +109,23 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void deleteByCreatedAtBefore(LocalDateTime cutoffDate);
 
     /**
-     * Find notifications by metadata (JSON search would be database-specific)
+     * Find notifications by metadata (MongoDB text search)
      */
-    @Query("SELECT n FROM Notification n WHERE n.metadata LIKE %:searchTerm%")
-    List<Notification> findByMetadataContaining(@Param("searchTerm") String searchTerm);
+    @Query("{'data': {'$regex': ?0, '$options': 'i'}}")
+    List<Notification> findByDataContaining(String searchTerm);
+
+    /**
+     * Additional MongoDB-specific methods for better performance
+     */
+    /**
+     * Find notifications by user ID and read status with limit
+     */
+    @Query("{'userId': ?0, 'isRead': ?1}")
+    List<Notification> findByUserIdAndIsRead(String userId, Boolean isRead, Pageable pageable);
+
+    /**
+     * Find notifications by multiple delivery statuses
+     */
+    @Query("{'deliveryStatus': {'$in': ?0}}")
+    List<Notification> findByDeliveryStatusIn(List<Notification.DeliveryStatus> statuses);
 }

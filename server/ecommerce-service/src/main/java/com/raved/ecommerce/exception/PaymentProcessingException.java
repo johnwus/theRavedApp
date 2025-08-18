@@ -1,8 +1,15 @@
 package com.raved.ecommerce.exception;
 
 /**
- * PaymentProcessingException for TheRavedApp
+ * Exception for payment processing errors
  */
 public class PaymentProcessingException extends RuntimeException {
-    // Implementation
+    
+    public PaymentProcessingException(String message) {
+        super(message);
+    }
+    
+    public PaymentProcessingException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

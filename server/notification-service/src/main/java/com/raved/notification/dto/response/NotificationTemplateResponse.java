@@ -1,96 +1,67 @@
 package com.raved.notification.dto.response;
 
 import com.raved.notification.model.NotificationTemplate;
-
 import java.time.LocalDateTime;
+import java.util.Map;
 
-/**
- * Response DTO for notification templates
- */
 public class NotificationTemplateResponse {
-
-    private Long id;
-    private String name;
-    private NotificationTemplate.TemplateType type;
-    private String language;
-    private String subject;
-    private String content;
-    private String description;
+    private String id; // Changed to String for MongoDB
+    private String templateName;
+    private NotificationTemplate.TemplateType templateType;
+    private String subjectTemplate;
+    private String bodyTemplate;
+    private Map<String, Object> variables; // Changed to Map for MongoDB
     private Boolean isActive;
-    private String version;
-    private String tags;
-    private String category;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    // Constructors
-    public NotificationTemplateResponse() {}
-
-    public NotificationTemplateResponse(Long id, String name, NotificationTemplate.TemplateType type,
-                                      String language, String subject, String content) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.language = language;
-        this.subject = subject;
-        this.content = content;
-    }
-
-    // Getters and Setters
-    public Long getId() {
+    // Getters and setters
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getTemplateName() {
+        return templateName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTemplateName(String templateName) {
+        this.templateName = templateName;
     }
 
-    public NotificationTemplate.TemplateType getType() {
-        return type;
+    public NotificationTemplate.TemplateType getTemplateType() {
+        return templateType;
     }
 
-    public void setType(NotificationTemplate.TemplateType type) {
-        this.type = type;
+    public void setTemplateType(NotificationTemplate.TemplateType templateType) {
+        this.templateType = templateType;
     }
 
-    public String getLanguage() {
-        return language;
+    public String getSubjectTemplate() {
+        return subjectTemplate;
     }
 
-    public void setLanguage(String language) {
-        this.language = language;
+    public void setSubjectTemplate(String subjectTemplate) {
+        this.subjectTemplate = subjectTemplate;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getBodyTemplate() {
+        return bodyTemplate;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setBodyTemplate(String bodyTemplate) {
+        this.bodyTemplate = bodyTemplate;
     }
 
-    public String getContent() {
-        return content;
+    public Map<String, Object> getVariables() {
+        return variables;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setVariables(Map<String, Object> variables) {
+        this.variables = variables;
     }
 
     public Boolean getIsActive() {
@@ -99,30 +70,6 @@ public class NotificationTemplateResponse {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public String getTags() {
-        return tags;
-    }
-
-    public void setTags(String tags) {
-        this.tags = tags;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -139,5 +86,18 @@ public class NotificationTemplateResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public String toString() {
+        return "NotificationTemplateResponse{" +
+                "id=" + id +
+                ", templateName='" + templateName + '\'' +
+                ", templateType=" + templateType +
+                ", subjectTemplate='" + subjectTemplate + '\'' +
+                ", bodyTemplate='" + bodyTemplate + '\'' +
+                ", isActive=" + isActive +
+                ", createdAt=" + createdAt +
+                '}';
     }
 }

@@ -1,0 +1,175 @@
+repositories:
+  - name: local
+    url: file://./raved-app
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: elastic
+    url: https://helm.elastic.co
+  - name: external-secrets
+    url: https://charts.external-secrets.io
+  - name: sealed-secrets
+    url: https://bitnami-labs.github.io/sealed-secrets
+
+releases:
+  - name: user-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./user-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/user-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: api-gateway
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./api-gateway
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/api-gateway.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: eureka-server
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./eureka-server
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/eureka-server.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: config-server
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./config-server
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/config-server.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: content-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./content-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/content-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: social-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./social-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/social-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: realtime-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./realtime-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/realtime-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: ecommerce-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./ecommerce-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/ecommerce-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: notification-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./notification-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/notification-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: analytics-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./analytics-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/analytics-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: events-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./events-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/events-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  - name: subscription-service
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: ./subscription-service
+    values:
+      - workload:
+          {{ readFile (printf "env/%s/subscription-service.yaml" (requiredEnv "ENV")) | fromYaml }}
+
+  # Messaging dependencies (installed in staging/prod by default)
+  - name: rabbitmq
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: bitnami/rabbitmq
+    values:
+      - env/{{ requiredEnv "ENV" }}/rabbitmq.yaml
+
+  - name: kafka
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: bitnami/kafka
+    values:
+      - env/{{ requiredEnv "ENV" }}/kafka.yaml
+
+  - name: redis
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: bitnami/redis
+    values:
+      - env/{{ requiredEnv "ENV" }}/redis.yaml
+
+  - name: postgresql
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: bitnami/postgresql
+    installed: {{ eq (requiredEnv "ENV") "dev" }}
+    values:
+      - env/{{ requiredEnv "ENV" }}/postgresql.yaml
+
+  - name: kube-prometheus-stack
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: prometheus-community/kube-prometheus-stack
+    values:
+      - env/{{ requiredEnv "ENV" }}/kube-prometheus-stack.yaml
+
+  - name: elasticsearch
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: elastic/elasticsearch
+    values:
+      - env/{{ requiredEnv "ENV" }}/elasticsearch.yaml
+
+  - name: kibana
+    namespace: raved-{{ requiredEnv "ENV" }}
+    createNamespace: true
+    chart: elastic/kibana
+    values:
+      - env/{{ requiredEnv "ENV" }}/kibana.yaml
+
+  # --- Security/Secrets controllers ---
+  - name: external-secrets
+    namespace: external-secrets
+    createNamespace: true
+    chart: external-secrets/external-secrets
+    installed: {{ ne (requiredEnv "ENV") "dev" | toYaml }}
+
+  - name: sealed-secrets
+    namespace: kube-system
+    createNamespace: true
+    chart: sealed-secrets/sealed-secrets
+    installed: {{ ne (requiredEnv "ENV") "dev" | toYaml }}
+

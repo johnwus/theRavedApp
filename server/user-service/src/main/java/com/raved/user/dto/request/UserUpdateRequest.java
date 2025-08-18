@@ -41,7 +41,7 @@ public class UserUpdateRequest {
 
     private Long facultyId;
 
-    private Long departmentId;
+
 
     private Integer graduationYear;
 
@@ -156,13 +156,7 @@ public class UserUpdateRequest {
         this.facultyId = facultyId;
     }
 
-    public Long getDepartmentId() {
-        return departmentId;
-    }
 
-    public void setDepartmentId(Long departmentId) {
-        this.departmentId = departmentId;
-    }
 
     public Integer getGraduationYear() {
         return graduationYear;

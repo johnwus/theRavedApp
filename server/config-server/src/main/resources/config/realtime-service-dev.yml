@@ -1,0 +1,7 @@
+spring:
+  redis:
+    host: localhost
+
+logging:
+  level:
+    com.raved.realtime: DEBUG

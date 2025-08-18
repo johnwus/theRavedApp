@@ -24,7 +24,7 @@ public interface PushNotificationService {
     /**
      * Send push notification to a user (all their devices)
      */
-    void sendPushNotificationToUser(Long userId, String title, String body, Map<String, String> data);
+    void sendPushNotificationToUser(String userId, String title, String body, Map<String, String> data);
 
     /**
      * Send notification via push
@@ -34,7 +34,7 @@ public interface PushNotificationService {
     /**
      * Register device token for a user
      */
-    void registerDeviceToken(Long userId, String deviceToken, String deviceType, String appVersion);
+    void registerDeviceToken(String userId, String deviceToken, String deviceType, String appVersion);
 
     /**
      * Unregister device token
@@ -44,7 +44,7 @@ public interface PushNotificationService {
     /**
      * Get device tokens for a user
      */
-    List<DeviceToken> getUserDeviceTokens(Long userId);
+    List<DeviceToken> getUserDeviceTokens(String userId);
 
     /**
      * Send topic-based notification

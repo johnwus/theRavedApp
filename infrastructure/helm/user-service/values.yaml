@@ -1,0 +1,32 @@
+workload:
+  nameOverride: user-service
+  image:
+    repository: ghcr.io/theravedapp
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    port: 8081
+  autoscaling:
+    enabled: false
+  probes:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 45
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 15
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 800m
+      memory: 768Mi
+  envFrom:
+    - configMapRef:
+        name: common-config
+    - configMapRef:
+        name: user-service-config
+    - secretRef:
+        name: user-service-secrets
+

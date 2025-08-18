@@ -1,26 +1,26 @@
 package com.raved.user.dto.response;
 
+import com.raved.user.model.StudentVerification;
+
 import java.time.LocalDateTime;
 
 /**
- * Response DTO for StudentVerification entity
+ * Response DTO for student verification
  */
 public class StudentVerificationResponse {
 
     private Long id;
     private Long userId;
-    private String userFullName;
     private Long universityId;
-    private String universityName;
     private String studentIdDocumentUrl;
     private String additionalDocumentUrl;
-    private String verificationStatus;
-    private Long verifiedByUserId;
-    private String verifiedByUserName;
-    private String verificationNotes;
-    private String rejectionReason;
+    private StudentVerification.VerificationStatus status;
+    private String verificationToken;
     private LocalDateTime submittedAt;
-    private LocalDateTime verifiedAt;
+    private LocalDateTime reviewedAt;
+    private Long reviewedBy;
+    private String rejectionReason;
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
     // Constructors
@@ -43,28 +43,12 @@ public class StudentVerificationResponse {
         this.userId = userId;
     }
 
-    public String getUserFullName() {
-        return userFullName;
-    }
-
-    public void setUserFullName(String userFullName) {
-        this.userFullName = userFullName;
-    }
-
     public Long getUniversityId() {
         return universityId;
     }
 
     public void setUniversityId(Long universityId) {
         this.universityId = universityId;
-    }
-
-    public String getUniversityName() {
-        return universityName;
-    }
-
-    public void setUniversityName(String universityName) {
-        this.universityName = universityName;
     }
 
     public String getStudentIdDocumentUrl() {
@@ -83,44 +67,20 @@ public class StudentVerificationResponse {
         this.additionalDocumentUrl = additionalDocumentUrl;
     }
 
-    public String getVerificationStatus() {
-        return verificationStatus;
+    public StudentVerification.VerificationStatus getStatus() {
+        return status;
     }
 
-    public void setVerificationStatus(String verificationStatus) {
-        this.verificationStatus = verificationStatus;
+    public void setStatus(StudentVerification.VerificationStatus status) {
+        this.status = status;
     }
 
-    public Long getVerifiedByUserId() {
-        return verifiedByUserId;
+    public String getVerificationToken() {
+        return verificationToken;
     }
 
-    public void setVerifiedByUserId(Long verifiedByUserId) {
-        this.verifiedByUserId = verifiedByUserId;
-    }
-
-    public String getVerifiedByUserName() {
-        return verifiedByUserName;
-    }
-
-    public void setVerifiedByUserName(String verifiedByUserName) {
-        this.verifiedByUserName = verifiedByUserName;
-    }
-
-    public String getVerificationNotes() {
-        return verificationNotes;
-    }
-
-    public void setVerificationNotes(String verificationNotes) {
-        this.verificationNotes = verificationNotes;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
-
-    public void setRejectionReason(String rejectionReason) {
-        this.rejectionReason = rejectionReason;
+    public void setVerificationToken(String verificationToken) {
+        this.verificationToken = verificationToken;
     }
 
     public LocalDateTime getSubmittedAt() {
@@ -131,12 +91,36 @@ public class StudentVerificationResponse {
         this.submittedAt = submittedAt;
     }
 
-    public LocalDateTime getVerifiedAt() {
-        return verifiedAt;
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
     }
 
-    public void setVerifiedAt(LocalDateTime verifiedAt) {
-        this.verifiedAt = verifiedAt;
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public Long getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(Long reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public LocalDateTime getUpdatedAt() {

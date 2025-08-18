@@ -1,0 +1,5 @@
+1. To install:
+   helm upgrade --install user-service ./user-service --namespace raved-dev --create-namespace
+
+2. Set image tag and envs via values or --set flags.
+

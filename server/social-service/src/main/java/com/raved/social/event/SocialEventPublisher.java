@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -13,218 +12,155 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Publisher for social events to Kafka
+ * Publisher for social events to Kafka topics
  */
 @Component
 public class SocialEventPublisher {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(SocialEventPublisher.class);
-
+    
+    private static final String LIKE_TOPIC = "social.likes";
+    private static final String COMMENT_TOPIC = "social.comments";
+    private static final String FOLLOW_TOPIC = "social.follows";
+    private static final String ACTIVITY_TOPIC = "social.activities";
+    
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+    
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Value("${kafka.topics.social-events:social-events}")
-    private String socialEventsTopic;
-
+    public SocialEventPublisher(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
+    }
+    
     /**
      * Publish like event
      */
     public void publishLikeEvent(Long userId, Long postId, Long postAuthorId) {
-        logger.info("Publishing like event: user {} liked post {} by user {}", userId, postId, postAuthorId);
-        
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "LIKE_CREATED");
         event.put("userId", userId);
-        event.put("interactionType", "LIKE");
-        event.put("targetId", postId);
-        event.put("targetType", "POST");
-        event.put("targetAuthorId", postAuthorId);
+        event.put("postId", postId);
+        event.put("postAuthorId", postAuthorId);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, userId.toString());
+        publishEvent(LIKE_TOPIC, userId.toString(), event);
     }
-
+    
     /**
-     * Publish unlike event
+     * Publish like removed event
      */
-    public void publishUnlikeEvent(Long userId, Long postId, Long postAuthorId) {
-        logger.info("Publishing unlike event: user {} unliked post {} by user {}", userId, postId, postAuthorId);
-        
+    public void publishLikeRemovedEvent(Long userId, Long postId, Long postAuthorId) {
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "LIKE_REMOVED");
         event.put("userId", userId);
-        event.put("interactionType", "UNLIKE");
-        event.put("targetId", postId);
-        event.put("targetType", "POST");
-        event.put("targetAuthorId", postAuthorId);
+        event.put("postId", postId);
+        event.put("postAuthorId", postAuthorId);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, userId.toString());
+        publishEvent(LIKE_TOPIC, userId.toString(), event);
     }
-
+    
     /**
-     * Publish comment event
+     * Publish comment created event
      */
-    public void publishCommentEvent(Long userId, Long postId, Long postAuthorId, Long commentId, String commentContent) {
-        logger.info("Publishing comment event: user {} commented on post {} by user {}", userId, postId, postAuthorId);
-        
+    public void publishCommentCreatedEvent(Long userId, Long postId, Long commentId, Long postAuthorId) {
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "COMMENT_CREATED");
         event.put("userId", userId);
-        event.put("interactionType", "COMMENT");
-        event.put("targetId", postId);
-        event.put("targetType", "POST");
-        event.put("targetAuthorId", postAuthorId);
+        event.put("postId", postId);
         event.put("commentId", commentId);
-        event.put("commentContent", commentContent);
+        event.put("postAuthorId", postAuthorId);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, userId.toString());
+        publishEvent(COMMENT_TOPIC, userId.toString(), event);
     }
-
+    
     /**
-     * Publish comment reply event
+     * Publish comment updated event
      */
-    public void publishCommentReplyEvent(Long userId, Long commentId, Long commentAuthorId, Long replyId, String replyContent) {
-        logger.info("Publishing comment reply event: user {} replied to comment {} by user {}", userId, commentId, commentAuthorId);
-        
+    public void publishCommentUpdatedEvent(Long userId, Long postId, Long commentId) {
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "COMMENT_UPDATED");
         event.put("userId", userId);
-        event.put("interactionType", "COMMENT_REPLY");
-        event.put("targetId", commentId);
-        event.put("targetType", "COMMENT");
-        event.put("targetAuthorId", commentAuthorId);
-        event.put("replyId", replyId);
-        event.put("replyContent", replyContent);
+        event.put("postId", postId);
+        event.put("commentId", commentId);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, userId.toString());
+        publishEvent(COMMENT_TOPIC, userId.toString(), event);
     }
-
+    
     /**
-     * Publish follow event
+     * Publish comment deleted event
      */
-    public void publishFollowEvent(Long followerId, Long followingId) {
-        logger.info("Publishing follow event: user {} followed user {}", followerId, followingId);
-        
+    public void publishCommentDeletedEvent(Long userId, Long postId, Long commentId) {
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
-        event.put("userId", followerId);
-        event.put("interactionType", "FOLLOW");
-        event.put("targetId", followingId);
-        event.put("targetType", "USER");
-        event.put("targetAuthorId", followingId);
-        event.put("timestamp", System.currentTimeMillis());
-        
-        publishEvent(event, followerId.toString());
-    }
-
-    /**
-     * Publish unfollow event
-     */
-    public void publishUnfollowEvent(Long followerId, Long followingId) {
-        logger.info("Publishing unfollow event: user {} unfollowed user {}", followerId, followingId);
-        
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
-        event.put("userId", followerId);
-        event.put("interactionType", "UNFOLLOW");
-        event.put("targetId", followingId);
-        event.put("targetType", "USER");
-        event.put("targetAuthorId", followingId);
-        event.put("timestamp", System.currentTimeMillis());
-        
-        publishEvent(event, followerId.toString());
-    }
-
-    /**
-     * Publish mention event
-     */
-    public void publishMentionEvent(Long userId, Long mentionedUserId, Long postId, String content) {
-        logger.info("Publishing mention event: user {} mentioned user {} in post {}", userId, mentionedUserId, postId);
-        
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "COMMENT_DELETED");
         event.put("userId", userId);
-        event.put("interactionType", "MENTION");
-        event.put("targetId", postId);
-        event.put("targetType", "POST");
-        event.put("targetAuthorId", mentionedUserId);
-        event.put("mentionedUserId", mentionedUserId);
-        event.put("content", content);
+        event.put("postId", postId);
+        event.put("commentId", commentId);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, userId.toString());
+        publishEvent(COMMENT_TOPIC, userId.toString(), event);
     }
-
+    
     /**
-     * Publish share event
+     * Publish follow created event
      */
-    public void publishShareEvent(Long userId, Long postId, Long postAuthorId, String shareType) {
-        logger.info("Publishing share event: user {} shared post {} by user {}", userId, postId, postAuthorId);
-        
+    public void publishFollowCreatedEvent(Long followerId, Long followingId) {
         Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
+        event.put("eventType", "FOLLOW_CREATED");
+        event.put("followerId", followerId);
+        event.put("followingId", followingId);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(FOLLOW_TOPIC, followerId.toString(), event);
+    }
+    
+    /**
+     * Publish follow removed event
+     */
+    public void publishFollowRemovedEvent(Long followerId, Long followingId) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "FOLLOW_REMOVED");
+        event.put("followerId", followerId);
+        event.put("followingId", followingId);
+        event.put("timestamp", System.currentTimeMillis());
+        
+        publishEvent(FOLLOW_TOPIC, followerId.toString(), event);
+    }
+    
+    /**
+     * Publish activity created event
+     */
+    public void publishActivityCreatedEvent(Long userId, String activityType, Long targetId, String targetType) {
+        Map<String, Object> event = new HashMap<>();
+        event.put("eventType", "ACTIVITY_CREATED");
         event.put("userId", userId);
-        event.put("interactionType", "SHARE");
-        event.put("targetId", postId);
-        event.put("targetType", "POST");
-        event.put("targetAuthorId", postAuthorId);
-        event.put("shareType", shareType);
-        event.put("timestamp", System.currentTimeMillis());
-        
-        publishEvent(event, userId.toString());
-    }
-
-    /**
-     * Publish block event
-     */
-    public void publishBlockEvent(Long blockerId, Long blockedId) {
-        logger.info("Publishing block event: user {} blocked user {}", blockerId, blockedId);
-        
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
-        event.put("userId", blockerId);
-        event.put("interactionType", "BLOCK");
-        event.put("targetId", blockedId);
-        event.put("targetType", "USER");
-        event.put("targetAuthorId", blockedId);
-        event.put("timestamp", System.currentTimeMillis());
-        
-        publishEvent(event, blockerId.toString());
-    }
-
-    /**
-     * Publish report event
-     */
-    public void publishReportEvent(Long reporterId, Long targetId, String targetType, String reason) {
-        logger.info("Publishing report event: user {} reported {} {} for {}", reporterId, targetType, targetId, reason);
-        
-        Map<String, Object> event = new HashMap<>();
-        event.put("eventType", "SOCIAL_INTERACTION");
-        event.put("userId", reporterId);
-        event.put("interactionType", "REPORT");
+        event.put("activityType", activityType);
         event.put("targetId", targetId);
         event.put("targetType", targetType);
-        event.put("reason", reason);
         event.put("timestamp", System.currentTimeMillis());
         
-        publishEvent(event, reporterId.toString());
+        publishEvent(ACTIVITY_TOPIC, userId.toString(), event);
     }
-
-    private void publishEvent(Map<String, Object> event, String key) {
+    
+    /**
+     * Generic method to publish event to Kafka
+     */
+    private void publishEvent(String topic, String key, Map<String, Object> event) {
         try {
             String eventJson = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(socialEventsTopic, key, eventJson);
-            logger.debug("Social event published successfully: {}", event.get("interactionType"));
+            kafkaTemplate.send(topic, key, eventJson)
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        logger.error("Failed to send event to topic {}: {}", topic, ex.getMessage());
+                    } else {
+                        logger.info("Event sent to topic {}: {}", topic, event.get("eventType"));
+                    }
+                });
         } catch (JsonProcessingException e) {
-            logger.error("Failed to serialize social event: {}", event.get("interactionType"), e);
-        } catch (Exception e) {
-            logger.error("Failed to publish social event: {}", event.get("interactionType"), e);
+            logger.error("Failed to serialize event: {}", e.getMessage());
         }
     }
 }

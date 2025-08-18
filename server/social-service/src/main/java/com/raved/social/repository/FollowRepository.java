@@ -3,88 +3,84 @@ package com.raved.social.repository;
 import com.raved.social.model.Follow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * FollowRepository for TheRavedApp
+ * Repository for Follow MongoDB documents
  */
 @Repository
-public interface FollowRepository extends JpaRepository<Follow, Long> {
+public interface FollowRepository extends MongoRepository<Follow, String> {
+    
+    Optional<Follow> findByFollowerIdAndFollowingIdAndStatus(String followerId, String followingId, String status);
+    
+    Page<Follow> findByFollowerIdAndStatusOrderByCreatedAtDesc(String followerId, String status, Pageable pageable);
 
-    /**
-     * Check if follow relationship exists
-     */
-    boolean existsByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    Page<Follow> findByFollowingIdAndStatusOrderByCreatedAtDesc(String followingId, String status, Pageable pageable);
 
-    /**
-     * Find follow relationship
-     */
-    Optional<Follow> findByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    boolean existsByFollowerIdAndFollowingIdAndStatus(String followerId, String followingId, String status);
 
-    /**
-     * Find followers of a user
-     */
-    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(Long followingId, Pageable pageable);
+    long countByFollowerIdAndStatus(String followerId, String status);
 
-    /**
-     * Find users that a user is following
-     */
-    Page<Follow> findByFollowerIdOrderByCreatedAtDesc(Long followerId, Pageable pageable);
+    long countByFollowingIdAndStatus(String followingId, String status);
 
-    /**
-     * Count followers
-     */
-    long countByFollowingId(Long followingId);
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowerIdAndStatusActive(String followerId);
 
-    /**
-     * Count following
-     */
-    long countByFollowerId(Long followerId);
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowingIdAndStatusActive(String followingId);
 
-    /**
-     * Delete follow relationship
-     */
-    void deleteByFollowerIdAndFollowingId(Long followerId, Long followingId);
+    @Query("{'followerId': ?0, 'followingId': ?1, 'status': 'ACTIVE'}")
+    Optional<Follow> findByFollowerIdAndFollowingIdAndStatusActive(String followerId, String followingId);
 
-    /**
-     * Find mutual followers
-     */
-    @Query("SELECT f1 FROM Follow f1 WHERE f1.followingId IN " +
-           "(SELECT f2.followingId FROM Follow f2 WHERE f2.followerId = :userId1) " +
-           "AND f1.followerId IN " +
-           "(SELECT f3.followingId FROM Follow f3 WHERE f3.followerId = :userId2)")
-    List<Follow> findMutualFollowers(@Param("userId1") Long userId1, @Param("userId2") Long userId2);
+    @Query("{'$or': [{'followerId': ?0}, {'followingId': ?0}], 'status': 'ACTIVE'}")
+    List<Follow> findByUserIdInvolved(String userId);
 
-    /**
-     * Find suggested follows (users followed by people you follow)
-     */
-    @Query("SELECT f FROM Follow f WHERE f.followingId IN " +
-           "(SELECT f2.followingId FROM Follow f2 WHERE f2.followerId IN " +
-           "(SELECT f3.followingId FROM Follow f3 WHERE f3.followerId = :userId)) " +
-           "AND f.followerId != :userId " +
-           "AND NOT EXISTS (SELECT 1 FROM Follow f4 WHERE f4.followerId = :userId AND f4.followingId = f.followingId) " +
-           "GROUP BY f.followingId ORDER BY COUNT(f.followingId) DESC")
-    List<Follow> findSuggestedFollows(@Param("userId") Long userId, @Param("limit") int limit);
+    @Query("{'followerId': ?0, 'status': 'BLOCKED'}")
+    List<Follow> findBlockedByUser(String userId);
 
-    /**
-     * Find recent followers
-     */
-    @Query("SELECT f FROM Follow f WHERE f.followingId = :userId " +
-           "ORDER BY f.createdAt DESC")
-    List<Follow> findRecentFollowers(@Param("userId") Long userId, @Param("limit") int limit);
+    @Query("{'followingId': ?0, 'status': 'BLOCKED'}")
+    List<Follow> findBlockedUsers(String userId);
 
-    /**
-     * Block-related methods
-     */
-    Optional<Follow> findByFollowerIdAndFollowingIdAndIsBlockedTrue(Long followerId, Long followingId);
+    @Query("{'followerId': ?0, 'isMutual': true, 'status': 'ACTIVE'}")
+    List<Follow> findMutualFollows(String userId);
 
-    boolean existsByFollowerIdAndFollowingIdAndIsBlockedTrue(Long followerId, Long followingId);
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowerIdOrderByCreatedAtDesc(String followerId);
+    
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findByFollowingIdOrderByCreatedAtDesc(String followingId);
+    
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    long countByFollowerId(String followerId);
+    
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    long countByFollowingId(String followingId);
+    
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findRecentFollowers(String userId, int limit);
+    
+    @Query("{'followingId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findRecentFollowing(String userId, int limit);
+    
+    @Query("{'followerId': ?0, 'status': 'ACTIVE'}")
+    List<Follow> findSuggestedFollows(String userId, int limit);
+    
+    void deleteByFollowerIdAndFollowingId(String followerId, String followingId);
 
-    Page<Follow> findByFollowerIdAndIsBlockedTrueOrderByCreatedAtDesc(Long followerId, Pageable pageable);
+    // Methods for backward compatibility with service layer
+    boolean existsByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    Optional<Follow> findByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    Page<Follow> findByFollowingIdOrderByCreatedAtDesc(String followingId, Pageable pageable);
+
+    Page<Follow> findByFollowerIdOrderByCreatedAtDesc(String followerId, Pageable pageable);
+
+    @Query("{'followerId': ?0, 'followingId': ?1, 'status': 'ACTIVE'}")
+    List<Follow> findMutualFollows(String userId1, String userId2);
 }

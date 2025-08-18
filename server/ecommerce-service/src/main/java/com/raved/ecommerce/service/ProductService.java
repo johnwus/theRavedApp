@@ -73,11 +73,6 @@ public interface ProductService {
     ProductResponse uploadProductImages(Long productId, List<MultipartFile> images);
 
     /**
-     * Update product status
-     */
-    ProductResponse updateProductStatus(Long id, Product.ProductStatus status);
-
-    /**
      * Feature product
      */
     void featureProduct(Long productId, int durationHours);

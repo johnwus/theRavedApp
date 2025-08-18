@@ -1,6 +1,6 @@
 package com.raved.notification.dto.response;
 
-import com.raved.notification.model.NotificationType;
+import com.raved.notification.model.Notification;
 
 import java.util.Map;
 
@@ -12,14 +12,14 @@ public class NotificationStats {
     private long totalNotifications;
     private long unreadNotifications;
     private long readNotifications;
-    private Map<NotificationType, Long> notificationsByType;
+    private Map<Notification.NotificationType, Long> notificationsByType;
     private double readRate;
 
     // Constructors
     public NotificationStats() {}
 
     public NotificationStats(long totalNotifications, long unreadNotifications, 
-                           long readNotifications, Map<NotificationType, Long> notificationsByType) {
+                           long readNotifications, Map<Notification.NotificationType, Long> notificationsByType) {
         this.totalNotifications = totalNotifications;
         this.unreadNotifications = unreadNotifications;
         this.readNotifications = readNotifications;
@@ -52,11 +52,11 @@ public class NotificationStats {
         this.readNotifications = readNotifications;
     }
 
-    public Map<NotificationType, Long> getNotificationsByType() {
+    public Map<Notification.NotificationType, Long> getNotificationsByType() {
         return notificationsByType;
     }
 
-    public void setNotificationsByType(Map<NotificationType, Long> notificationsByType) {
+    public void setNotificationsByType(Map<Notification.NotificationType, Long> notificationsByType) {
         this.notificationsByType = notificationsByType;
     }
 

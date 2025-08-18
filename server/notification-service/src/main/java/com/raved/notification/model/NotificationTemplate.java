@@ -1,96 +1,85 @@
 package com.raved.notification.model;
 
-import jakarta.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 /**
- * NotificationTemplate Entity for TheRavedApp
+ * NotificationTemplate Document for TheRavedApp MongoDB
  *
- * Represents notification templates for different types of notifications.
- * Based on the notification_templates table schema.
+ * Represents templates for different types of notifications. Converted from JPA
+ * entity to MongoDB document.
  */
-@Entity
-@Table(name = "notification_templates", indexes = {
-        @Index(name = "idx_notification_templates_type", columnList = "template_type"),
-        @Index(name = "idx_notification_templates_name", columnList = "template_name"),
-        @Index(name = "idx_notification_templates_active", columnList = "is_active")
+@Document(collection = "notification_templates")
+@CompoundIndexes({
+    @CompoundIndex(name = "idx_type_active", def = "{'templateType': 1, 'isActive': 1}"),
+    @CompoundIndex(name = "idx_name_unique", def = "{'templateName': 1}", unique = true)
 })
 public class NotificationTemplate {
-
+    
+    /**
+     * Enum representing the type of notification template
+     */
+    public enum TemplateType {
+        PUSH,      // Push notification
+        EMAIL,     // Email notification
+        SMS        // SMS notification
+    }
+    
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @NotBlank(message = "Template name is required")
-    @Size(max = 255, message = "Template name must not exceed 255 characters")
-    @Column(name = "template_name", nullable = false, unique = true)
+    @Field("templateName")
+    @Indexed(unique = true)
+    @NotBlank
     private String templateName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "template_type", nullable = false)
-    private TemplateType templateType;
+    @Field("templateType")
+    @Indexed
+    @NotNull
+    private TemplateType templateType; // PUSH, EMAIL, SMS
 
-    @NotBlank(message = "Subject template is required")
-    @Size(max = 500, message = "Subject template must not exceed 500 characters")
-    @Column(name = "subject_template", nullable = false)
+    @Field("subjectTemplate")
     private String subjectTemplate;
 
-    @NotBlank(message = "Body template is required")
-    @Column(name = "body_template", columnDefinition = "TEXT", nullable = false)
+    @Field("bodyTemplate")
+    @NotBlank
     private String bodyTemplate;
 
-    @Column(name = "sms_template", columnDefinition = "TEXT")
-    private String smsTemplate;
+    @Field("variables")
+    private Map<String, Object> variables; // Template variables (changed to Map for MongoDB)
 
-    @Column(name = "push_template", columnDefinition = "TEXT")
-    private String pushTemplate;
-
-    @Size(max = 1000, message = "Variables must not exceed 1000 characters")
-    @Column(name = "template_variables", columnDefinition = "TEXT")
-    private String templateVariables; // JSON string of available variables
-
-    @Column(name = "is_active", nullable = false)
+    @Field("isActive")
+    @Indexed
     private Boolean isActive = true;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Field("createdAt")
+    @Indexed
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Field("updatedAt")
     private LocalDateTime updatedAt;
-
-    // Relationships
-    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Notification> notifications;
-
-    // Enums
-    public enum TemplateType {
-        EMAIL, SMS, PUSH_NOTIFICATION, IN_APP
-    }
-
+    
     // Constructors
     public NotificationTemplate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-
-    public NotificationTemplate(String templateName, TemplateType templateType, String subjectTemplate,
-            String bodyTemplate) {
-        this();
-        this.templateName = templateName;
-        this.templateType = templateType;
-        this.subjectTemplate = subjectTemplate;
-        this.bodyTemplate = bodyTemplate;
-    }
-
-    // Getters and Setters
-    public Long getId() {
+    
+    // Getters and setters
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -100,6 +89,7 @@ public class NotificationTemplate {
 
     public void setTemplateName(String templateName) {
         this.templateName = templateName;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public TemplateType getTemplateType() {
@@ -108,6 +98,7 @@ public class NotificationTemplate {
 
     public void setTemplateType(TemplateType templateType) {
         this.templateType = templateType;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public String getSubjectTemplate() {
@@ -116,6 +107,7 @@ public class NotificationTemplate {
 
     public void setSubjectTemplate(String subjectTemplate) {
         this.subjectTemplate = subjectTemplate;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public String getBodyTemplate() {
@@ -124,30 +116,16 @@ public class NotificationTemplate {
 
     public void setBodyTemplate(String bodyTemplate) {
         this.bodyTemplate = bodyTemplate;
+        this.updatedAt = LocalDateTime.now();
     }
 
-    public String getSmsTemplate() {
-        return smsTemplate;
+    public Map<String, Object> getVariables() {
+        return variables;
     }
 
-    public void setSmsTemplate(String smsTemplate) {
-        this.smsTemplate = smsTemplate;
-    }
-
-    public String getPushTemplate() {
-        return pushTemplate;
-    }
-
-    public void setPushTemplate(String pushTemplate) {
-        this.pushTemplate = pushTemplate;
-    }
-
-    public String getTemplateVariables() {
-        return templateVariables;
-    }
-
-    public void setTemplateVariables(String templateVariables) {
-        this.templateVariables = templateVariables;
+    public void setVariables(Map<String, Object> variables) {
+        this.variables = variables;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Boolean getIsActive() {
@@ -156,6 +134,7 @@ public class NotificationTemplate {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+        this.updatedAt = LocalDateTime.now();
     }
 
     public LocalDateTime getCreatedAt() {
@@ -173,55 +152,9 @@ public class NotificationTemplate {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
-    }
-
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+    
+    // MongoDB lifecycle method
+    public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    // Utility methods
-    public void activate() {
-        this.isActive = true;
-    }
-
-    public void deactivate() {
-        this.isActive = false;
-    }
-
-    public boolean supportsEmail() {
-        return templateType == TemplateType.EMAIL && bodyTemplate != null;
-    }
-
-    public boolean supportsSms() {
-        return templateType == TemplateType.SMS && smsTemplate != null;
-    }
-
-    public boolean supportsPush() {
-        return templateType == TemplateType.PUSH_NOTIFICATION && pushTemplate != null;
-    }
-
-    @Override
-    public String toString() {
-        return "NotificationTemplate{" +
-                "id=" + id +
-                ", templateName='" + templateName + '\'' +
-                ", templateType=" + templateType +
-                ", isActive=" + isActive +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

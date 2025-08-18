@@ -1,0 +1,8 @@
+spring:
+  data:
+    elasticsearch:
+      cluster-nodes: localhost:9200
+
+logging:
+  level:
+    com.raved.search: DEBUG

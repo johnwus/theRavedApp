@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: subscription-service
+  namespace: raved-dev
+spec:
+  selector: { app: subscription-service }
+  ports:
+    - port: 8089
+      targetPort: 8089
+  type: ClusterIP
+

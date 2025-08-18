@@ -1,41 +1,33 @@
 package com.raved.realtime.dto.request;
 
+import com.raved.realtime.model.ChatRoomType;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 /**
- * Request DTO for creating a new chat room
+ * DTO for creating a chat room
  */
 public class CreateChatRoomRequest {
-
-    @NotBlank(message = "Chat room name is required")
-    @Size(max = 255, message = "Chat room name must not exceed 255 characters")
+    
+    @NotBlank(message = "Room name is required")
+    @Size(min = 3, max = 100, message = "Room name must be between 3 and 100 characters")
     private String name;
-
-    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
-
-    private String roomType; // "direct", "group", "public", "private"
-
-    private Boolean isPrivate = false;
-
-    private Integer maxMembers;
-
-    private List<Long> initialMemberIds;
-
-    private String avatarUrl;
-
-    // Constructors
-    public CreateChatRoomRequest() {
-    }
-
-    public CreateChatRoomRequest(String name, String roomType) {
-        this.name = name;
-        this.roomType = roomType;
-    }
-
-    // Getters and Setters
+    
+    @NotNull(message = "Room type is required")
+    private ChatRoomType type;
+    
+    @NotNull(message = "Creator ID is required")
+    private Long createdBy;
+    
+    private Boolean isPrivate;
+    
+    private Integer maxParticipants;
+    
+    // Getters and setters
     public String getName() {
         return name;
     }
@@ -52,12 +44,20 @@ public class CreateChatRoomRequest {
         this.description = description;
     }
 
-    public String getRoomType() {
-        return roomType;
+    public ChatRoomType getType() {
+        return type;
     }
 
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
+    public void setType(ChatRoomType type) {
+        this.type = type;
+    }
+
+    public Long getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
     }
 
     public Boolean getIsPrivate() {
@@ -68,27 +68,11 @@ public class CreateChatRoomRequest {
         this.isPrivate = isPrivate;
     }
 
-    public Integer getMaxMembers() {
-        return maxMembers;
+    public Integer getMaxParticipants() {
+        return maxParticipants;
     }
 
-    public void setMaxMembers(Integer maxMembers) {
-        this.maxMembers = maxMembers;
-    }
-
-    public List<Long> getInitialMemberIds() {
-        return initialMemberIds;
-    }
-
-    public void setInitialMemberIds(List<Long> initialMemberIds) {
-        this.initialMemberIds = initialMemberIds;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
+    public void setMaxParticipants(Integer maxParticipants) {
+        this.maxParticipants = maxParticipants;
     }
 }

@@ -1,0 +1,13 @@
+{{- if .Values.configMap }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "raved-app.fullname" . }}
+data:
+{{- range $key, $value := .Values.configMap }}
+  {{ $key }}: |-
+{{ $value | indent 4 }}
+{{- end }}
+{{- end }}
+
+

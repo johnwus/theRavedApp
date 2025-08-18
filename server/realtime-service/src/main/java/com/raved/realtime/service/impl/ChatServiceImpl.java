@@ -54,13 +54,13 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatRoomResponse createChatRoom(CreateChatRoomRequest request) {
         logger.info("Creating chat room: {} by user: {}", request.getName(), request.getCreatedBy());
-        
+
         ChatRoom chatRoom = chatRoomMapper.toChatRoom(request);
         chatRoom.setRoomId(generateRoomId());
         chatRoom.setCreatedAt(LocalDateTime.now());
         chatRoom.setUpdatedAt(LocalDateTime.now());
         chatRoom.setIsActive(true);
-        
+
         // Set default values based on room type
         if (request.getType() == ChatRoomType.PRIVATE) {
             chatRoom.setMaxParticipants(2);
@@ -69,12 +69,12 @@ public class ChatServiceImpl implements ChatService {
         } else if (request.getType() == ChatRoomType.PUBLIC) {
             chatRoom.setMaxParticipants(1000); // Large limit for public rooms
         }
-        
+
         ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
-        
+
         // Add creator as first participant
         addParticipant(savedChatRoom.getId(), request.getCreatedBy());
-        
+
         logger.info("Chat room created: {}", savedChatRoom.getId());
         return chatRoomMapper.toChatRoomResponse(savedChatRoom);
     }
@@ -82,42 +82,42 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ChatRoomResponse joinChatRoom(JoinChatRoomRequest request) {
         logger.info("User {} joining chat room: {}", request.getUserId(), request.getRoomId());
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(request.getRoomId());
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + request.getRoomId());
         }
-        
+
         ChatRoom chatRoom = chatRoomOpt.get();
-        
+
         // Check if room is active
         if (!chatRoom.getIsActive()) {
             throw new UnauthorizedChatAccessException("Chat room is not active");
         }
-        
+
         // Check if user can join
         if (!canUserJoinRoom(chatRoom, request.getUserId())) {
             throw new UnauthorizedChatAccessException("User cannot join this chat room");
         }
-        
+
         // Check participant limit
         if (chatRoom.getCurrentParticipants() >= chatRoom.getMaxParticipants()) {
             throw new UnauthorizedChatAccessException("Chat room is full");
         }
-        
+
         // Add participant
         addParticipant(chatRoom.getId(), request.getUserId());
-        
+
         // Update room stats
         chatRoom.setCurrentParticipants(chatRoom.getCurrentParticipants() + 1);
-        chatRoom.setLastActivityAt(LocalDateTime.now());
+        chatRoom.setLastMessageAt(LocalDateTime.now());
         chatRoom.setUpdatedAt(LocalDateTime.now());
         chatRoomRepository.save(chatRoom);
-        
+
         // Notify other participants
-        messageBroker.broadcastToRoom(request.getRoomId(), "USER_JOINED", 
+        messageBroker.broadcastToRoom(request.getRoomId(), "USER_JOINED",
                 "User " + request.getUserId() + " joined the room");
-        
+
         logger.info("User {} joined chat room: {}", request.getUserId(), request.getRoomId());
         return chatRoomMapper.toChatRoomResponse(chatRoom);
     }
@@ -125,27 +125,27 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void leaveChatRoom(String roomId, Long userId) {
         logger.info("User {} leaving chat room: {}", userId, roomId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + roomId);
         }
-        
+
         ChatRoom chatRoom = chatRoomOpt.get();
-        
+
         // Remove participant
         removeParticipant(chatRoom.getId(), userId);
-        
+
         // Update room stats
         chatRoom.setCurrentParticipants(Math.max(0, chatRoom.getCurrentParticipants() - 1));
-        chatRoom.setLastActivityAt(LocalDateTime.now());
+        chatRoom.setLastMessageAt(LocalDateTime.now());
         chatRoom.setUpdatedAt(LocalDateTime.now());
         chatRoomRepository.save(chatRoom);
-        
+
         // Notify other participants
-        messageBroker.broadcastToRoom(roomId, "USER_LEFT", 
+        messageBroker.broadcastToRoom(roomId, "USER_LEFT",
                 "User " + userId + " left the room");
-        
+
         logger.info("User {} left chat room: {}", userId, roomId);
     }
 
@@ -153,12 +153,12 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public ChatRoomResponse getChatRoom(String roomId) {
         logger.debug("Getting chat room: {}", roomId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + roomId);
         }
-        
+
         return chatRoomMapper.toChatRoomResponse(chatRoomOpt.get());
     }
 
@@ -166,10 +166,10 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public Page<ChatRoomResponse> getUserChatRooms(Long userId, Pageable pageable) {
         logger.debug("Getting chat rooms for user: {}", userId);
-        
-        Page<ChatRoom> chatRooms = chatRoomRepository.findByParticipantsContainingOrderByLastActivityAtDesc(
+
+        Page<ChatRoom> chatRooms = chatRoomRepository.findByMembersContainingOrderByLastMessageAtDesc(
                 userId, pageable);
-        
+
         return chatRooms.map(chatRoomMapper::toChatRoomResponse);
     }
 
@@ -177,10 +177,10 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public Page<ChatRoomResponse> getPublicChatRooms(Pageable pageable) {
         logger.debug("Getting public chat rooms");
-        
+
         Page<ChatRoom> publicRooms = chatRoomRepository.findByTypeAndIsActiveTrueOrderByCurrentParticipantsDesc(
                 ChatRoomType.PUBLIC, pageable);
-        
+
         return publicRooms.map(chatRoomMapper::toChatRoomResponse);
     }
 
@@ -188,12 +188,12 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public List<Long> getChatRoomParticipants(String roomId) {
         logger.debug("Getting participants for chat room: {}", roomId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + roomId);
         }
-        
+
         return chatRoomRepository.findParticipantsByRoomId(roomId);
     }
 
@@ -201,26 +201,26 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public boolean isUserInChatRoom(String roomId, Long userId) {
         logger.debug("Checking if user {} is in chat room: {}", userId, roomId);
-        
+
         return chatRoomRepository.isUserParticipant(roomId, userId);
     }
 
     @Override
     public ChatRoomResponse updateChatRoom(String roomId, Long userId, CreateChatRoomRequest request) {
         logger.info("Updating chat room: {} by user: {}", roomId, userId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + roomId);
         }
-        
+
         ChatRoom chatRoom = chatRoomOpt.get();
-        
+
         // Check if user has permission to update (creator or admin)
         if (!chatRoom.getCreatedBy().equals(userId) && !isUserAdmin(chatRoom, userId)) {
             throw new UnauthorizedChatAccessException("User not authorized to update this chat room");
         }
-        
+
         // Update room details
         if (request.getName() != null) {
             chatRoom.setName(request.getName());
@@ -231,15 +231,15 @@ public class ChatServiceImpl implements ChatService {
         if (request.getMaxParticipants() != null) {
             chatRoom.setMaxParticipants(request.getMaxParticipants());
         }
-        
+
         chatRoom.setUpdatedAt(LocalDateTime.now());
-        
+
         ChatRoom savedChatRoom = chatRoomRepository.save(chatRoom);
-        
+
         // Notify participants of update
-        messageBroker.broadcastToRoom(roomId, "ROOM_UPDATED", 
+        messageBroker.broadcastToRoom(roomId, "ROOM_UPDATED",
                 "Chat room has been updated");
-        
+
         logger.info("Chat room updated: {}", roomId);
         return chatRoomMapper.toChatRoomResponse(savedChatRoom);
     }
@@ -247,31 +247,31 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void deleteChatRoom(String roomId, Long userId) {
         logger.info("Deleting chat room: {} by user: {}", roomId, userId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isEmpty()) {
             throw new ChatRoomNotFoundException("Chat room not found: " + roomId);
         }
-        
+
         ChatRoom chatRoom = chatRoomOpt.get();
-        
+
         // Check if user has permission to delete (creator only)
         if (!chatRoom.getCreatedBy().equals(userId)) {
             throw new UnauthorizedChatAccessException("Only room creator can delete the chat room");
         }
-        
+
         // Notify all participants before deletion
-        messageBroker.broadcastToRoom(roomId, "ROOM_DELETED", 
+        messageBroker.broadcastToRoom(roomId, "ROOM_DELETED",
                 "Chat room has been deleted");
-        
+
         // Mark as inactive instead of hard delete
         chatRoom.setIsActive(false);
         chatRoom.setUpdatedAt(LocalDateTime.now());
         chatRoomRepository.save(chatRoom);
-        
+
         // Remove all participants
         removeAllParticipants(chatRoom.getId());
-        
+
         logger.info("Chat room deleted: {}", roomId);
     }
 
@@ -285,17 +285,17 @@ public class ChatServiceImpl implements ChatService {
     @Transactional(readOnly = true)
     public long getActiveChatRoomCount() {
         LocalDateTime recentActivity = LocalDateTime.now().minusHours(1);
-        return chatRoomRepository.countByIsActiveTrueAndLastActivityAtAfter(recentActivity);
+        return chatRoomRepository.countByIsActiveTrueAndLastMessageAtAfter(recentActivity);
     }
 
     @Override
     public void updateChatRoomActivity(String roomId) {
         logger.debug("Updating activity for chat room: {}", roomId);
-        
+
         Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findByRoomId(roomId);
         if (chatRoomOpt.isPresent()) {
             ChatRoom chatRoom = chatRoomOpt.get();
-            chatRoom.setLastActivityAt(LocalDateTime.now());
+            chatRoom.setLastMessageAt(LocalDateTime.now());
             chatRoom.setUpdatedAt(LocalDateTime.now());
             chatRoomRepository.save(chatRoom);
         }
@@ -304,9 +304,9 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void cleanupInactiveChatRooms(LocalDateTime cutoffDate) {
         logger.info("Cleaning up inactive chat rooms older than: {}", cutoffDate);
-        
-        List<ChatRoom> inactiveRooms = chatRoomRepository.findByLastActivityAtBeforeAndIsActiveTrue(cutoffDate);
-        
+
+        List<ChatRoom> inactiveRooms = chatRoomRepository.findByLastMessageAtBeforeAndIsActiveTrue(cutoffDate);
+
         for (ChatRoom room : inactiveRooms) {
             if (room.getCurrentParticipants() == 0) {
                 room.setIsActive(false);
@@ -315,7 +315,7 @@ public class ChatServiceImpl implements ChatService {
                 logger.debug("Deactivated inactive chat room: {}", room.getRoomId());
             }
         }
-        
+
         logger.info("Cleaned up {} inactive chat rooms", inactiveRooms.size());
     }
 
@@ -328,17 +328,17 @@ public class ChatServiceImpl implements ChatService {
         if (chatRoom.getType() == ChatRoomType.PUBLIC) {
             return true;
         }
-        
+
         // Private rooms - only invited users
         if (chatRoom.getType() == ChatRoomType.PRIVATE) {
             return isUserInvited(chatRoom, userId);
         }
-        
+
         // Group rooms - invited users or open groups
         if (chatRoom.getType() == ChatRoomType.GROUP) {
             return isUserInvited(chatRoom, userId) || !chatRoom.getIsPrivate();
         }
-        
+
         return false;
     }
 

@@ -3,92 +3,89 @@ package com.raved.social.dto.response;
 import java.time.LocalDateTime;
 
 /**
- * Response DTO for Like entity
+ * DTO for Like responses
+ * Updated for MongoDB compatibility with String IDs
  */
 public class LikeResponse {
-
-    private Long id;
-    private Long userId;
-    private String username;
-    private String userFullName;
-    private String userProfilePictureUrl;
-    private Long entityId;
-    private String entityType; // "post" or "comment"
+    private String id;
+    private String userId;
+    private String targetId;
+    private String targetType;
     private LocalDateTime createdAt;
-
-    // Constructors
+    
+    // Additional fields for responses
+    private String userName;
+    private String userAvatar;
+    
+    // Default constructor
     public LikeResponse() {
     }
-
-    public LikeResponse(Long userId, String username, Long entityId, String entityType) {
+    
+    // Constructor with all fields
+    public LikeResponse(String id, String userId, String targetId, String targetType, LocalDateTime createdAt, String userName, String userAvatar) {
+        this.id = id;
         this.userId = userId;
-        this.username = username;
-        this.entityId = entityId;
-        this.entityType = entityType;
+        this.targetId = targetId;
+        this.targetType = targetType;
+        this.createdAt = createdAt;
+        this.userName = userName;
+        this.userAvatar = userAvatar;
     }
 
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    public String getUsername() {
-        return username;
+    public String getTargetId() {
+        return targetId;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setTargetId(String targetId) {
+        this.targetId = targetId;
     }
-
-    public String getUserFullName() {
-        return userFullName;
+    
+    public String getTargetType() {
+        return targetType;
     }
-
-    public void setUserFullName(String userFullName) {
-        this.userFullName = userFullName;
+    
+    public void setTargetType(String targetType) {
+        this.targetType = targetType;
     }
-
-    public String getUserProfilePictureUrl() {
-        return userProfilePictureUrl;
-    }
-
-    public void setUserProfilePictureUrl(String userProfilePictureUrl) {
-        this.userProfilePictureUrl = userProfilePictureUrl;
-    }
-
-    public Long getEntityId() {
-        return entityId;
-    }
-
-    public void setEntityId(Long entityId) {
-        this.entityId = entityId;
-    }
-
-    public String getEntityType() {
-        return entityType;
-    }
-
-    public void setEntityType(String entityType) {
-        this.entityType = entityType;
-    }
-
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
+    
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public String getUserName() {
+        return userName;
+    }
+    
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+    
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+    
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
     }
 }

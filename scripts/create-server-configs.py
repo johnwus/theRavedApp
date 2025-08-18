@@ -321,10 +321,13 @@ def create_missing_pom_files():
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     
-    <parent>
+          <parent>
         <groupId>com.raved</groupId>
         <artifactId>raved-parent</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     
@@ -357,10 +360,13 @@ def create_missing_pom_files():
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     
-    <parent>
+          <parent>
         <groupId>com.raved</groupId>
         <artifactId>raved-parent</artifactId>
         <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     

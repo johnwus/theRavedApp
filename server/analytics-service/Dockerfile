@@ -1,11 +1,12 @@
-# Multi-stage build for analytics-service
+# Multi-stage build for analytics-service with monorepo parent
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 
-WORKDIR /app
-COPY pom.xml .
-COPY src src
+WORKDIR /build
+# Copy entire server monorepo to satisfy aggregator modules
+COPY server server
 
-RUN mvn clean package -DskipTests
+# Build only this module and its deps
+RUN mvn -f server/pom.xml -pl analytics-service -am clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 
@@ -16,11 +17,11 @@ RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /build/server/analytics-service/target/*.jar app.jar
 
 RUN mkdir -p logs && chown -R appuser:appgroup /app
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8087
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

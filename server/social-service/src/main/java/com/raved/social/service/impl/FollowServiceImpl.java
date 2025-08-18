@@ -9,6 +9,7 @@ import com.raved.social.mapper.FollowMapper;
 import com.raved.social.model.Follow;
 import com.raved.social.repository.FollowRepository;
 import com.raved.social.service.FollowService;
+import com.raved.social.util.MongoIdConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +67,7 @@ public class FollowServiceImpl implements FollowService {
     public void unfollowUser(Long followerId, Long followingId) {
         logger.info("User {} unfollowing user {}", followerId, followingId);
         
-        Optional<Follow> followOpt = followRepository.findByFollowerIdAndFollowingId(followerId, followingId);
+        Optional<Follow> followOpt = followRepository.findByFollowerIdAndFollowingId(MongoIdConverter.toStringId(followerId), MongoIdConverter.toStringId(followingId));
         if (followOpt.isPresent()) {
             followRepository.delete(followOpt.get());
             logger.info("Follow relationship removed successfully");
@@ -78,15 +79,15 @@ public class FollowServiceImpl implements FollowService {
     @Override
     @Transactional(readOnly = true)
     public boolean isFollowing(Long followerId, Long followingId) {
-        return followRepository.existsByFollowerIdAndFollowingId(followerId, followingId);
+        return followRepository.existsByFollowerIdAndFollowingId(MongoIdConverter.toStringId(followerId), MongoIdConverter.toStringId(followingId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<FollowResponse> getFollowers(Long userId, Pageable pageable) {
         logger.debug("Getting followers for user: {}", userId);
-        
-        Page<Follow> followers = followRepository.findByFollowingIdOrderByCreatedAtDesc(userId, pageable);
+
+        Page<Follow> followers = followRepository.findByFollowingIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return followers.map(followMapper::toFollowResponse);
     }
 
@@ -94,8 +95,8 @@ public class FollowServiceImpl implements FollowService {
     @Transactional(readOnly = true)
     public Page<FollowResponse> getFollowing(Long userId, Pageable pageable) {
         logger.debug("Getting following for user: {}", userId);
-        
-        Page<Follow> following = followRepository.findByFollowerIdOrderByCreatedAtDesc(userId, pageable);
+
+        Page<Follow> following = followRepository.findByFollowerIdOrderByCreatedAtDesc(MongoIdConverter.toStringId(userId), pageable);
         return following.map(followMapper::toFollowResponse);
     }
 
@@ -103,15 +104,15 @@ public class FollowServiceImpl implements FollowService {
     @Transactional(readOnly = true)
     public UserFollowStatsResponse getFollowStats(Long userId) {
         logger.debug("Getting follow stats for user: {}", userId);
-        
-        long followersCount = followRepository.countByFollowingId(userId);
-        long followingCount = followRepository.countByFollowerId(userId);
-        
+
+        long followersCount = followRepository.countByFollowingId(MongoIdConverter.toStringId(userId));
+        long followingCount = followRepository.countByFollowerId(MongoIdConverter.toStringId(userId));
+
         UserFollowStatsResponse stats = new UserFollowStatsResponse();
         stats.setUserId(userId);
-        stats.setFollowersCount(followersCount);
-        stats.setFollowingCount(followingCount);
-        
+        stats.setFollowersCount((int) followersCount);
+        stats.setFollowingCount((int) followingCount);
+
         return stats;
     }
 
@@ -119,8 +120,9 @@ public class FollowServiceImpl implements FollowService {
     @Transactional(readOnly = true)
     public List<FollowResponse> getMutualFollowers(Long userId1, Long userId2) {
         logger.debug("Getting mutual followers between users: {} and {}", userId1, userId2);
-        
-        List<Follow> mutualFollows = followRepository.findMutualFollowers(userId1, userId2);
+
+        List<Follow> mutualFollows = followRepository.findMutualFollows(MongoIdConverter.toStringId(userId1), MongoIdConverter.toStringId(userId2));
+
         return mutualFollows.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
@@ -130,10 +132,9 @@ public class FollowServiceImpl implements FollowService {
     @Transactional(readOnly = true)
     public List<FollowResponse> getSuggestedFollows(Long userId, int limit) {
         logger.debug("Getting suggested follows for user: {} with limit: {}", userId, limit);
-        
-        // Simple suggestion algorithm: users followed by people you follow
-        List<Follow> suggestions = followRepository.findSuggestedFollows(userId, limit);
-        return suggestions.stream()
+
+        List<Follow> suggestedFollows = followRepository.findSuggestedFollows(MongoIdConverter.toStringId(userId), limit);
+        return suggestedFollows.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
     }
@@ -142,58 +143,10 @@ public class FollowServiceImpl implements FollowService {
     @Transactional(readOnly = true)
     public List<FollowResponse> getRecentFollowers(Long userId, int limit) {
         logger.debug("Getting recent followers for user: {} with limit: {}", userId, limit);
-        
-        List<Follow> recentFollowers = followRepository.findRecentFollowers(userId, limit);
+
+        List<Follow> recentFollowers = followRepository.findRecentFollowers(MongoIdConverter.toStringId(userId), limit);
         return recentFollowers.stream()
                 .map(followMapper::toFollowResponse)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public void blockUser(Long blockerId, Long blockedId) {
-        logger.info("User {} blocking user {}", blockerId, blockedId);
-        
-        // Remove existing follow relationships
-        followRepository.deleteByFollowerIdAndFollowingId(blockerId, blockedId);
-        followRepository.deleteByFollowerIdAndFollowingId(blockedId, blockerId);
-        
-        // Create block relationship (could be a separate Block entity)
-        // For now, we'll use a special Follow record with a flag
-        Follow block = new Follow();
-        block.setFollowerId(blockerId);
-        block.setFollowingId(blockedId);
-        block.setIsBlocked(true);
-        block.setCreatedAt(LocalDateTime.now());
-        
-        followRepository.save(block);
-        logger.info("User blocked successfully");
-    }
-
-    @Override
-    public void unblockUser(Long blockerId, Long blockedId) {
-        logger.info("User {} unblocking user {}", blockerId, blockedId);
-        
-        Optional<Follow> blockOpt = followRepository.findByFollowerIdAndFollowingIdAndIsBlockedTrue(blockerId, blockedId);
-        if (blockOpt.isPresent()) {
-            followRepository.delete(blockOpt.get());
-            logger.info("User unblocked successfully");
-        } else {
-            logger.warn("Block relationship not found for blocker {} and blocked {}", blockerId, blockedId);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isBlocked(Long blockerId, Long blockedId) {
-        return followRepository.existsByFollowerIdAndFollowingIdAndIsBlockedTrue(blockerId, blockedId);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<FollowResponse> getBlockedUsers(Long userId, Pageable pageable) {
-        logger.debug("Getting blocked users for user: {}", userId);
-        
-        Page<Follow> blockedUsers = followRepository.findByFollowerIdAndIsBlockedTrueOrderByCreatedAtDesc(userId, pageable);
-        return blockedUsers.map(followMapper::toFollowResponse);
     }
 }

@@ -21,24 +21,12 @@ public class OrderMapper {
         OrderResponse response = new OrderResponse();
         response.setId(order.getId());
         response.setOrderNumber(order.getOrderNumber());
-        response.setBuyerId(order.getBuyerId());
-        response.setSellerId(order.getSellerId());
-        response.setProductId(order.getProductId());
-        response.setQuantity(order.getQuantity());
-        response.setUnitPrice(order.getUnitPrice());
+        response.setBuyerId(order.getUserId());
         response.setTotalAmount(order.getTotalAmount());
         response.setShippingAddress(order.getShippingAddress());
-        response.setPaymentMethodId(order.getPaymentMethodId());
-        response.setStatus(order.getStatus() != null ? order.getStatus().name() : null);
-        response.setNotes(order.getNotes());
-        response.setCancellationReason(order.getCancellationReason());
-        response.setRefundReason(order.getRefundReason());
+        response.setOrderNotes(order.getNotes());
         response.setCreatedAt(order.getCreatedAt());
         response.setUpdatedAt(order.getUpdatedAt());
-        response.setConfirmedAt(order.getConfirmedAt());
-        response.setShippedAt(order.getShippedAt());
-        response.setDeliveredAt(order.getDeliveredAt());
-        response.setCancelledAt(order.getCancelledAt());
 
         return response;
     }
@@ -49,11 +37,8 @@ public class OrderMapper {
         }
 
         Order order = new Order();
-        order.setBuyerId(request.getBuyerId());
+        order.setUserId(request.getBuyerId());
         order.setSellerId(request.getSellerId());
-        order.setProductId(request.getProductId());
-        order.setQuantity(request.getQuantity());
-        order.setUnitPrice(request.getUnitPrice());
         order.setTotalAmount(request.getTotalAmount());
         order.setShippingAddress(request.getShippingAddress());
         order.setNotes(request.getNotes());

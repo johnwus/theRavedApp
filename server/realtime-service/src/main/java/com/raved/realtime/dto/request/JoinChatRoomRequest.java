@@ -1,44 +1,33 @@
 package com.raved.realtime.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Request DTO for joining a chat room
+ * DTO for joining a chat room
  */
 public class JoinChatRoomRequest {
-
-    @NotNull(message = "Chat room ID is required")
-    private Long chatRoomId;
-
-    private String joinCode; // For private rooms
-
-    // Constructors
-    public JoinChatRoomRequest() {
+    
+    @NotBlank(message = "Room ID is required")
+    private String roomId;
+    
+    @NotNull(message = "User ID is required")
+    private Long userId;
+    
+    // Getters and setters
+    public String getRoomId() {
+        return roomId;
     }
 
-    public JoinChatRoomRequest(Long chatRoomId) {
-        this.chatRoomId = chatRoomId;
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
     }
 
-    public JoinChatRoomRequest(Long chatRoomId, String joinCode) {
-        this.chatRoomId = chatRoomId;
-        this.joinCode = joinCode;
+    public Long getUserId() {
+        return userId;
     }
 
-    // Getters and Setters
-    public Long getChatRoomId() {
-        return chatRoomId;
-    }
-
-    public void setChatRoomId(Long chatRoomId) {
-        this.chatRoomId = chatRoomId;
-    }
-
-    public String getJoinCode() {
-        return joinCode;
-    }
-
-    public void setJoinCode(String joinCode) {
-        this.joinCode = joinCode;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

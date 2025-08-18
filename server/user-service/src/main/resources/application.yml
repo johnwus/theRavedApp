@@ -4,8 +4,15 @@ server:
 spring:
   application:
     name: user-service
+  config:
+    import: optional:configserver:${SPRING_CONFIG_IMPORT_URI:http://localhost:8888}
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 # =============================================================================
 # RAVED CONFIGURATION
@@ -17,17 +24,41 @@ raved:
     environment: ${SPRING_PROFILES_ACTIVE:local}
 
 # =============================================================================
+# RATE LIMIT CONFIGURATION (simple in-memory)
+# =============================================================================
+rate-limit:
+  enabled: ${RATE_LIMIT_ENABLED:true}
+  rules:
+    - path: /api/v1/auth/login
+      method: POST
+      key: ip
+      capacity: 5
+      refillPerMinute: 5
+    - path: /api/v1/auth/send-email-code
+      method: POST
+      key: destination
+      capacity: 3
+      refillPerMinute: 3
+    - path: /api/v1/auth/send-phone-code
+      method: POST
+      key: destination
+      capacity: 3
+      refillPerMinute: 3
+
+# =============================================================================
 # PROFILE-SPECIFIC CONFIGURATIONS
 # =============================================================================
 
 ---
 # LOCAL DEVELOPMENT PROFILE
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   datasource:
-    url: ${USER_SERVICE_DB_URL:jdbc:postgresql://localhost:5432/raved_user_db}
-    username: ${DATABASE_USERNAME:raved_user}
-    password: ${DATABASE_PASSWORD:raved_password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/raved_user_db}
+    username: ${DATABASE_USERNAME:raved_admin}
+    password: ${DATABASE_PASSWORD:theRAVEDapp#123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -50,6 +81,10 @@ spring:
           batch_size: 20
         order_inserts: true
         order_updates: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -59,9 +94,11 @@ spring:
 ---
 # STAGING PROFILE (Neon Cloud)
 spring:
-  profiles: staging
+  config:
+    activate:
+      on-profile: staging
   datasource:
-    url: ${USER_SERVICE_DB_URL}
+    url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -98,9 +135,11 @@ spring:
 ---
 # PRODUCTION PROFILE (Neon Cloud)
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   datasource:
-    url: ${USER_SERVICE_DB_URL}
+    url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}
     password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -151,7 +190,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/
     fetch-registry: true
     register-with-eureka: true
   instance:
@@ -163,7 +202,11 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   endpoint:
     health:
       show-details: always
@@ -173,8 +216,8 @@ logging:
     com.raved.user: DEBUG
     org.springframework.security: DEBUG
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%X{requestId}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] [%X{requestId}] %-5level %logger{36} - %msg%n"
   file:
     name: logs/user-service.log
 
@@ -184,14 +227,9 @@ jwt:
   expiration: 86400000 # 24 hours
   refresh-expiration: 604800000 # 7 days
 
----
-spring:
-  profiles: production
-  datasource:
-    url: ${DATABASE_URL}
-    username: ${DATABASE_USERNAME}
-    password: ${DATABASE_PASSWORD}
-
-logging:
-  level:
-    com.raved.user: INFO
+# Kafka topics (env-overridable)
+kafka:
+  topics:
+    user-events: ${KAFKA_TOPIC_USER_EVENTS:user.events}
+    user-created: ${KAFKA_TOPIC_USER_CREATED:user.created}
+    user-updated: ${KAFKA_TOPIC_USER_UPDATED:user.updated}

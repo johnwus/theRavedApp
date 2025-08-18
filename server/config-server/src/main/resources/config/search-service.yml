@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: search-service
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true
+      cluster-name: ${ELASTICSEARCH_CLUSTER_NAME:raved-cluster}
+      cluster-nodes: ${ELASTICSEARCH_CLUSTER_NODES:localhost:9200}
+      username: ${ELASTICSEARCH_USERNAME:}
+      password: ${ELASTICSEARCH_PASSWORD:}
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: search-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+server:
+  port: 8088
+
+# Search Configuration
+search:
+  index:
+    user: raved-users
+    content: raved-content
+    event: raved-events
+    product: raved-products
+    group: raved-groups
+  indexing:
+    batch-size: 100
+    refresh-interval: 1s
+    auto-refresh: true
+  query:
+    max-results: 1000
+    default-size: 20
+    max-size: 100
+    timeout: 30s
+  relevance:
+    boost:
+      title: 3.0
+      content: 2.0
+      tags: 1.5
+      description: 1.0
+    fuzzy:
+      enabled: true
+      max-edits: 2
+      min-length: 3
+  suggestions:
+    enabled: true
+    max-suggestions: 5
+    min-word-length: 3
+
+# Elasticsearch Configuration
+elasticsearch:
+  connection:
+    connect-timeout: 5000ms
+    read-timeout: 30000ms
+    retry-on-conflict: 3
+  index:
+    shards: 3
+    replicas: 1
+    refresh-interval: 1s
+  bulk:
+    max-size: 100MB
+    max-actions: 1000
+    flush-interval: 5s
+
+# Caching Configuration
+cache:
+  search-results:
+    ttl: 300s # 5 minutes
+    max-size: 10000
+  suggestions:
+    ttl: 600s # 10 minutes
+    max-size: 5000
+  index-metadata:
+    ttl: 3600s # 1 hour
+    max-size: 1000
