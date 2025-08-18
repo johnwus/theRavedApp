@@ -34,7 +34,14 @@
     <dependency>
       <groupId>com.raved</groupId>
       <artifactId>raved-common</artifactId>
-            </dependency>
+    </dependency>
+
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
