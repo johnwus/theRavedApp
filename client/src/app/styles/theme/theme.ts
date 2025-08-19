@@ -1,8 +1,8 @@
-import { colors } from './colors'
-import { spacing } from './spacing'
-import { shadows } from './shadows'
-import { typographyStyles } from './typography'
-import type { Theme } from './types'
+import { colors } from "./colors"
+import { shadows } from "./shadows"
+import { spacing } from "./spacing"
+import type { Theme } from "./types"
+import { typographyStyles } from "./typography"
 
 export const lightTheme: Theme = {
   colors: {

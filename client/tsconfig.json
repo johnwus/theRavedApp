@@ -51,7 +51,6 @@
 //   ]
 // }
 
-
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
@@ -85,7 +84,7 @@
     "baseUrl": "./src/app",
     "paths": {
       "@/*": ["*"],
-      "@config/*":["config/*"],
+      "@config/*": ["config/*"],
       "@components/*": ["components/*"],
       "@screens/*": ["screens/*"],
       "@navigation/*": ["navigation/*"],

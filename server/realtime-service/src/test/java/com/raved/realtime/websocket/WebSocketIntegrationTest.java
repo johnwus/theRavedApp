@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(com.raved.realtime.config.TestSecurityConfig.class)
 class WebSocketIntegrationTest {
 
     @LocalServerPort
@@ -29,11 +30,9 @@ class WebSocketIntegrationTest {
 
     @Test
     void connectToStompEndpoint_succeeds() throws Exception {
-        List<Transport> transports = List.of(new WebSocketTransport(new StandardWebSocketClient()));
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
 
-        String url = "http://localhost:" + port + "/api/v1/realtime/connect";
+        String url = "ws://localhost:" + port + "/api/v1/realtime/connect/websocket";
         CompletableFuture<StompSession> future = new CompletableFuture<>();
 
         stompClient.connect(url, new StompSessionHandlerAdapter() {

@@ -7,6 +7,9 @@ spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:local}
 
+# Spring Boot 3+ uses 'spring.config.activate.on-profile' for profile-specific blocks
+# Converted below profile markers accordingly
+
 # =============================================================================
 # RAVED CONFIGURATION
 # =============================================================================
@@ -23,7 +26,9 @@ raved:
 ---
 # LOCAL DEVELOPMENT PROFILE
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   data:
     mongodb:
       uri: ${SOCIAL_SERVICE_MONGODB_URI:mongodb://raved_admin:theRAVEDapp#123@localhost:27017/raved_social?authSource=admin}
@@ -43,7 +48,9 @@ spring:
 ---
 # STAGING PROFILE (MongoDB Cloud)
 spring:
-  profiles: staging
+  config:
+    activate:
+      on-profile: staging
   data:
     mongodb:
       uri: ${SOCIAL_SERVICE_MONGODB_URI}
@@ -63,7 +70,9 @@ spring:
 ---
 # PRODUCTION PROFILE (MongoDB Cloud)
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   data:
     mongodb:
       uri: ${SOCIAL_SERVICE_MONGODB_URI}

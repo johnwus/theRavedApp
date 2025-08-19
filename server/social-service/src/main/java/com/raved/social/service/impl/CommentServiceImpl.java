@@ -110,7 +110,10 @@ public class CommentServiceImpl implements CommentService {
         // Note: This method doesn't have userId parameter, so we can't check authorization
         // In a real implementation, you'd want to get the current user from security context
 
-        commentRepository.softDeleteById(MongoIdConverter.toStringId(id));
+        // Soft delete: set isDeleted=true and update updatedAt
+        comment.setIsDeleted(true);
+        comment.setUpdatedAt(LocalDateTime.now());
+        commentRepository.save(comment);
         logger.info("Comment deleted successfully with ID: {}", id);
     }
 

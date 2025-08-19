@@ -24,7 +24,7 @@ public class ActivityController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<Page<ActivityResponse>> getUserActivity(@PathVariable String userId, Pageable pageable) {
-        return ResponseEntity.ok(activityService.getActivityForUser(userId, pageable));
+    public ResponseEntity<Page<ActivityResponse>> getUserActivity(@PathVariable Long userId, Pageable pageable) {
+        return ResponseEntity.ok(activityService.getUserActivities(userId, pageable));
     }
 }

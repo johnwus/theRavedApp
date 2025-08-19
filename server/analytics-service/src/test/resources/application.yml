@@ -1,0 +1,25 @@
+eureka:
+  client:
+    enabled: false
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  data:
+    elasticsearch:
+      client:
+        reactive:
+          endpoints: localhost:9200
+      repositories:
+        enabled: false
+  kafka:
+    listener:
+      auto-startup: false
+    consumer:
+      group-id: test-analytics
+
+logging:
+  level:
+    root: WARN
+    com.raved: INFO
+

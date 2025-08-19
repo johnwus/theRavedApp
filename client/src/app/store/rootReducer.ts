@@ -1,13 +1,13 @@
-import { combineReducers } from '@reduxjs/toolkit';
+import { combineReducers } from "@reduxjs/toolkit"
 
-import { baseApi } from './api/baseApi';
-import authSlice from './slices/authSlice';
-import userSlice from './slices/userSlice';
-import postsSlice from './slices/postsSlice';
-import socialSlice from './slices/socialSlice';
-import chatSlice from './slices/chatSlice';
-import ecommerceSlice from './slices/ecommerceSlice';
-import uiSlice from './slices/uiSlice';
+import { baseApi } from "./api/baseApi"
+import authSlice from "./slices/authSlice"
+import chatSlice from "./slices/chatSlice"
+import ecommerceSlice from "./slices/ecommerceSlice"
+import postsSlice from "./slices/postsSlice"
+import socialSlice from "./slices/socialSlice"
+import uiSlice from "./slices/uiSlice"
+import userSlice from "./slices/userSlice"
 
 const rootReducer = combineReducers({
   // API slice
@@ -21,6 +21,6 @@ const rootReducer = combineReducers({
   chat: chatSlice,
   ecommerce: ecommerceSlice,
   ui: uiSlice,
-});
+})
 
-export default rootReducer;
+export default rootReducer

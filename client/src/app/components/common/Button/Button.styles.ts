@@ -1,46 +1,46 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native"
 
 export const buttonStyles = StyleSheet.create({
   button: {
+    alignItems: "center",
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
+    flexDirection: "row",
+    justifyContent: "center",
   },
-  button_small: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    minHeight: 36,
-  },
-  button_medium: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    minHeight: 44,
-  },
-  button_large: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    minHeight: 52,
+  buttonContent: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   buttonFullWidth: {
-    width: '100%',
+    width: "100%",
   },
   buttonText: {
-    fontFamily: 'Inter-Medium',
-    textAlign: 'center',
-  },
-  buttonText_small: {
-    fontSize: 14,
-  },
-  buttonText_medium: {
-    fontSize: 16,
+    fontFamily: "Inter-Medium",
+    textAlign: "center",
   },
   buttonText_large: {
     fontSize: 18,
   },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  buttonText_medium: {
+    fontSize: 16,
   },
-});
+  buttonText_small: {
+    fontSize: 14,
+  },
+  button_large: {
+    minHeight: 52,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+  },
+  button_medium: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  button_small: {
+    minHeight: 36,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+})

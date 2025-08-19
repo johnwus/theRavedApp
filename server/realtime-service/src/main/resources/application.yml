@@ -4,8 +4,9 @@ server:
 spring:
   application:
     name: realtime-service
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+  config:
+    activate:
+      on-profile: ${SPRING_PROFILES_ACTIVE:local}
 
 # =============================================================================
 # RAVED CONFIGURATION
@@ -28,7 +29,9 @@ jwt:
 ---
 # LOCAL DEVELOPMENT PROFILE
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/raved_realtime_db}
     username: ${DATABASE_USERNAME:raved_admin}
@@ -64,7 +67,9 @@ spring:
 ---
 # STAGING PROFILE (Neon Cloud)
 spring:
-  profiles: staging
+  config:
+    activate:
+      on-profile: staging
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}
@@ -103,7 +108,9 @@ spring:
 ---
 # PRODUCTION PROFILE (Neon Cloud)
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${DATABASE_USERNAME}

@@ -1,39 +1,36 @@
-import * as SecureStore from 'expo-secure-store';
+import { MMKV } from "react-native-mmkv"
 
-const ACCESS_TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
+const storage = new MMKV()
+const ACCESS_TOKEN_KEY = "access_token"
+const REFRESH_TOKEN_KEY = "refresh_token"
 
 class TokenService {
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
-    await Promise.all([
-      SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
-      SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
-    ]);
+    storage.set(ACCESS_TOKEN_KEY, accessToken)
+    storage.set(REFRESH_TOKEN_KEY, refreshToken)
   }
 
   async getAccessToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+    return storage.getString(ACCESS_TOKEN_KEY) ?? null
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+    return storage.getString(REFRESH_TOKEN_KEY) ?? null
   }
 
   async setAccessToken(accessToken: string): Promise<void> {
-    await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
+    storage.set(ACCESS_TOKEN_KEY, accessToken)
   }
 
   async clearTokens(): Promise<void> {
-    await Promise.all([
-      SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
-      SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
-    ]);
+    storage.delete(ACCESS_TOKEN_KEY)
+    storage.delete(REFRESH_TOKEN_KEY)
   }
 
   async hasValidTokens(): Promise<boolean> {
-    const accessToken = await this.getAccessToken();
-    return !!accessToken;
+    const accessToken = await this.getAccessToken()
+    return !!accessToken
   }
 }
 
-export const tokenService = new TokenService();
+export const tokenService = new TokenService()

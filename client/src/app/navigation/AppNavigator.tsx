@@ -8,8 +8,6 @@
 // import { navigationRef, useBackButtonHandler } from "./navigationUtilities"
 // import {MainNavigator, MainTabParamList} from "./MainNavigator"
 
-
-
 // export type AppStackParamList = {
 //   Main: NavigatorScreenParams<MainTabParamList>
 //   Auth:undefined
@@ -62,43 +60,43 @@
 //   )
 // }
 
+import React, { useEffect } from "react"
+import { useColorScheme } from "react-native"
+import { StatusBar } from "expo-status-bar"
+import Loading from "@components/common/Loading/Loading"
+import { NavigationContainer } from "@react-navigation/native"
+import { createStackNavigator } from "@react-navigation/stack"
 
-import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { StatusBar } from 'expo-status-bar';
-import { useAppSelector, useAppDispatch } from '../store';
-import { setDarkMode } from '../store/slices/uiSlice';
-import { useColorScheme } from 'react-native';
+import { lightTheme, darkTheme } from "@styles/theme"
 
-import AuthNavigator from './AuthNavigator';
-import MainNavigator from './MainNavigator';
-import LoadingScreen from '@components/common/Loading/LoadingScreen';
-import { lightTheme, darkTheme } from '@styles/theme';
+import { useAppSelector, useAppDispatch } from "@store/middleware"
+import { AuthNavigator } from "./AuthNavigator"
+import MainNavigator from "./MainNavigator"
+import { setDarkMode } from "@store/slices/uiSlice"
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator()
 
 const AppNavigator: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated, isLoading } = useAppSelector(state => state.auth);
-  const { theme, isDarkMode } = useAppSelector(state => state.ui);
-  const systemColorScheme = useColorScheme();
+  const dispatch = useAppDispatch()
+  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth)
+  const { theme, isDarkMode } = useAppSelector((state) => state.ui)
+  const systemColorScheme = useColorScheme()
 
   useEffect(() => {
-    if (theme === 'auto') {
-      dispatch(setDarkMode(systemColorScheme === 'dark'));
+    if (theme === "auto") {
+      dispatch(setDarkMode(systemColorScheme === "dark"))
     } else {
-      dispatch(setDarkMode(theme === 'dark'));
+      dispatch(setDarkMode(theme === "dark"))
     }
-  }, [theme, systemColorScheme, dispatch]);
+  }, [theme, systemColorScheme, dispatch])
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return <Loading />
   }
 
   return (
     <NavigationContainer theme={isDarkMode ? darkTheme : lightTheme}>
-      <StatusBar style={isDarkMode ? 'light' : 'dark'} />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isAuthenticated ? (
           <Stack.Screen name="Main" component={MainNavigator} />
@@ -107,7 +105,7 @@ const AppNavigator: React.FC = () => {
         )}
       </Stack.Navigator>
     </NavigationContainer>
-  );
-};
+  )
+}
 
-export default AppNavigator;
+export default AppNavigator

@@ -8,38 +8,31 @@ const config = getDefaultConfig(__dirname)
 // Add support for additional file extensions
 config.resolver.assetExts.push(
   // Fonts
-  'ttf',
-  'otf',
-  'woff',
-  'woff2',
+  "ttf",
+  "otf",
+  "woff",
+  "woff2",
   // Images
-  'svg',
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'webp',
+  "svg",
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
   // Audio/Video
-  'mp3',
-  'mp4',
-  'mov',
-  'avi',
-  'webm',
+  "mp3",
+  "mp4",
+  "mov",
+  "avi",
+  "webm",
   // Documents
-  'pdf',
-  'doc',
-  'docx'
-);
+  "pdf",
+  "doc",
+  "docx",
+)
 
 // Add support for TypeScript and JSX
-config.resolver.sourceExts.push(
-  'ts',
-  'tsx',
-  'js',
-  'jsx',
-  'json',
-  'mjs'
-);
+config.resolver.sourceExts.push("ts", "tsx", "js", "jsx", "json", "mjs")
 
 config.transformer.getTransformOptions = async () => ({
   transform: {
@@ -50,19 +43,19 @@ config.transformer.getTransformOptions = async () => ({
     // And here: https://github.com/expo/expo/issues/27279#issuecomment-1971610698
     inlineRequires: true,
     ...config.transformer,
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
+    babelTransformerPath: require.resolve("react-native-svg-transformer"),
     unstable_allowRequireContext: true,
   },
 })
 
 // Exclude SVG from asset extensions since we're using svg-transformer
-config.resolver.assetExts = config.resolver.assetExts.filter(ext => ext !== 'svg');
+config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== "svg")
 
 // Add SVG to source extensions
-config.resolver.sourceExts.push('svg');
+config.resolver.sourceExts.push("svg")
 
 // Configure for better caching (simplified)
-config.cacheVersion = '1.0';
+config.cacheVersion = "1.0"
 
 // This is a temporary fix that helps fixing an issue with axios/apisauce.
 // See the following issues in Github for more details:

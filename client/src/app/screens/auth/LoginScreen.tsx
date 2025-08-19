@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react"
 import {
   View,
   Text,
@@ -7,47 +7,50 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
-} from 'react-native';
-import { useDispatch } from 'react-redux';
-import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+} from "react-native"
+import { useDispatch } from "react-redux"
+
+import { loginStart, loginSuccess, loginFailure } from "../../store/slices/authSlice"
 
 export const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const dispatch = useDispatch();
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const dispatch = useDispatch()
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+      Alert.alert("Error", "Please fill in all fields")
+      return
     }
 
-    dispatch(loginStart());
+    dispatch(loginStart())
 
     try {
       // TODO: Replace with actual API call
-      const response = await fetch('http://localhost:8080/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
 
       if (response.ok) {
-        dispatch(loginSuccess({
-          token: data.token,
-          user: data.user,
-        }));
+        dispatch(
+          loginSuccess({
+            token: data.token,
+            user: data.user,
+          }),
+        )
       } else {
-        dispatch(loginFailure(data.message || 'Login failed'));
+        dispatch(loginFailure(data.message || "Login failed"))
       }
     } catch (error) {
-      dispatch(loginFailure('Network error. Please try again.'));
+      dispatch(loginFailure("Network error. Please try again."))
     }
-  };
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,68 +81,66 @@ export const LoginScreen: React.FC = () => {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.registerLink}>
-            <Text style={styles.registerLinkText}>
-              Don't have an account? Sign Up
-            </Text>
+            <Text style={styles.registerLinkText}>Don't have an account? Sign Up</Text>
           </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#fff",
     flex: 1,
-    backgroundColor: '#fff',
   },
   content: {
     flex: 1,
+    justifyContent: "center",
     padding: 20,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 40,
-    color: '#666',
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
+    backgroundColor: "#f9f9f9",
+    borderColor: "#ddd",
     borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
+    borderWidth: 1,
     fontSize: 16,
-    backgroundColor: '#f9f9f9',
+    marginBottom: 15,
+    padding: 15,
   },
   loginButton: {
-    backgroundColor: '#007AFF',
+    alignItems: "center",
+    backgroundColor: "#007AFF",
     borderRadius: 8,
-    padding: 15,
-    alignItems: 'center',
     marginBottom: 15,
+    padding: 15,
   },
   loginButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   registerLink: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   registerLinkText: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 14,
   },
-});
+  subtitle: {
+    color: "#666",
+    fontSize: 16,
+    marginBottom: 40,
+    textAlign: "center",
+  },
+  title: {
+    color: "#333",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+})

@@ -1,37 +1,35 @@
-import React from 'react'
-import { View, Text, ScrollView, StyleSheet } from 'react-native'
-import { ThemeToggle } from './ThemeToggle'
-import { useAppTheme } from './context'
+import React from "react"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
+
+import { useAppTheme } from "./context"
+import { ThemeToggle } from "./ThemeToggle"
 
 export const ThemeDemo: React.FC = () => {
-  const { theme:{colors, spacing, shadows, typography, isDark},  setThemeContextOverride :setTheme } = useAppTheme()
+  const {
+    theme: { colors, spacing, shadows, typography, isDark },
+    setThemeContextOverride: setTheme,
+  } = useAppTheme()
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          Theme System Demo
-        </Text>
+        <Text style={[styles.title, { color: colors.text }]}>Theme System Demo</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-          Current theme: {isDark ? 'Dark' : 'Light'}
+          Current theme: {isDark ? "Dark" : "Light"}
         </Text>
       </View>
 
       {/* Theme Toggle */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Theme Toggle
-        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Theme Toggle</Text>
         <ThemeToggle size="medium" showLabels={true} />
       </View>
 
       {/* Colors Demo */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Color Palette
-        </Text>
-        
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Color Palette</Text>
+
         <View style={styles.colorGrid}>
           <ColorSwatch label="Primary" color={colors.primary} />
           <ColorSwatch label="Secondary" color={colors.secondary} />
@@ -53,19 +51,11 @@ export const ThemeDemo: React.FC = () => {
 
       {/* Typography Demo */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Typography
-        </Text>
-        
-        <Text style={[typography.h1, { color: colors.text }]}>
-          Heading 1
-        </Text>
-        <Text style={[typography.h2, { color: colors.text }]}>
-          Heading 2
-        </Text>
-        <Text style={[typography.h3, { color: colors.text }]}>
-          Heading 3
-        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Typography</Text>
+
+        <Text style={[typography.h1, { color: colors.text }]}>Heading 1</Text>
+        <Text style={[typography.h2, { color: colors.text }]}>Heading 2</Text>
+        <Text style={[typography.h3, { color: colors.text }]}>Heading 3</Text>
         <Text style={[typography.body, { color: colors.text }]}>
           Body text with regular weight and good readability.
         </Text>
@@ -79,10 +69,8 @@ export const ThemeDemo: React.FC = () => {
 
       {/* Spacing Demo */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Spacing Scale
-        </Text>
-        
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Spacing Scale</Text>
+
         <View style={styles.spacingDemo}>
           <View style={[styles.spacingItem, { marginBottom: spacing.xs }]}>
             <Text style={[styles.spacingLabel, { color: colors.textSecondary }]}>
@@ -114,10 +102,8 @@ export const ThemeDemo: React.FC = () => {
 
       {/* Shadows Demo */}
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          Shadow Presets
-        </Text>
-        
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Shadow Presets</Text>
+
         <View style={styles.shadowDemo}>
           <View style={[styles.shadowItem, shadows.xs, { backgroundColor: colors.surface }]}>
             <Text style={[styles.shadowLabel, { color: colors.text }]}>xs shadow</Text>
@@ -142,83 +128,83 @@ const ColorSwatch: React.FC<{ label: string; color: string }> = ({ label, color 
 )
 
 const styles = StyleSheet.create({
+  colorBox: {
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 40,
+    marginBottom: 8,
+    width: 40,
+  },
+  colorGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  colorLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  colorSwatch: {
+    alignItems: "center",
+    marginBottom: 16,
+    width: "30%",
+  },
   container: {
     flex: 1,
   },
   header: {
-    padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: '400',
+    padding: 20,
   },
   section: {
-    padding: 20,
-    marginBottom: 16,
     borderRadius: 12,
+    marginBottom: 16,
     marginHorizontal: 16,
+    padding: 20,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  colorSwatch: {
-    alignItems: 'center',
-    marginBottom: 16,
-    width: '30%',
-  },
-  colorBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  colorLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  spacingDemo: {
-    marginBottom: 20,
-  },
-  spacingItem: {
-    height: 20,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 4,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  spacingLabel: {
-    fontSize: 12,
-    fontWeight: '500',
   },
   shadowDemo: {
     gap: 16,
   },
   shadowItem: {
-    padding: 20,
+    alignItems: "center",
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
+    padding: 20,
   },
   shadowLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
+  },
+  spacingDemo: {
+    marginBottom: 20,
+  },
+  spacingItem: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 4,
+    height: 20,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  spacingLabel: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "400",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 8,
   },
 })

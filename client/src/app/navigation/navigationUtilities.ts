@@ -5,15 +5,15 @@ import {
   PartialState,
   createNavigationContainerRef,
 } from "@react-navigation/native"
+import Config from "@config/index"
+import type { PersistNavigationConfig } from "@config/config.base"
+import { storageUtils } from "@utils/storage"
+import { useIsMounted } from "@utils/useIsMounted"
 
-import Config from "src/app/config"
-import type { PersistNavigationConfig } from "src/app/config/config.base"
-import * as storage from "src/app/utils/storage"
-import { useIsMounted } from "src/app/utils/useIsMounted"
+type AppStackParamList = any
+type NavigationProps = any
 
-import type { AppStackParamList, NavigationProps } from "./AppNavigator"
-
-type Storage = typeof storage
+type Storage = typeof storageUtils
 
 /**
  * Reference to the root App Navigator.
@@ -115,7 +115,7 @@ function navigationRestoredDefaultState(persistNavigation: PersistNavigationConf
  * @param {string} persistenceKey - The key to use for storing the navigation state.
  * @returns {object} - The navigation state and persistence functions.
  */
-export function useNavigationPersistence(storage: Storage, persistenceKey: string) {
+export function useNavigationPersistence(_storage: Storage, persistenceKey: string) {
   const [initialNavigationState, setInitialNavigationState] =
     useState<NavigationProps["initialState"]>()
   const isMounted = useIsMounted()
@@ -141,7 +141,7 @@ export function useNavigationPersistence(storage: Storage, persistenceKey: strin
       routeNameRef.current = currentRouteName as keyof AppStackParamList
 
       // Persist state to storage
-      storage.save(persistenceKey, state)
+      storageUtils.setObject(persistenceKey, state)
     }
   }
 
@@ -151,7 +151,7 @@ export function useNavigationPersistence(storage: Storage, persistenceKey: strin
 
       // Only restore the state if app has not started from a deep link
       if (!initialUrl) {
-        const state = (await storage.load(persistenceKey)) as NavigationProps["initialState"] | null
+        const state = storageUtils.getObject<NavigationProps["initialState"]>(persistenceKey)
         if (state) setInitialNavigationState(state)
       }
     } finally {

@@ -1,6 +1,5 @@
 import { ErrorInfo } from "react"
-import { ScrollView, Text,TextStyle, View, ViewStyle, Button } from "react-native"
-
+import { ScrollView, Text, TextStyle, View, ViewStyle, Button } from "react-native"
 import { useAppTheme } from "src/app/theme/context"
 import type { ThemedStyle } from "src/app/theme/types"
 
@@ -18,9 +17,7 @@ export interface ErrorDetailsProps {
 export function ErrorDetails(props: ErrorDetailsProps) {
   const { themed } = useAppTheme()
   return (
-    <View
-      style={themed($contentContainer)}
-    >
+    <View style={themed($contentContainer)}>
       <View style={$topSection}>
         <Text style={themed($heading)}>Error Details</Text>
         <Text>Error: {props.error.message}</Text>
@@ -36,10 +33,7 @@ export function ErrorDetails(props: ErrorDetailsProps) {
       </ScrollView>
 
       <View style={themed($resetButton)}>
-      <Button
-          onPress={props.onReset}
-          title="Reset"
-        />
+        <Button onPress={props.onReset} title="Reset" />
       </View>
     </View>
   )

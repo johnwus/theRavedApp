@@ -9,6 +9,3 @@ onFlowStart:
 - waitForAnimationToEnd
 - assertVisible:
     text: "Home"
-
-
-

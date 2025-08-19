@@ -18,12 +18,14 @@ public class FollowController {
 
     @PostMapping
     public ResponseEntity<FollowResponse> follow(@Valid @RequestBody FollowRequest request) {
-        return ResponseEntity.ok(followService.follow(request));
+        return ResponseEntity.ok(followService.followUser(request));
     }
 
     @DeleteMapping
     public ResponseEntity<Void> unfollow(@Valid @RequestBody FollowRequest request) {
-        followService.unfollow(request);
+        Long followerId = com.raved.social.util.MongoIdConverter.toLongId(request.getFollowerId());
+        Long followingId = com.raved.social.util.MongoIdConverter.toLongId(request.getFollowingId());
+        followService.unfollowUser(followerId, followingId);
         return ResponseEntity.noContent().build();
     }
 }

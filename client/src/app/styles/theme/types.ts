@@ -1,9 +1,10 @@
-import { StyleProp, TextStyle, ViewStyle, ImageStyle } from 'react-native'
-import { colors  } from "./colors"
-import { spacing  } from "./spacing"
+import { StyleProp, TextStyle, ViewStyle, ImageStyle } from "react-native"
 
-export type ThemeContextModeT = 'light' | 'dark' | undefined
-export type ImmutableThemeContextModeT = 'light' | 'dark'
+import { colors } from "./colors"
+import { spacing } from "./spacing"
+
+export type ThemeContextModeT = "light" | "dark" | undefined
+export type ImmutableThemeContextModeT = "light" | "dark"
 
 export type Colors = typeof colors
 export type Spacing = typeof spacing

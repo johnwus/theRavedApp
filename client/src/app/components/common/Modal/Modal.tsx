@@ -1,16 +1,16 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface ModalProps {
   // Define props here
 }
 
-const Modal: React.FC<ModalProps> = (props) => {
+const Modal: React.FC<ModalProps> = () => {
   return (
     <View>
       <Text>Modal Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal

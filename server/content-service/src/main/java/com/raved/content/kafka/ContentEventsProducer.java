@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -19,7 +19,7 @@ public class ContentEventsProducer {
     private static final Logger logger = LoggerFactory.getLogger(ContentEventsProducer.class);
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaOperations<String, String> kafkaOperations;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -36,7 +36,7 @@ public class ContentEventsProducer {
             event.put("timestamp", System.currentTimeMillis());
 
             String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(contentCreatedTopic, post.getId(), payload)
+            kafkaOperations.send(contentCreatedTopic, post.getId(), payload)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
                         logger.info("Published content created event: {} to topic: {}", post.getId(), contentCreatedTopic);

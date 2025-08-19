@@ -35,7 +35,17 @@ class WebSocketAuthorizationNegativeTest {
         accessor.setSessionId("s1");
         var msg = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
-        var result = interceptor.preSend(msg, channel -> true);
+        var result = interceptor.preSend(msg, new org.springframework.messaging.MessageChannel() {
+            @Override
+            public boolean send(org.springframework.messaging.Message<?> m) {
+                return true;
+            }
+
+            @Override
+            public boolean send(org.springframework.messaging.Message<?> m, long timeout) {
+                return true;
+            }
+        });
         assertThat(result).isNull();
     }
 
@@ -67,7 +77,17 @@ class WebSocketAuthorizationNegativeTest {
         accessor.setNativeHeader("authorization", "Bearer sometoken");
         var msg = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
 
-        var result = interceptor.preSend(msg, channel -> true);
+        var result = interceptor.preSend(msg, new org.springframework.messaging.MessageChannel() {
+            @Override
+            public boolean send(org.springframework.messaging.Message<?> m) {
+                return true;
+            }
+
+            @Override
+            public boolean send(org.springframework.messaging.Message<?> m, long timeout) {
+                return true;
+            }
+        });
         assertThat(result).isNull();
     }
 

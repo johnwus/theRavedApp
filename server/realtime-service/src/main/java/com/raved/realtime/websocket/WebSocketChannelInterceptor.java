@@ -21,20 +21,30 @@ public class WebSocketChannelInterceptor implements ChannelInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(WebSocketChannelInterceptor.class);
 
-    @Autowired private WebSocketSessionManager sessionManager;
-    @Autowired private JwtAuthenticator jwtAuthenticator;
-    @Autowired private ChatService chatService;
-    @Autowired private RateLimiterService rateLimiter;
-    @Autowired(required = false) private MeterRegistry meterRegistry;
+    @Autowired
+    private WebSocketSessionManager sessionManager;
+    @Autowired
+    private JwtAuthenticator jwtAuthenticator;
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private ChatService chatService;
+    @Autowired
+    private RateLimiterService rateLimiter;
+    @Autowired(required = false)
+    private MeterRegistry meterRegistry;
 
     @Value("${websocket.ratelimit.window-seconds:${websocket.ratelimit.window.seconds:5}}")
-    private int rlWindowSeconds;
+    private int rlWindowSeconds = 5;
     @Value("${websocket.ratelimit.send-limit:${websocket.ratelimit.send.limit:30}}")
-    private int rlSendLimit;
+    private int rlSendLimit = 30;
     @Value("${websocket.ratelimit.subscribe-limit:${websocket.ratelimit.subscribe.limit:30}}")
-    private int rlSubscribeLimit;
+    private int rlSubscribeLimit = 30;
     @Value("${websocket.ratelimit.enabled:true}")
-    private boolean rlEnabled;
+    private boolean rlEnabled = true;
+    @Value("${websocket.auth.required:true}")
+    private boolean authRequired = true;
+    @Value("${websocket.membership.check:true}")
+    private boolean membershipCheck = true;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -45,7 +55,21 @@ public class WebSocketChannelInterceptor implements ChannelInterceptor {
             String bearer = accessor.getFirstNativeHeader("authorization");
             String token = (bearer != null && bearer.toLowerCase().startsWith("bearer ")) ? bearer.substring(7) : bearer;
 
+            // Always try to register session when a token or x-user-id is provided, regardless of command
+            String headerUser = accessor.getFirstNativeHeader("x-user-id");
+            if (sessionId != null) {
+                if (token != null) {
+                    var optUser = jwtAuthenticator.authenticate(token);
+                    if (optUser.isPresent()) {
+                        sessionManager.registerSession(sessionId, optUser.get().getUserId());
+                    }
+                } else if (headerUser != null) {
+                    sessionManager.registerSession(sessionId, headerUser);
+                }
+            }
+
             if (command == StompCommand.SEND || command == StompCommand.SUBSCRIBE) {
+                // Enforce JWT for message actions
                 if (token == null) {
                     recordBlocked("missing_jwt", command, null);
                     logger.debug("Blocking {} due to missing JWT", command);
@@ -67,16 +91,18 @@ public class WebSocketChannelInterceptor implements ChannelInterceptor {
                 if (roomId != null) {
                     try {
                         Long uid = Long.valueOf(userId);
-                        boolean inRoom = chatService.isUserInChatRoom(roomId, uid);
+                        boolean inRoom = true;
+                        if (membershipCheck) {
+                            inRoom = chatService.isUserInChatRoom(roomId, uid);
+                        }
                         if (!inRoom) {
                             recordBlocked("not_in_room", command, roomId);
-                            logger.debug("Blocking {} tbo {} for user {} not " +
-                                    "in room", command, destination, userId);
+                            logger.debug("Blocking {} tbo {} for user {} not in room", command, destination, userId);
                             return null;
                         }
                         if (rlEnabled) {
                             int limit = (command == StompCommand.SEND) ? rlSendLimit : rlSubscribeLimit;
-                            String rlKey = "ws:rl:" + roomId + ":" + userId + ":" + command.name().toLowerCase();
+                            String rlKey = "ws:rl:" + roomId + ":" + userId + ":" + (command != null ? command.name().toLowerCase() : "unknown");
                             if (!rateLimiter.allow(rlKey, limit, rlWindowSeconds)) {
                                 recordBlocked("rate_limited", command, roomId);
                                 logger.debug("Rate limit exceeded for user {} on {} {}", userId, command, destination);
@@ -111,7 +137,9 @@ public class WebSocketChannelInterceptor implements ChannelInterceptor {
     }
 
     private String extractRoomId(String destination, StompCommand command) {
-        if (destination == null) return null;
+        if (destination == null) {
+            return null;
+        }
         if (command == StompCommand.SEND && destination.startsWith("/app/chat/rooms/") && destination.endsWith("/send")) {
             return destination.substring("/app/chat/rooms/".length(), destination.length() - "/send".length());
         }
@@ -121,7 +149,11 @@ public class WebSocketChannelInterceptor implements ChannelInterceptor {
         return null;
     }
 
-    @Override public void postSend(Message<?> message, MessageChannel channel, boolean sent) { }
-    @Override public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, @Nullable Exception ex) { }
-}
+    @Override
+    public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
+    }
 
+    @Override
+    public void afterSendCompletion(Message<?> message, MessageChannel channel, boolean sent, @Nullable Exception ex) {
+    }
+}

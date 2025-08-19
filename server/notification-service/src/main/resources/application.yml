@@ -38,7 +38,9 @@ raved:
 ---
 # LOCAL DEVELOPMENT PROFILE
 spring:
-  profiles: local
+  config:
+    activate:
+      on-profile: local
   # MongoDB Configuration (Primary)
   data:
     mongodb:
@@ -152,7 +154,9 @@ app:
 ---
 # STAGING PROFILE (MongoDB primary)
 spring:
-  profiles: staging
+  config:
+    activate:
+      on-profile: staging
   data:
     mongodb:
       uri: ${MONGODB_URI:mongodb://mongodb:27017/raved_notifications}
@@ -172,7 +176,9 @@ spring:
 
 # PRODUCTION PROFILE
 spring:
-  profiles: production
+  config:
+    activate:
+      on-profile: production
   # MongoDB Configuration (Primary)
   data:
     mongodb:

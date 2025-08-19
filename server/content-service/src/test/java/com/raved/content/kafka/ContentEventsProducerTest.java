@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.CompletableFuture;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 class ContentEventsProducerTest {
 
     @Mock
-    KafkaTemplate<String, String> kafkaTemplate;
+    KafkaOperations<String, String> kafkaOperations;
 
     @Mock
     ObjectMapper objectMapper;
@@ -42,14 +42,14 @@ class ContentEventsProducerTest {
         post.setUserId("user-456");
 
         when(objectMapper.writeValueAsString(any())).thenReturn("{}");
-        when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+        when(kafkaOperations.send(anyString(), anyString(), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
         // Act
         producer.publishPostCreated(post);
 
         // Assert
-        verify(kafkaTemplate, times(1))
+        verify(kafkaOperations, times(1))
                 .send(eq("content.created"), eq("post-123"), anyString());
     }
 }

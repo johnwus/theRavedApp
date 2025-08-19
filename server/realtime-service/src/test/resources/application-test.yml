@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  flyway:
+    enabled: false
+  main:
+    allow-bean-definition-overriding: true
+
+# Disable service discovery during tests
+eureka:
+  client:
+    enabled: false
+  instance:
+    instance-enabled-onit: false
+
+# Disable AMQP across tests
+spring.rabbitmq.listener.simple.auto-startup: false
+
+# Websocket defaults for tests
+websocket:
+  interceptor:
+    enabled: false
+  ratelimit:
+    enabled: false
+  auth:
+    required: false
+  membership:
+    check: false
+
+logging:
+  level:
+    root: WARN
+    com.raved: DEBUG
+

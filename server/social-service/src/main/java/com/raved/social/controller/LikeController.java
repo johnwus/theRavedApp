@@ -23,7 +23,9 @@ public class LikeController {
 
     @DeleteMapping
     public ResponseEntity<Void> unlikeTarget(@Valid @RequestBody LikeRequest request) {
-        likeService.unlikeTarget(request);
+        Long userId = com.raved.social.util.MongoIdConverter.toLongId(request.getUserId());
+        Long targetId = com.raved.social.util.MongoIdConverter.toLongId(request.getTargetId());
+        likeService.unlikeTarget(userId, targetId, request.getTargetType());
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface DrawerContentProps {
   // Define props here
@@ -10,7 +10,7 @@ const DrawerContent: React.FC<DrawerContentProps> = (props) => {
     <View>
       <Text>DrawerContent Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default DrawerContent;
+export default DrawerContent
