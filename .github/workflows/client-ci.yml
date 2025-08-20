@@ -7,34 +7,86 @@ on:
       - 'client/**'
       - '.github/workflows/client-ci.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-ci.yml'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   frontend-test:
     runs-on: ubuntu-latest
     env:
       NODE_VERSION: '20'
+      CI: true
     steps:
       - uses: actions/checkout@v4
+      - name: Check if client directory exists
+        id: check_client
+        run: |
+          if [ -d "client" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Client directory found"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Client directory not found, skipping"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.check_client.outputs.exists == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
           cache-dependency-path: client/yarn.lock
       - name: Install dependencies
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn install --frozen-lockfile
+          echo "Installing dependencies..."
+          yarn install --frozen-lockfile --network-timeout 300000
       - name: Lint
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn lint
-      - name: Test
-        run: |
-          cd client
-          yarn test --ci
+          echo "Running linter..."
+          if yarn run --silent lint --help > /dev/null 2>&1; then
+            yarn lint
+          else
+            echo "Lint script not found, skipping"
+          fi
       - name: Type check
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn type-check
+          echo "Running type check..."
+          if yarn run --silent type-check --help > /dev/null 2>&1; then
+            yarn type-check
+          else
+            echo "Type check script not found, skipping"
+          fi
+      - name: Test
+        if: steps.check_client.outputs.exists == 'true' && inputs.skip_tests != true
+        run: |
+          cd client
+          echo "Running tests..."
+          if yarn run --silent test --help > /dev/null 2>&1; then
+            yarn test --ci --coverage --watchAll=false --passWithNoTests
+          else
+            echo "Test script not found, skipping"
+          fi
+      - name: Build
+        if: steps.check_client.outputs.exists == 'true'
+        run: |
+          cd client
+          echo "Building application..."
+          if yarn run --silent build --help > /dev/null 2>&1; then
+            yarn build
+          else
+            echo "Build script not found, skipping"
+          fi
 

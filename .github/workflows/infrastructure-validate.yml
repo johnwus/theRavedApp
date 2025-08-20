@@ -2,7 +2,7 @@ name: Infrastructure Validate
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
     paths:
       - 'infrastructure/helm/**'
       - '.github/workflows/infrastructure-validate.yml'

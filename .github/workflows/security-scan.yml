@@ -7,7 +7,17 @@ on:
       - '**/*'
       - '.github/workflows/security-scan.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to run'
+        required: false
+        type: choice
+        options:
+          - 'fs'
+          - 'image'
+        default: 'fs'
 
 jobs:
   security-scan:

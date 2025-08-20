@@ -2,7 +2,7 @@ name: Services Unit Tests
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
     paths:
       - 'server/social-service/**'
       - 'server/realtime-service/**'
@@ -11,6 +11,19 @@ on:
       - 'server/notification-service/**'
       - '.github/workflows/services-unit-tests.yml'
   workflow_dispatch:
+    inputs:
+      service:
+        description: 'Specific service to test (optional)'
+        required: false
+        type: choice
+        options:
+          - 'all'
+          - 'social-service'
+          - 'realtime-service'
+          - 'content-service'
+          - 'analytics-service'
+          - 'notification-service'
+        default: 'all'
 
 jobs:
   test-services:
