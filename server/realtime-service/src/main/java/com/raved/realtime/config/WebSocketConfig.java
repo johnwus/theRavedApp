@@ -18,7 +18,14 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${websocket.allowed-origins:${websocket.allowed.origins:*}}")
     private String allowedOrigins;
 
+    @Value("${websocket.interceptor.enabled:true}")
+    private boolean interceptorEnabled;
+
+    @Value("${websocket.sockjs.enabled:true}")
+    private boolean sockJsEnabled;
+
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private WebSocketChannelInterceptor webSocketChannelInterceptor;
 
     @Override
@@ -29,13 +36,19 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        // Direct WebSocket endpoint
         registry.addEndpoint("/api/v1/realtime/connect")
-                .setAllowedOrigins(allowedOrigins)
+                .setAllowedOriginPatterns(allowedOrigins);
+        // SockJS fallback endpoint
+        registry.addEndpoint("/api/v1/realtime/connect")
+                .setAllowedOriginPatterns(allowedOrigins)
                 .withSockJS();
     }
 
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(webSocketChannelInterceptor);
+        if (interceptorEnabled) {
+            registration.interceptors(webSocketChannelInterceptor);
+        }
     }
 }

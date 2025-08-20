@@ -102,6 +102,7 @@
     "@types/react-native-video": "^5.0.20",
     "add": "^2.0.6",
     "babel-jest": "^29.2.1",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^8.57.0",
     "eslint-config-expo": "~9.2.0",
     "eslint-config-prettier": "^9.1.0",

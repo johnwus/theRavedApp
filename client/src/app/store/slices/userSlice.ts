@@ -1,74 +1,74 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 interface UserProfile {
-  id: string;
-  studentId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  profileImage?: string;
-  coverImage?: string;
-  bio?: string;
+  id: string
+  studentId: string
+  firstName: string
+  lastName: string
+  email: string
+  profileImage?: string
+  coverImage?: string
+  bio?: string
   faculty: {
-    id: string;
-    name: string;
-    university: string;
-  };
-  year?: string;
-  course?: string;
-  location?: string;
-  website?: string;
-  joinedAt: string;
-  isFollowing?: boolean;
-  isFollowedBy?: boolean;
+    id: string
+    name: string
+    university: string
+  }
+  year?: string
+  course?: string
+  location?: string
+  website?: string
+  joinedAt: string
+  isFollowing?: boolean
+  isFollowedBy?: boolean
   stats: {
-    postsCount: number;
-    followersCount: number;
-    followingCount: number;
-    likesReceived: number;
-  };
+    postsCount: number
+    followersCount: number
+    followingCount: number
+    likesReceived: number
+  }
 }
 
 interface UserSettings {
   privacy: {
-    profileVisibility: 'public' | 'faculty' | 'private';
-    allowDirectMessages: 'everyone' | 'following' | 'none';
-    showOnlineStatus: boolean;
-    showLastSeen: boolean;
-  };
+    profileVisibility: "public" | "faculty" | "private"
+    allowDirectMessages: "everyone" | "following" | "none"
+    showOnlineStatus: boolean
+    showLastSeen: boolean
+  }
   notifications: {
-    pushEnabled: boolean;
-    emailEnabled: boolean;
-    likes: boolean;
-    comments: boolean;
-    follows: boolean;
-    messages: boolean;
-    mentions: boolean;
-    facultyUpdates: boolean;
-  };
+    pushEnabled: boolean
+    emailEnabled: boolean
+    likes: boolean
+    comments: boolean
+    follows: boolean
+    messages: boolean
+    mentions: boolean
+    facultyUpdates: boolean
+  }
   content: {
-    autoPlay: boolean;
-    dataUsage: 'low' | 'medium' | 'high';
-    downloadQuality: 'low' | 'medium' | 'high';
-  };
+    autoPlay: boolean
+    dataUsage: "low" | "medium" | "high"
+    downloadQuality: "low" | "medium" | "high"
+  }
 }
 
 interface UserState {
-  profile: UserProfile | null;
-  settings: UserSettings | null;
-  visitedProfiles: UserProfile[];
-  suggestedUsers: UserProfile[];
-  recentSearches: string[];
-  blockedUsers: string[];
-  mutedUsers: string[];
-  isProfileLoading: boolean;
-  isSettingsLoading: boolean;
+  profile: UserProfile | null
+  settings: UserSettings | null
+  visitedProfiles: UserProfile[]
+  suggestedUsers: UserProfile[]
+  recentSearches: string[]
+  blockedUsers: string[]
+  mutedUsers: string[]
+  isProfileLoading: boolean
+  isSettingsLoading: boolean
 }
 
 const defaultSettings: UserSettings = {
   privacy: {
-    profileVisibility: 'public',
-    allowDirectMessages: 'everyone',
+    profileVisibility: "public",
+    allowDirectMessages: "everyone",
     showOnlineStatus: true,
     showLastSeen: true,
   },
@@ -84,10 +84,10 @@ const defaultSettings: UserSettings = {
   },
   content: {
     autoPlay: true,
-    dataUsage: 'medium',
-    downloadQuality: 'medium',
+    dataUsage: "medium",
+    downloadQuality: "medium",
   },
-};
+}
 
 const initialState: UserState = {
   profile: null,
@@ -99,125 +99,131 @@ const initialState: UserState = {
   mutedUsers: [],
   isProfileLoading: false,
   isSettingsLoading: false,
-};
+}
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
     setProfile: (state, action: PayloadAction<UserProfile>) => {
-      state.profile = action.payload;
-      state.isProfileLoading = false;
+      state.profile = action.payload
+      state.isProfileLoading = false
     },
-    
+
     updateProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
       if (state.profile) {
-        state.profile = { ...state.profile, ...action.payload };
+        state.profile = { ...state.profile, ...action.payload }
       }
     },
-    
-    updateProfileStats: (state, action: PayloadAction<Partial<UserProfile['stats']>>) => {
+
+    updateProfileStats: (state, action: PayloadAction<Partial<UserProfile["stats"]>>) => {
       if (state.profile) {
-        state.profile.stats = { ...state.profile.stats, ...action.payload };
+        state.profile.stats = { ...state.profile.stats, ...action.payload }
       }
     },
-    
+
     setSettings: (state, action: PayloadAction<UserSettings>) => {
-      state.settings = action.payload;
-      state.isSettingsLoading = false;
+      state.settings = action.payload
+      state.isSettingsLoading = false
     },
-    
+
     updateSettings: (state, action: PayloadAction<Partial<UserSettings>>) => {
       if (state.settings) {
-        state.settings = { ...state.settings, ...action.payload };
+        state.settings = { ...state.settings, ...action.payload }
       }
     },
-    
-    updatePrivacySettings: (state, action: PayloadAction<Partial<UserSettings['privacy']>>) => {
+
+    updatePrivacySettings: (state, action: PayloadAction<Partial<UserSettings["privacy"]>>) => {
       if (state.settings) {
-        state.settings.privacy = { ...state.settings.privacy, ...action.payload };
+        state.settings.privacy = { ...state.settings.privacy, ...action.payload }
       }
     },
-    
-    updateNotificationSettings: (state, action: PayloadAction<Partial<UserSettings['notifications']>>) => {
+
+    updateNotificationSettings: (
+      state,
+      action: PayloadAction<Partial<UserSettings["notifications"]>>,
+    ) => {
       if (state.settings) {
-        state.settings.notifications = { ...state.settings.notifications, ...action.payload };
+        state.settings.notifications = { ...state.settings.notifications, ...action.payload }
       }
     },
-    
-    updateContentSettings: (state, action: PayloadAction<Partial<UserSettings['content']>>) => {
+
+    updateContentSettings: (state, action: PayloadAction<Partial<UserSettings["content"]>>) => {
       if (state.settings) {
-        state.settings.content = { ...state.settings.content, ...action.payload };
+        state.settings.content = { ...state.settings.content, ...action.payload }
       }
     },
-    
+
     addVisitedProfile: (state, action: PayloadAction<UserProfile>) => {
-      const exists = state.visitedProfiles.find(p => p.id === action.payload.id);
+      const exists = state.visitedProfiles.find((p) => p.id === action.payload.id)
       if (!exists) {
-        state.visitedProfiles.unshift(action.payload);
+        state.visitedProfiles.unshift(action.payload)
         // Keep only last 10 visited profiles
         if (state.visitedProfiles.length > 10) {
-          state.visitedProfiles = state.visitedProfiles.slice(0, 10);
+          state.visitedProfiles = state.visitedProfiles.slice(0, 10)
         }
       }
     },
-    
+
     setSuggestedUsers: (state, action: PayloadAction<UserProfile[]>) => {
-      state.suggestedUsers = action.payload;
+      state.suggestedUsers = action.payload
     },
-    
+
     addRecentSearch: (state, action: PayloadAction<string>) => {
-      const search = action.payload.trim();
+      const search = action.payload.trim()
       if (search) {
-        state.recentSearches = [search, ...state.recentSearches.filter(s => s !== search)].slice(0, 10);
+        state.recentSearches = [search, ...state.recentSearches.filter((s) => s !== search)].slice(
+          0,
+          10,
+        )
       }
     },
-    
+
     clearRecentSearches: (state) => {
-      state.recentSearches = [];
+      state.recentSearches = []
     },
-    
+
     blockUser: (state, action: PayloadAction<string>) => {
       if (!state.blockedUsers.includes(action.payload)) {
-        state.blockedUsers.push(action.payload);
+        state.blockedUsers.push(action.payload)
       }
     },
-    
+
     unblockUser: (state, action: PayloadAction<string>) => {
-      state.blockedUsers = state.blockedUsers.filter(id => id !== action.payload);
+      state.blockedUsers = state.blockedUsers.filter((id) => id !== action.payload)
     },
-    
+
     muteUser: (state, action: PayloadAction<string>) => {
       if (!state.mutedUsers.includes(action.payload)) {
-        state.mutedUsers.push(action.payload);
+        state.mutedUsers.push(action.payload)
       }
     },
-    
+
     unmuteUser: (state, action: PayloadAction<string>) => {
-      state.mutedUsers = state.mutedUsers.filter(id => id !== action.payload);
+      state.mutedUsers = state.mutedUsers.filter((id) => id !== action.payload)
     },
-    
+
     setProfileLoading: (state, action: PayloadAction<boolean>) => {
-      state.isProfileLoading = action.payload;
+      state.isProfileLoading = action.payload
     },
-    
+
     setSettingsLoading: (state, action: PayloadAction<boolean>) => {
-      state.isSettingsLoading = action.payload;
+      state.isSettingsLoading = action.payload
     },
-    
+
     clearUserData: (state) => {
-      state.profile = null;
-      state.settings = defaultSettings;
-      state.visitedProfiles = [];
-      state.suggestedUsers = [];
-      state.recentSearches = [];
-      state.blockedUsers = [];
-      state.mutedUsers = [];
-      state.isProfileLoading = false;
-      state.isSettingsLoading = false;
+      state.profile = null
+      state.settings = defaultSettings
+      state.visitedProfiles = []
+      state.suggestedUsers = []
+      state.recentSearches = []
+      state.blockedUsers = []
+      state.mutedUsers = []
+      state.isProfileLoading = false
+      state.isSettingsLoading = false
     },
   },
-});
+})
 
 export const {
   setProfile,
@@ -239,6 +245,6 @@ export const {
   setProfileLoading,
   setSettingsLoading,
   clearUserData,
-} = userSlice.actions;
+} = userSlice.actions
 
-export default userSlice.reducer;
+export default userSlice.reducer

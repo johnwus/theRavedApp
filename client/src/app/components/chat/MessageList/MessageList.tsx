@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface MessageListProps {
   // Define props here
@@ -10,7 +10,7 @@ const MessageList: React.FC<MessageListProps> = (props) => {
     <View>
       <Text>MessageList Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default MessageList;
+export default MessageList

@@ -2,15 +2,17 @@ package com.raved.analytics.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
 /**
- * Elasticsearch Configuration for Analytics Service Configures Elasticsearch
- * client and repositories for analytics data
+ * Elasticsearch Configuration for Analytics Service Enables Elasticsearch
+ * client and repositories only when profile "it-es" is active.
  */
 @Configuration
+@Profile("it-es")
 @EnableElasticsearchRepositories(basePackages = "com.raved.analytics.repository.elasticsearch")
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
 

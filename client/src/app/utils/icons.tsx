@@ -1,5 +1,4 @@
-import React from 'react';
-import { Ionicons, MaterialIcons, FontAwesome, AntDesign } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons"
 
 // Icon mapping from lucide-react-native to @expo/vector-icons
 export const Icons = {
@@ -10,7 +9,7 @@ export const Icons = {
   ArrowDownLeft: (props: any) => <Ionicons name="arrow-down" {...props} />,
   ChevronRight: (props: any) => <Ionicons name="chevron-forward" {...props} />,
   ChevronDown: (props: any) => <Ionicons name="chevron-down" {...props} />,
-  
+
   // Actions
   Plus: (props: any) => <Ionicons name="add" {...props} />,
   PlusCircle: (props: any) => <Ionicons name="add-circle" {...props} />,
@@ -25,7 +24,7 @@ export const Icons = {
   Link2: (props: any) => <Ionicons name="link" {...props} />,
   Trash2: (props: any) => <Ionicons name="trash" {...props} />,
   Refresh: (props: any) => <Ionicons name="refresh" {...props} />,
-  
+
   // UI Elements
   User: (props: any) => <Ionicons name="person" {...props} />,
   Settings: (props: any) => <Ionicons name="settings" {...props} />,
@@ -42,7 +41,7 @@ export const Icons = {
   Lock: (props: any) => <Ionicons name="lock-closed" {...props} />,
   Fingerprint: (props: any) => <Ionicons name="finger-print" {...props} />,
   AlertTriangle: (props: any) => <Ionicons name="warning" {...props} />,
-  
+
   // Payment/Finance
   CreditCard: (props: any) => <Ionicons name="card" {...props} />,
   Wallet: (props: any) => <Ionicons name="wallet" {...props} />,
@@ -52,23 +51,23 @@ export const Icons = {
   Banknote: (props: any) => <Ionicons name="cash" {...props} />,
   University: (props: any) => <Ionicons name="business" {...props} />,
   Building2: (props: any) => <Ionicons name="business" {...props} />,
-  
+
   // Shopping
   ShoppingCart: (props: any) => <Ionicons name="cart" {...props} />,
   ShoppingBag: (props: any) => <Ionicons name="bag" {...props} />,
   Package: (props: any) => <Ionicons name="cube" {...props} />,
-  
+
   // Location
   MapPin: (props: any) => <Ionicons name="location" {...props} />,
   Navigation: (props: any) => <Ionicons name="navigate" {...props} />,
   Map: (props: any) => <Ionicons name="map" {...props} />,
-  
+
   // Status
   CheckCircle: (props: any) => <Ionicons name="checkmark-circle" {...props} />,
   XCircle: (props: any) => <Ionicons name="close-circle" {...props} />,
   AlertCircle: (props: any) => <Ionicons name="alert-circle" {...props} />,
   Info: (props: any) => <Ionicons name="information-circle" {...props} />,
-  
+
   // Technology
   Smartphone: (props: any) => <Ionicons name="phone-portrait" {...props} />,
   Camera: (props: any) => <Ionicons name="camera" {...props} />,
@@ -76,7 +75,7 @@ export const Icons = {
   QrCode: (props: any) => <Ionicons name="qr-code" {...props} />,
   Monitor: (props: any) => <Ionicons name="desktop" {...props} />,
   Plug: (props: any) => <Ionicons name="flash" {...props} />,
-  
+
   // Utilities
   TrendingUp: (props: any) => <Ionicons name="trending-up" {...props} />,
   TrendingDown: (props: any) => <Ionicons name="trending-down" {...props} />,
@@ -95,15 +94,15 @@ export const Icons = {
   History: (props: any) => <Ionicons name="time" {...props} />,
   Lightbulb: (props: any) => <Ionicons name="bulb" {...props} />,
   Target: (props: any) => <Ionicons name="locate" {...props} />,
-  
+
   // Food/Utensils
   Utensils: (props: any) => <Ionicons name="restaurant" {...props} />,
   Coffee: (props: any) => <Ionicons name="cafe" {...props} />,
-  
+
   // Business
   Landmark: (props: any) => <Ionicons name="business" {...props} />,
   Shirt: (props: any) => <Ionicons name="shirt" {...props} />,
-  
+
   // Additional icons
   UserPlus: (props: any) => <Ionicons name="person-add" {...props} />,
   Calendar: (props: any) => <Ionicons name="calendar" {...props} />,
@@ -119,11 +118,11 @@ export const Icons = {
   MessageCircle: (props: any) => <Ionicons name="chatbubble" {...props} />,
   Phone: (props: any) => <Ionicons name="call" {...props} />,
   Minus: (props: any) => <Ionicons name="remove" {...props} />,
-  
+
   // Additional missing icons found in codebase
   DollarSign: (props: any) => <Ionicons name="cash" {...props} />,
   ChevronLeft: (props: any) => <Ionicons name="chevron-back" {...props} />,
-  
+
   // Popular icons for future use
   Download: (props: any) => <Ionicons name="download" {...props} />,
   Bookmark: (props: any) => <Ionicons name="bookmark" {...props} />,
@@ -175,9 +174,9 @@ export const Icons = {
   Stopwatch: (props: any) => <Ionicons name="stopwatch" {...props} />,
   Calculator: (props: any) => <Ionicons name="calculator" {...props} />,
   CalculatorOutline: (props: any) => <Ionicons name="calculator-outline" {...props} />,
-  
-  // Default fallback
-  default: (props: any) => <Ionicons name="help-circle" {...props} />
-};
 
-export default Icons; 
+  // Default fallback
+  default: (props: any) => <Ionicons name="help-circle" {...props} />,
+}
+
+export default Icons

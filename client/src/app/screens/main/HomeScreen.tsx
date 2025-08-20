@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React from "react"
+import { View, Text, StyleSheet, SafeAreaView } from "react-native"
 
 export const HomeScreen: React.FC = () => {
   return (
@@ -9,28 +9,28 @@ export const HomeScreen: React.FC = () => {
         <Text style={styles.subtitle}>Welcome to Raved!</Text>
       </View>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#fff",
     flex: 1,
-    backgroundColor: '#fff',
   },
   content: {
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
     padding: 20,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
   subtitle: {
+    color: "#666",
     fontSize: 16,
-    color: '#666',
   },
-});
+  title: {
+    color: "#333",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+})

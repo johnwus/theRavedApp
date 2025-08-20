@@ -43,6 +43,7 @@ public class ChatServiceImpl implements ChatService {
     private ChatRoomMapper chatRoomMapper;
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private MessageService messageService;
 
     @Autowired

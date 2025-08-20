@@ -2,7 +2,7 @@ name: Infrastructure Validate
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
     paths:
       - 'infrastructure/helm/**'
       - '.github/workflows/infrastructure-validate.yml'
@@ -28,6 +28,35 @@ jobs:
           curl -L https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -o yq
           chmod +x yq
           sudo mv yq /usr/local/bin/yq
+      - name: Verify tools
+        run: |
+          helm version
+          helmfile --version
+          yq --version
+      - name: Check helmfile configuration
+        working-directory: infrastructure/helm
+        run: |
+          echo "Checking helmfile.yaml syntax..."
+          if [ -f "helmfile.yaml" ]; then
+            echo "helmfile.yaml found"
+            head -20 helmfile.yaml
+          else
+            echo "helmfile.yaml not found"
+            exit 1
+          fi
+      - name: Sync Helm repositories
+        working-directory: infrastructure/helm
+        run: |
+          echo "Syncing Helm repositories..."
+          helmfile repos || {
+            echo "Failed to sync repositories, trying individual repos..."
+            helm repo add bitnami https://charts.bitnami.com/bitnami || true
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+            helm repo add elastic https://helm.elastic.co || true
+            helm repo add external-secrets https://charts.external-secrets.io || true
+            helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets || true
+            helm repo update || true
+          }
       - name: Template dev
         working-directory: infrastructure/helm
         env:

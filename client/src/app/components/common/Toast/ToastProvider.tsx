@@ -1,31 +1,33 @@
 // frontend/components/ToastProvider.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
-import Toast, { ToastType } from './Toast';
-import { toast, ToastConfig } from '@/utils/toast';
+import React, { useState, useCallback, useEffect } from "react"
+
+import { toast, ToastConfig } from "@/utils/toast"
+
+import Toast, { ToastType } from "./Toast"
 
 interface ToastState {
-  visible: boolean;
-  type: ToastType;
-  title: string;
-  message?: string;
-  duration?: number;
-  hapticEnabled?: boolean;
+  visible: boolean
+  type: ToastType
+  title: string
+  message?: string
+  duration?: number
+  hapticEnabled?: boolean
 }
 
 interface ToastProviderProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export default function ToastProvider({ children }: ToastProviderProps) {
   const [toastState, setToastState] = useState<ToastState>({
     visible: false,
-    type: 'info',
-    title: '',
-    message: '',
+    type: "info",
+    title: "",
+    message: "",
     duration: 4000,
     hapticEnabled: true,
-  });
+  })
 
   const showToast = useCallback((config: ToastConfig) => {
     setToastState({
@@ -35,17 +37,17 @@ export default function ToastProvider({ children }: ToastProviderProps) {
       message: config.message,
       duration: config.duration,
       hapticEnabled: config.hapticEnabled,
-    });
-  }, []);
+    })
+  }, [])
 
   const hideToast = useCallback(() => {
-    setToastState(prev => ({ ...prev, visible: false }));
-  }, []);
+    setToastState((prev) => ({ ...prev, visible: false }))
+  }, [])
 
   useEffect(() => {
-    const unsubscribe = toast.subscribe(showToast);
-    return () => unsubscribe();
-  }, [showToast]);
+    const unsubscribe = toast.subscribe(showToast)
+    return () => unsubscribe()
+  }, [showToast])
 
   return (
     <>
@@ -60,5 +62,5 @@ export default function ToastProvider({ children }: ToastProviderProps) {
         hapticEnabled={toastState.hapticEnabled}
       />
     </>
-  );
+  )
 }

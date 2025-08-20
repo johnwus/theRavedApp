@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: social-service
+  
+  # MongoDB Configuration for Tests (Embedded)
+  data:
+    mongodb:
+      uri: mongodb://localhost:27018/social_test  # Different port for tests
+      auto-index-creation: true
+  
+  # Redis Configuration for Tests (Embedded)
+  redis:
+    host: localhost
+    port: 6371  # Different port to avoid conflicts
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  
+  # Kafka Configuration for Tests (Embedded)
+  kafka:
+    bootstrap-servers: localhost:9094  # Different port for tests
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: social-service-test
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+# Eureka Configuration for Tests (Disabled)
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# Actuator Configuration for Tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration for Tests
+logging:
+  level:
+    com.raved.social: DEBUG
+    org.springframework.data.mongodb: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Test-specific properties
+test:
+  mongodb:
+    embedded: true
+  kafka:
+    embedded: true
+  redis:
+    embedded: true

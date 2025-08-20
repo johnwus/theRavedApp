@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: notification-service
-  profiles:
-    active: test
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
@@ -17,6 +15,10 @@ spring:
       uri: mongodb://localhost:27017/raved_notifications_test
       database: raved_notifications_test
       auto-index-creation: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    listener:
+      auto-startup: false
 
 # Disable other services for testing
 eureka:

@@ -60,11 +60,11 @@ export const ThemeProvider: FC<PropsWithChildren<ThemeProviderProps>> = ({
 
   // Add error handling for theme initialization
   useEffect(() => {
-    console.log('ThemeProvider initialization:', {
+    console.log("ThemeProvider initialization:", {
       systemColorScheme,
       themeScheme,
       initialContext,
-      hasStorage: !!storage
+      hasStorage: !!storage,
     })
   }, [systemColorScheme, themeScheme, initialContext])
 
@@ -101,55 +101,55 @@ export const ThemeProvider: FC<PropsWithChildren<ThemeProviderProps>> = ({
   }, [themeContext])
 
   const theme: Theme = useMemo(() => {
-    let selectedTheme: Theme;
+    let selectedTheme: Theme
     switch (themeContext) {
       case "dark":
-        selectedTheme = darkTheme;
-        break;
+        selectedTheme = darkTheme
+        break
       default:
-        selectedTheme = lightTheme;
-        break;
+        selectedTheme = lightTheme
+        break
     }
-    
+
     // Validate that the theme is properly initialized
     if (!selectedTheme || !selectedTheme.colors || !selectedTheme.colors.background) {
-      console.error('Theme validation failed:', { 
-        selectedTheme, 
-        themeContext, 
+      console.error("Theme validation failed:", {
+        selectedTheme,
+        themeContext,
         hasColors: !!selectedTheme?.colors,
-        hasBackground: !!selectedTheme?.colors?.background 
-      });
-      
+        hasBackground: !!selectedTheme?.colors?.background,
+      })
+
       // Try to use the other theme as fallback
-      const fallbackTheme = themeContext === "dark" ? lightTheme : darkTheme;
+      const fallbackTheme = themeContext === "dark" ? lightTheme : darkTheme
       if (!fallbackTheme || !fallbackTheme.colors || !fallbackTheme.colors.background) {
-        console.error('Fallback theme also failed, creating minimal theme');
+        console.error("Fallback theme also failed, creating minimal theme")
         // Create a minimal theme as last resort
         return {
           colors: {
-            background: '#ffffff',
-            tint: '#007AFF',
-            tintInactive: '#8E8E93',
-            accent3: '#E5E5EA',
-            spacing: { md: 16, xs: 4, xxxs: 2 }
+            background: "#ffffff",
+            tint: "#007AFF",
+            tintInactive: "#8E8E93",
+            accent3: "#E5E5EA",
+            spacing: { md: 16, xs: 4, xxxs: 2 },
           } as any,
           spacing: { md: 16, xs: 4, xxxs: 2 } as any,
           shadows: {} as any,
           typography: {} as any,
           timing: {} as any,
-          isDark: false
-        };
+          isDark: false,
+        }
       }
-      return fallbackTheme;
+      return fallbackTheme
     }
-    
-    return selectedTheme;
+
+    return selectedTheme
   }, [themeContext])
 
   // Debug logging to help identify theme issues
   useEffect(() => {
     if (!theme || !theme.colors || !theme.colors.background) {
-      console.error('Theme initialization issue:', { theme, themeContext })
+      console.error("Theme initialization issue:", { theme, themeContext })
     }
   }, [theme, themeContext])
 
@@ -184,10 +184,10 @@ export const ThemeProvider: FC<PropsWithChildren<ThemeProviderProps>> = ({
   // Debug logging to help identify provider issues
   useEffect(() => {
     if (!value.theme || !value.theme.colors || !value.theme.colors.background) {
-      console.error('ThemeProvider value issue:', { 
-        hasTheme: !!value.theme, 
+      console.error("ThemeProvider value issue:", {
+        hasTheme: !!value.theme,
         hasColors: !!value.theme?.colors,
-        hasBackground: !!value.theme?.colors?.background 
+        hasBackground: !!value.theme?.colors?.background,
       })
     }
   }, [value])
@@ -204,31 +204,31 @@ export const useAppTheme = () => {
     console.error("useAppTheme must be used within an ThemeProvider")
     throw new Error("useAppTheme must be used within an ThemeProvider")
   }
-  
+
   // Debug logging to help identify context issues
   if (!context.theme || !context.theme.colors || !context.theme.colors.background) {
-    console.error('Theme context issue:', { 
-      hasTheme: !!context.theme, 
+    console.error("Theme context issue:", {
+      hasTheme: !!context.theme,
       hasColors: !!context.theme?.colors,
-      hasBackground: !!context.theme?.colors?.background 
+      hasBackground: !!context.theme?.colors?.background,
     })
-    
+
     // Return a fallback context if the theme is invalid
     const fallbackTheme = {
       colors: {
-        background: '#ffffff',
-        tint: '#007AFF',
-        tintInactive: '#8E8E93',
-        accent3: '#E5E5EA',
-        spacing: { md: 16, xs: 4, xxxs: 2 }
+        background: "#ffffff",
+        tint: "#007AFF",
+        tintInactive: "#8E8E93",
+        accent3: "#E5E5EA",
+        spacing: { md: 16, xs: 4, xxxs: 2 },
       } as any,
       spacing: { md: 16, xs: 4, xxxs: 2 } as any,
       shadows: {} as any,
       typography: {} as any,
       timing: {} as any,
-      isDark: false
-    };
-    
+      isDark: false,
+    }
+
     return {
       navigationTheme: NavDefaultTheme,
       setThemeContextOverride: () => {},
@@ -237,6 +237,6 @@ export const useAppTheme = () => {
       themed: (style: any) => style,
     }
   }
-  
+
   return context
 }

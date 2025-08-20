@@ -1,7 +1,7 @@
-import { apiClient } from '../../src/services/api/client';
+import { apiClient } from "../../src/app/services/api/client"
 
 // Mock axios
-jest.mock('axios', () => ({
+jest.mock("axios", () => ({
   create: jest.fn(() => ({
     defaults: {
       headers: {
@@ -21,23 +21,23 @@ jest.mock('axios', () => ({
     put: jest.fn(),
     delete: jest.fn(),
   })),
-}));
+}))
 
-describe('apiClient', () => {
-  it('should be defined', () => {
-    expect(apiClient).toBeDefined();
-  });
+describe("apiClient", () => {
+  it("should be defined", () => {
+    expect(apiClient).toBeDefined()
+  })
 
-  it('should have HTTP methods', () => {
-    expect(apiClient.get).toBeDefined();
-    expect(apiClient.post).toBeDefined();
-    expect(apiClient.put).toBeDefined();
-    expect(apiClient.delete).toBeDefined();
-  });
+  it("should have HTTP methods", () => {
+    expect(apiClient.get).toBeDefined()
+    expect(apiClient.post).toBeDefined()
+    expect(apiClient.put).toBeDefined()
+    expect(apiClient.delete).toBeDefined()
+  })
 
-  it('should have interceptors configured', () => {
-    expect(apiClient.interceptors).toBeDefined();
-    expect(apiClient.interceptors.request).toBeDefined();
-    expect(apiClient.interceptors.response).toBeDefined();
-  });
-});
+  it("should have interceptors configured", () => {
+    expect(apiClient.interceptors).toBeDefined()
+    expect(apiClient.interceptors.request).toBeDefined()
+    expect(apiClient.interceptors.response).toBeDefined()
+  })
+})

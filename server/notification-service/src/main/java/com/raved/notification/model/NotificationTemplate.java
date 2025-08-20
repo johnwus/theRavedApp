@@ -38,7 +38,7 @@ public class NotificationTemplate {
     private String id;
 
     @Field("templateName")
-    @Indexed(unique = true)
+    @Indexed(name = "idx_name_unique", unique = true)
     @NotBlank
     private String templateName;
 

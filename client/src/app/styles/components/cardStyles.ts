@@ -1,4 +1,4 @@
-import type { Theme } from '../theme/types';
+import type { Theme } from "../theme/types"
 
 export const cardStyles = {
   container: (theme: Theme) => ({
@@ -22,12 +22,10 @@ export const cardStyles = {
     rounded: { borderRadius: 16 },
     roundedSmall: { borderRadius: 8 },
     roundedLarge: { borderRadius: 24 },
-    fullWidth: { alignSelf: 'stretch' as const },
+    fullWidth: { alignSelf: "stretch" as const },
     centerContent: {
-      alignItems: 'center' as const,
-      justifyContent: 'center' as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
     },
   },
-};
-
-
+}

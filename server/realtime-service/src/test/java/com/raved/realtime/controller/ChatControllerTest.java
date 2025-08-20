@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ChatController.class)
+@org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 class ChatControllerTest {
 
     @Autowired
@@ -30,7 +31,7 @@ class ChatControllerTest {
 
         mockMvc.perform(post("/api/v1/chat/rooms")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"General\", \"type\":\"PUBLIC\"}"))
+                .content("{\"name\":\"General\", \"type\":\"PUBLIC\", \"createdBy\": 1}"))
                 .andExpect(status().isOk());
     }
 }

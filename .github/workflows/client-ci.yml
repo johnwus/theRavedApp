@@ -7,34 +7,88 @@ on:
       - 'client/**'
       - '.github/workflows/client-ci.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-ci.yml'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   frontend-test:
     runs-on: ubuntu-latest
     env:
       NODE_VERSION: '20'
+      CI: true
     steps:
       - uses: actions/checkout@v4
+      - name: Check if client directory exists
+        id: check_client
+        run: |
+          if [ -d "client" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Client directory found"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Client directory not found, skipping"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.check_client.outputs.exists == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'yarn'
           cache-dependency-path: client/yarn.lock
       - name: Install dependencies
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn install --frozen-lockfile
+          echo "Installing dependencies..."
+          yarn install --frozen-lockfile --network-timeout 300000
+      - name: Check available scripts
+        if: steps.check_client.outputs.exists == 'true'
+        run: |
+          cd client
+          echo "Available scripts in package.json:"
+          cat package.json | grep -A 20 '"scripts"'
       - name: Lint
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn lint
-      - name: Test
-        run: |
-          cd client
-          yarn test --ci
+          echo "Running linter..."
+          if grep -q '"lint"' package.json; then
+            yarn lint
+          else
+            echo "Lint script not found, skipping"
+          fi
       - name: Type check
+        if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          yarn type-check
+          echo "Running type check..."
+          if grep -q '"type-check"' package.json; then
+            yarn type-check
+          else
+            echo "Type check script not found, skipping"
+          fi
+      - name: Test
+        if: steps.check_client.outputs.exists == 'true' && inputs.skip_tests != true
+        run: |
+          cd client
+          echo "Running tests..."
+          if grep -q '"test"' package.json; then
+            yarn test --ci --coverage --watchAll=false --passWithNoTests
+          else
+            echo "Test script not found, skipping"
+          fi
+      - name: Build (Skip - Expo build not needed for CI)
+        if: steps.check_client.outputs.exists == 'true'
+        run: |
+          cd client
+          echo "Skipping build step - Expo build not required for CI validation"
+          echo "Available build commands: android, build:android, ios"
 

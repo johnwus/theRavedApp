@@ -1,16 +1,16 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface MessageBubbleProps {
   // Define props here
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = (props) => {
+const MessageBubble: React.FC<MessageBubbleProps> = () => {
   return (
     <View>
       <Text>MessageBubble Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default MessageBubble;
+export default MessageBubble

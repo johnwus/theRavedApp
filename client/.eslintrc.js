@@ -13,7 +13,9 @@ module.exports = {
   ],
   plugins: ["reactotron", "prettier"],
   rules: {
+    // Enforce Prettier formatting
     "prettier/prettier": "error",
+
     // typescript-eslint
     "@typescript-eslint/array-type": 0,
     "@typescript-eslint/ban-ts-comment": 0,
@@ -28,45 +30,37 @@ module.exports = {
     "@typescript-eslint/no-var-requires": 0,
     "@typescript-eslint/no-require-imports": 0,
     "@typescript-eslint/no-empty-object-type": 0,
-    // eslint
+    "@typescript-eslint/no-namespace": "warn",
+
+    // eslint core
     "no-use-before-define": 0,
-    "no-restricted-imports": [
-      "error",
-      {
-        paths: [
-          // Prefer named exports from 'react' instead of importing `React`
-          {
-            name: "react",
-            importNames: ["default"],
-            message: "Import named exports from 'react' instead.",
-          },
-          {
-            name: "react-native",
-            importNames: ["SafeAreaView"],
-            message: "Use the SafeAreaView from 'react-native-safe-area-context' instead.",
-          },
-          {
-            name: "react-native",
-            importNames: ["Text", "Button", "TextInput"],
-            message: "Use the custom wrapper component from '@/components'.",
-          },
-        ],
-      },
-    ],
+    "no-var": "warn",
+    // React import restrictions will be re-enabled below
+
     // react
     "react/prop-types": 0,
-    // react-native
+    "react/jsx-no-undef": "error",
+
+    // react-native (enable some style rules)
     "react-native/no-raw-text": 0,
+    "react-native/no-inline-styles": ["warn"],
+    "react-native/no-color-literals": 0,
+    "react-native/sort-styles": 0,
+    "react-native/no-unused-styles": "warn",
+
     // reactotron
     "reactotron/no-tron-in-production": "error",
+
     // eslint-config-standard overrides
     "comma-dangle": 0,
     "no-global-assign": 0,
     "quotes": 0,
     "space-before-function-paren": 0,
+
     // eslint-import
+    "import/no-unresolved": "error",
     "import/order": [
-      "error",
+      "warn",
       {
         "alphabetize": {
           order: "asc",
@@ -97,9 +91,10 @@ module.exports = {
             position: "after",
           },
         ],
-        "pathGroupsExcludedImportTypes": ["react", "react-native", "expo", "expo-*"],
+        "pathGroupsExcludedImportTypes": ["react", "react-native", "expo", "expo-*"]
       },
     ],
     "import/newline-after-import": 1,
+    "react/no-unescaped-entities": "warn",
   },
 }

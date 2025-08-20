@@ -6,10 +6,10 @@ import com.raved.social.dto.response.CommentResponse;
 import com.raved.social.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/comments")
@@ -25,18 +25,18 @@ public class CommentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CommentResponse> update(@PathVariable String id, @Valid @RequestBody UpdateCommentRequest request) {
+    public ResponseEntity<CommentResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateCommentRequest request) {
         return ResponseEntity.ok(commentService.updateComment(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         commentService.deleteComment(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/post/{postId}")
-    public ResponseEntity<List<CommentResponse>> listByPost(@PathVariable String postId) {
-        return ResponseEntity.ok(commentService.getCommentsByPost(postId));
+    public ResponseEntity<Page<CommentResponse>> listByPost(@PathVariable Long postId, Pageable pageable) {
+        return ResponseEntity.ok(commentService.getCommentsByPost(postId, pageable));
     }
 }

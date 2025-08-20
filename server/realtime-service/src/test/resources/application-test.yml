@@ -1,0 +1,76 @@
+spring:
+  application:
+    name: realtime-service
+
+  # Test Database Configuration
+  datasource:
+    url: jdbc:h2:mem:realtime_testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA Configuration for Tests
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+
+  # Flyway Configuration for Tests (Disabled)
+  flyway:
+    enabled: false
+
+  main:
+    allow-bean-definition-overriding: true
+
+  # Redis Configuration for Tests (Embedded)
+  redis:
+    host: localhost
+    port: 6373  # Different port to avoid conflicts
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+
+  # RabbitMQ Configuration for Tests (Embedded)
+  rabbitmq:
+    host: localhost
+    port: 5673  # Different port for tests
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        auto-startup: false
+
+# Disable service discovery during tests
+eureka:
+  client:
+    enabled: false
+  instance:
+    instance-enabled-onit: false
+
+# Disable AMQP across tests
+spring.rabbitmq.listener.simple.auto-startup: false
+
+# Websocket defaults for tests
+websocket:
+  interceptor:
+    enabled: false
+  ratelimit:
+    enabled: false
+  auth:
+    required: false
+  membership:
+    check: false
+
+logging:
+  level:
+    root: WARN
+    com.raved: DEBUG
+

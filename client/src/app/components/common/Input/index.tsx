@@ -1,16 +1,16 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface indexProps {
   // Define props here
 }
 
-const index: React.FC<indexProps> = (props) => {
+const index: React.FC<indexProps> = () => {
   return (
     <View>
       <Text>index Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default index;
+export default index

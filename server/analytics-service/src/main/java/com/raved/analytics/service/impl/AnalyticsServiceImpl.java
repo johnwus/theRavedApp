@@ -62,7 +62,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Autowired
     private AnalyticsEventMapper eventMapper;
 
-    @Autowired
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private com.raved.analytics.search.AnalyticsEventSearchRepository searchRepository;
 
     @Autowired
@@ -1156,6 +1156,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public Page<com.raved.analytics.dto.response.AnalyticsSearchHitResponse> searchByUser(String userId, Pageable pageable) {
+        if (searchRepository == null) {
+            return Page.empty(pageable);
+        }
         return searchRepository.findByUserId(userId, pageable)
                 .map(this::toSearchHitResponse);
     }
@@ -1163,6 +1166,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public Page<com.raved.analytics.dto.response.AnalyticsSearchHitResponse> searchByEventType(String eventType, Pageable pageable) {
+        if (searchRepository == null) {
+            return Page.empty(pageable);
+        }
         return searchRepository.findByEventType(eventType, pageable)
                 .map(this::toSearchHitResponse);
     }
@@ -1170,6 +1176,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public Page<com.raved.analytics.dto.response.AnalyticsSearchHitResponse> searchByHashtag(String hashtag, Pageable pageable) {
+        if (searchRepository == null) {
+            return Page.empty(pageable);
+        }
         return searchRepository.findByHashtagsContaining(hashtag, pageable)
                 .map(this::toSearchHitResponse);
     }
@@ -1177,6 +1186,9 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     @Override
     @Transactional(readOnly = true)
     public Page<com.raved.analytics.dto.response.AnalyticsSearchHitResponse> searchByContentTag(String tag, Pageable pageable) {
+        if (searchRepository == null) {
+            return Page.empty(pageable);
+        }
         return searchRepository.findByContentTagsContaining(tag, pageable)
                 .map(this::toSearchHitResponse);
     }

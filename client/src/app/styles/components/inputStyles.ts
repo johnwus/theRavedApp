@@ -1,4 +1,4 @@
-import type { Theme } from '../theme/types';
+import type { Theme } from "../theme/types"
 
 export const inputStyles = {
   container: (theme: Theme) => ({
@@ -9,11 +9,11 @@ export const inputStyles = {
     paddingVertical: theme.spacing.xs,
     backgroundColor: theme.colors.surface,
   }),
-  text: (theme: Theme) => ({ 
+  text: (theme: Theme) => ({
     color: theme.colors.text,
     fontSize: 16,
   }),
-  placeholder: (theme: Theme) => ({ 
+  placeholder: (theme: Theme) => ({
     color: theme.colors.placeholder,
     fontSize: 16,
   }),
@@ -33,22 +33,20 @@ export const inputStyles = {
   }),
   // Static styles
   static: {
-    fullWidth: { alignSelf: 'stretch' as const },
-    multiline: { 
-      textAlignVertical: 'top' as const,
+    fullWidth: { alignSelf: "stretch" as const },
+    multiline: {
+      textAlignVertical: "top" as const,
       minHeight: 80,
     },
-    small: { 
-      paddingHorizontal: 8, 
+    small: {
+      paddingHorizontal: 8,
       paddingVertical: 6,
       fontSize: 14,
     },
-    large: { 
-      paddingHorizontal: 16, 
+    large: {
+      paddingHorizontal: 16,
       paddingVertical: 14,
       fontSize: 18,
     },
   },
-};
-
-
+}

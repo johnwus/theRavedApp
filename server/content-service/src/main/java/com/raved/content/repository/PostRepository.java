@@ -60,6 +60,12 @@ public interface PostRepository extends MongoRepository<Post, String> {
        @Query("{'isDeleted': false, 'moderationStatus': 'APPROVED', 'createdAt': {$gte: ?0}}")
        Page<Post> findTrendingPostsSince(LocalDateTime since, Pageable pageable);
 
+    /**
+     * Find posts by IDs ordered by creation date
+     */
+    @Query("{'_id': {$in: ?0}, 'isDeleted': false, 'moderationStatus': 'APPROVED'}")
+    Page<Post> findByIdInOrderByCreatedAtDesc(List<String> ids, Pageable pageable);
+
        /**
         * Find posts by author IDs ordered by creation date
         */

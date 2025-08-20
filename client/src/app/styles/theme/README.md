@@ -16,33 +16,29 @@ A comprehensive theming system for React Native that provides consistent design 
 ### 1. Wrap Your App
 
 ```tsx
-import { ThemeProvider } from '@/styles/theme'
+import { ThemeProvider } from "@/styles/theme"
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      {/* Your app components */}
-    </ThemeProvider>
-  )
+  return <ThemeProvider>{/* Your app components */}</ThemeProvider>
 }
 ```
 
 ### 2. Use Theme in Components
 
 ```tsx
-import { useTheme } from '@/styles/theme'
+import { useTheme } from "@/styles/theme"
 
 export const MyComponent = () => {
   const { colors, spacing, isDark } = useTheme()
-  
+
   return (
-    <View style={{ 
-      backgroundColor: colors.background,
-      padding: spacing.md 
-    }}>
-      <Text style={{ color: colors.text }}>
-        Hello {isDark ? 'Dark' : 'Light'} World!
-      </Text>
+    <View
+      style={{
+        backgroundColor: colors.background,
+        padding: spacing.md,
+      }}
+    >
+      <Text style={{ color: colors.text }}>Hello {isDark ? "Dark" : "Light"} World!</Text>
     </View>
   )
 }
@@ -51,22 +47,15 @@ export const MyComponent = () => {
 ## Available Hooks
 
 ### `useTheme()`
+
 Main hook that provides access to all theme values:
 
 ```tsx
-const { 
-  colors, 
-  spacing, 
-  shadows, 
-  typography, 
-  timing,
-  isDark,
-  themeMode,
-  setTheme 
-} = useTheme()
+const { colors, spacing, shadows, typography, timing, isDark, themeMode, setTheme } = useTheme()
 ```
 
 ### `useColors()`
+
 Hook for accessing only colors:
 
 ```tsx
@@ -75,6 +64,7 @@ const colors = useColors()
 ```
 
 ### `useSpacing()`
+
 Hook for accessing only spacing values:
 
 ```tsx
@@ -83,6 +73,7 @@ const spacing = useSpacing()
 ```
 
 ### `useShadows()`
+
 Hook for accessing only shadow presets:
 
 ```tsx
@@ -91,6 +82,7 @@ const shadows = useShadows()
 ```
 
 ### `useTypography()`
+
 Hook for accessing only typography styles:
 
 ```tsx
@@ -103,7 +95,7 @@ const typography = useTypography()
 ### ThemeToggle Component
 
 ```tsx
-import { ThemeToggle } from '@/styles/theme'
+import { ThemeToggle } from "@/styles/theme"
 
 export const SettingsScreen = () => {
   return (
@@ -118,25 +110,16 @@ export const SettingsScreen = () => {
 ### Programmatic Theme Switching
 
 ```tsx
-import { useTheme } from '@/styles/theme'
+import { useTheme } from "@/styles/theme"
 
 export const ThemeSwitcher = () => {
   const { setTheme, themeMode } = useTheme()
-  
+
   return (
     <View>
-      <Button 
-        title="Light Mode" 
-        onPress={() => setTheme('light')} 
-      />
-      <Button 
-        title="Dark Mode" 
-        onPress={() => setTheme('dark')} 
-      />
-      <Button 
-        title="System Theme" 
-        onPress={() => setTheme(undefined)} 
-      />
+      <Button title="Light Mode" onPress={() => setTheme("light")} />
+      <Button title="Dark Mode" onPress={() => setTheme("dark")} />
+      <Button title="System Theme" onPress={() => setTheme(undefined)} />
     </View>
   )
 }
@@ -196,17 +179,17 @@ const { shadows } = useTheme()
 ### Themed Styles Function
 
 ```tsx
-import { useAppTheme } from '@/styles/theme'
+import { useAppTheme } from "@/styles/theme"
 
 export const MyComponent = () => {
   const { themed } = useAppTheme()
-  
+
   const styles = themed([
-    { backgroundColor: theme => theme.colors.background },
-    { padding: theme => theme.spacing.md },
-    { color: theme => theme.colors.text }
+    { backgroundColor: (theme) => theme.colors.background },
+    { padding: (theme) => theme.spacing.md },
+    { color: (theme) => theme.colors.text },
   ])
-  
+
   return <View style={styles}>...</View>
 }
 ```
@@ -214,14 +197,10 @@ export const MyComponent = () => {
 ### Custom Theme Override
 
 ```tsx
-import { ThemeProvider } from '@/styles/theme'
+import { ThemeProvider } from "@/styles/theme"
 
 export default function App() {
-  return (
-    <ThemeProvider initialContext="dark">
-      {/* App will start in dark mode */}
-    </ThemeProvider>
-  )
+  return <ThemeProvider initialContext="dark">{/* App will start in dark mode */}</ThemeProvider>
 }
 ```
 
@@ -230,7 +209,7 @@ export default function App() {
 Use the `ThemeDemo` component to showcase all theme features:
 
 ```tsx
-import { ThemeDemo } from '@/styles/theme'
+import { ThemeDemo } from "@/styles/theme"
 
 export const DemoScreen = () => {
   return <ThemeDemo />
@@ -273,16 +252,19 @@ styles/theme/
 ## Troubleshooting
 
 ### Theme Not Updating
+
 - Ensure `ThemeProvider` wraps your app
 - Check that `useAppTheme()` is called within the provider
 - Verify MMKV storage is working correctly
 
 ### Type Errors
+
 - Import types from `@/styles/theme/types`
 - Use proper type annotations for theme objects
 - Check that all required dependencies are installed
 
 ### Performance Issues
+
 - Use `useMemo` for expensive theme calculations
 - Avoid creating new style objects in render
 - Use the `themed` function for dynamic styles

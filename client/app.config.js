@@ -1,9 +1,9 @@
 module.exports = ({ config }) => {
-  const ENV = process.env.APP_ENV || 'development'
+  const ENV = process.env.APP_ENV || "development"
   const API_BY_ENV = {
-    development: process.env.API_URL_DEV || 'http://localhost:8080',
-    staging: process.env.API_URL_STAGING || 'https://staging.api.raved.app',
-    production: process.env.API_URL_PROD || 'https://api.raved.app',
+    development: process.env.API_URL_DEV || "http://localhost:8080",
+    staging: process.env.API_URL_STAGING || "https://staging.api.raved.app",
+    production: process.env.API_URL_PROD || "https://api.raved.app",
   }
 
   return {
@@ -22,4 +22,3 @@ module.exports = ({ config }) => {
     android: { ...config.android },
   }
 }
-

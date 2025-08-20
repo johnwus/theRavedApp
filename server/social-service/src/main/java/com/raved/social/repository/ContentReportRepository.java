@@ -87,11 +87,7 @@ public interface ContentReportRepository extends MongoRepository<ContentReport, 
     
     // Geographic queries
     List<ContentReport> findByLocation(String location);
-    
-    List<ContentReport> findByCountry(String country);
-    
-    List<ContentReport> findByRegion(String region);
-    
+
     // Evidence and metadata queries
     @Query(value = "{'evidence': {$exists: true, $ne: {}}}")
     List<ContentReport> findReportsWithEvidence();

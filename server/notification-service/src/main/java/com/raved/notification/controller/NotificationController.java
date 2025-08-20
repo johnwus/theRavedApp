@@ -2,9 +2,7 @@ package com.raved.notification.controller;
 
 import com.raved.notification.dto.request.CreateNotificationRequest;
 import com.raved.notification.dto.request.SendBulkNotificationRequest;
-import com.raved.notification.dto.request.UpdateNotificationPreferencesRequest;
 import com.raved.notification.dto.response.NotificationResponse;
-import com.raved.notification.dto.response.NotificationPreferencesResponse;
 import com.raved.notification.service.NotificationService;
 import com.raved.notification.service.EmailService;
 import com.raved.notification.service.SmsService;
@@ -259,7 +257,7 @@ public class NotificationController {
         logger.info("Sending email verification to: {}", email);
 
         try {
-            boolean sent = emailService.sendVerificationEmail(email, code, userName);
+            boolean sent = emailService.sendEmailVerification(email, code);
 
             if (sent) {
                 Map<String, Object> response = Map.of(
@@ -330,7 +328,7 @@ public class NotificationController {
         logger.info("Sending SMS verification to: {}", phone);
 
         try {
-            boolean sent = smsService.sendVerificationSms(phone, code, userName);
+            boolean sent = smsService.sendVerificationCode(phone, code);
 
             if (sent) {
                 Map<String, Object> response = Map.of(

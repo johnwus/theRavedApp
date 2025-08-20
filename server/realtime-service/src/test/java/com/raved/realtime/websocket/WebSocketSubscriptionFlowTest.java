@@ -9,9 +9,6 @@ import org.springframework.messaging.simp.stomp.*;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.sockjs.client.SockJsClient;
-import org.springframework.web.socket.sockjs.client.Transport;
-import org.springframework.web.socket.sockjs.client.WebSocketTransport;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -22,7 +19,12 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@org.springframework.test.context.TestPropertySource(properties = {
+    "websocket.membership.check=false",
+    "websocket.auth.required=false"
+})
 @ActiveProfiles("test")
+@org.springframework.context.annotation.Import(com.raved.realtime.config.TestSecurityConfig.class)
 class WebSocketSubscriptionFlowTest {
 
     @LocalServerPort
@@ -30,12 +32,10 @@ class WebSocketSubscriptionFlowTest {
 
     @Test
     void sendMessage_reachesSubscribedTopic() throws Exception {
-        List<Transport> transports = List.of(new WebSocketTransport(new StandardWebSocketClient()));
-        SockJsClient sockJsClient = new SockJsClient(transports);
-        WebSocketStompClient stompClient = new WebSocketStompClient(sockJsClient);
+        WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
-        String url = "http://localhost:" + port + "/api/v1/realtime/connect";
+        String url = "ws://localhost:" + port + "/api/v1/realtime/connect";
         StompSession session = stompClient.connect(url, new StompSessionHandlerAdapter() {}).get(5, TimeUnit.SECONDS);
 
         ArrayBlockingQueue<Map> queue = new ArrayBlockingQueue<>(1);

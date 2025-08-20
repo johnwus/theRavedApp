@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React from "react"
+import { View, Text } from "react-native"
 
 interface AvatarProps {
   // Define props here
@@ -10,7 +10,7 @@ const Avatar: React.FC<AvatarProps> = (_props) => {
     <View>
       <Text>Avatar Component</Text>
     </View>
-  );
-};
+  )
+}
 
-export default Avatar;
+export default Avatar

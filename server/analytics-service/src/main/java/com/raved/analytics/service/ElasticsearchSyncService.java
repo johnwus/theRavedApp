@@ -1,13 +1,9 @@
 package com.raved.analytics.service;
 
-import com.raved.analytics.model.AnalyticsEvent;
-import com.raved.analytics.model.ContentMetrics;
-import com.raved.analytics.model.elasticsearch.AnalyticsEventDocument;
-import com.raved.analytics.model.elasticsearch.ContentMetricsDocument;
-import com.raved.analytics.repository.AnalyticsEventRepository;
-import com.raved.analytics.repository.ContentMetricsRepository;
-import com.raved.analytics.repository.elasticsearch.AnalyticsEventSearchRepository;
-import com.raved.analytics.repository.elasticsearch.ContentMetricsSearchRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +12,14 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.raved.analytics.model.AnalyticsEvent;
+import com.raved.analytics.model.ContentMetrics;
+import com.raved.analytics.model.elasticsearch.AnalyticsEventDocument;
+import com.raved.analytics.model.elasticsearch.ContentMetricsDocument;
+import com.raved.analytics.repository.AnalyticsEventRepository;
+import com.raved.analytics.repository.ContentMetricsRepository;
+import com.raved.analytics.repository.elasticsearch.AnalyticsEventSearchRepository;
+import com.raved.analytics.repository.elasticsearch.ContentMetricsSearchRepository;
 
 /**
  * Service for synchronizing data between MongoDB and Elasticsearch Handles
@@ -35,10 +36,10 @@ public class ElasticsearchSyncService {
     @Autowired
     private ContentMetricsRepository contentMetricsRepository;
 
-    @Autowired
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private AnalyticsEventSearchRepository analyticsEventSearchRepository;
 
-    @Autowired
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
     private ContentMetricsSearchRepository contentMetricsSearchRepository;
 
     @Value("${elasticsearch.index.management.enabled:true}")

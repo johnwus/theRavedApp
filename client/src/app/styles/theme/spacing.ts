@@ -2,7 +2,7 @@
   Use these spacings for margins/paddings and other whitespace throughout your app.
  */
 export const spacing = {
-  xxxxs: .5,
+  xxxxs: 0.5,
   xxxs: 2,
   xxs: 4,
   xs: 8,

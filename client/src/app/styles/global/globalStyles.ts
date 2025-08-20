@@ -1,5 +1,6 @@
-import { StyleSheet } from 'react-native';
-import type { Theme } from '../theme/types';
+import { StyleSheet } from "react-native"
+
+import type { Theme } from "../theme/types"
 
 export const globalStyles = {
   screen: (theme: Theme) => ({
@@ -21,20 +22,18 @@ export const globalStyles = {
   }),
   // Static styles that don't depend on theme
   static: StyleSheet.create({
+    centerContent: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    column: {
+      flexDirection: "column",
+    },
     flex1: {
       flex: 1,
     },
-    centerContent: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     row: {
-      flexDirection: 'row',
-    },
-    column: {
-      flexDirection: 'column',
+      flexDirection: "row",
     },
   }),
-};
-
-
+}

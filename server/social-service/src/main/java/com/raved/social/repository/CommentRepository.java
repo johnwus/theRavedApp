@@ -14,7 +14,7 @@ import java.util.List;
  * Repository for Comment MongoDB documents
  */
 @Repository
-public interface CommentRepository extends MongoRepository<Comment, String> {
+public interface CommentRepository extends MongoRepository<Comment, String>, CommentRepositoryCustom {
 
     Page<Comment> findByPostIdAndIsDeletedFalseOrderByCreatedAtDesc(String postId, Pageable pageable);
 
@@ -70,7 +70,6 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findByUpdatedAtAfter(LocalDateTime since);
 
     // Methods for backward compatibility with service layer
-    void softDeleteById(String id);
 
     Page<Comment> findByPostIdAndParentCommentIdIsNullOrderByCreatedAtDesc(String postId, Pageable pageable);
 

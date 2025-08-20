@@ -8,17 +8,24 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
+import java.time.Duration;
 import java.util.HashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 public class RegistrationServiceImplTest {
 
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
 
     private RegistrationServiceImpl service;
 
@@ -34,6 +41,9 @@ public class RegistrationServiceImplTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        // stub Redis ops to avoid NPE
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        doNothing().when(valueOperations).set(anyString(), any(), any(Duration.class));
     }
 
     @Test

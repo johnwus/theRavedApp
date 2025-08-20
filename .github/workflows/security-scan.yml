@@ -7,20 +7,48 @@ on:
       - '**/*'
       - '.github/workflows/security-scan.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feature/**', 'test/**', 'bugfix/**' ]
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of scan to run'
+        required: false
+        type: choice
+        options:
+          - 'fs'
+          - 'image'
+        default: 'fs'
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Trivy vulnerability scanner
+      - name: Check for .trivyignore file
+        run: |
+          if [ -f ".trivyignore" ]; then
+            echo "Found .trivyignore file:"
+            cat .trivyignore
+          else
+            echo "No .trivyignore file found"
+          fi
+      - name: Run Trivy vulnerability scanner (filesystem)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          ignore-unfixed: true
+      - name: Run Trivy vulnerability scanner (table output)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
         if: always()

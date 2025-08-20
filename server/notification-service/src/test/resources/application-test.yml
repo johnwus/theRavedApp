@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: notification-service
+  
+  # MongoDB Configuration for Tests (Embedded) - Primary choice
+  data:
+    mongodb:
+      uri: mongodb://localhost:27021/notification_test  # Different port for tests
+      auto-index-creation: true
+  
+  # Redis Configuration for Tests (Embedded)
+  redis:
+    host: localhost
+    port: 6375  # Different port to avoid conflicts
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  
+  # Kafka Configuration for Tests (Embedded)
+  kafka:
+    bootstrap-servers: localhost:9097  # Different port for tests
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: notification-service-test
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+  
+  # Mail Configuration for Tests (Mock)
+  mail:
+    host: localhost
+    port: 1025  # Mock SMTP server port
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+# Eureka Configuration for Tests (Disabled)
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# External Service Configuration for Tests (Mock)
+twilio:
+  account-sid: test_account_sid
+  auth-token: test_auth_token
+  phone-number: +1234567890
+
+# Actuator Configuration for Tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration for Tests
+logging:
+  level:
+    com.raved.notification: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.mail: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Test-specific properties
+test:
+  mongodb:
+    embedded: true
+  kafka:
+    embedded: true
+  redis:
+    embedded: true
+  mail:
+    mock: true
+  sms:
+    mock: true

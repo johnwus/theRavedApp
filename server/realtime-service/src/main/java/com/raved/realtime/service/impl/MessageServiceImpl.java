@@ -54,6 +54,7 @@ public class MessageServiceImpl implements MessageService {
     private MessageMapper messageMapper;
 
     @Autowired
+    @org.springframework.context.annotation.Lazy
     private ChatService chatService;
 
     @Autowired

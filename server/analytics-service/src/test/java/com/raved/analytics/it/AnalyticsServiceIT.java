@@ -16,13 +16,23 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+
+
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = AnalyticsServiceApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@Import(AnalyticsServiceIT.PermitAllTestSecurityConfig.class)
 public class AnalyticsServiceIT {
 
     @LocalServerPort
@@ -42,6 +52,8 @@ public class AnalyticsServiceIT {
         // Compute all flavors; repositories may be empty but methods should save empty snapshots OK
         rankingService.computeRankings("USER","ENGAGEMENT","DAILY", d, null, 10);
         rankingService.computeRankings("USER","INFLUENCE","WEEKLY", d, "science", 10);
+
+
         rankingService.computeRankings("CONTENT","VIRALITY","MONTHLY", d, "tech", 10);
 
         var snaps = snapshotRepository.findBySnapshotTypeAndMetricAndPeriodAndDate("USER","ENGAGEMENT","DAILY", d);
@@ -50,5 +62,18 @@ public class AnalyticsServiceIT {
         var resp = restTemplate.getForEntity("http://localhost:" + port + "/api/analytics/rankings/users/engagement?date=" + d + "&period=DAILY&page=0&size=10", String.class);
         assertThat(resp.getStatusCode().is2xxSuccessful()).isTrue();
     }
+
+    @TestConfiguration
+    static class PermitAllTestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain testChain(HttpSecurity http) throws Exception {
+            http.csrf(csrf -> csrf.disable())
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                    .httpBasic(Customizer.withDefaults());
+            return http.build();
+        }
+    }
+
 }
 
