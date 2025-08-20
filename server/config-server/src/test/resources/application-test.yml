@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: config-server
+  
+  # Config Server Configuration for Tests
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config
+        git:
+          uri: file:///tmp/config-repo  # Local file system for tests
+          clone-on-start: true
+
+# Server Configuration for Tests
+server:
+  port: 8888
+
+# Eureka Configuration for Tests (Disabled)
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# Actuator Configuration for Tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration for Tests
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Test-specific properties
+test:
+  config:
+    native: true

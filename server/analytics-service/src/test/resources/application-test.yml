@@ -1,0 +1,75 @@
+spring:
+  application:
+    name: analytics-service
+  
+  # MongoDB Configuration for Tests (Embedded)
+  data:
+    mongodb:
+      uri: mongodb://localhost:27020/analytics_test  # Different port for tests
+      auto-index-creation: true
+  
+  # Redis Configuration for Tests (Embedded)
+  redis:
+    host: localhost
+    port: 6374  # Different port to avoid conflicts
+    timeout: 2000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  
+  # Elasticsearch Configuration for Tests (Embedded)
+  elasticsearch:
+    uris: http://localhost:9202  # Different port for tests
+    connection-timeout: 5s
+    socket-timeout: 30s
+  
+  # Kafka Configuration for Tests (Embedded)
+  kafka:
+    bootstrap-servers: localhost:9096  # Different port for tests
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: analytics-service-test
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+# Eureka Configuration for Tests (Disabled)
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+# Actuator Configuration for Tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration for Tests
+logging:
+  level:
+    com.raved.analytics: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.data.elasticsearch: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Test-specific properties
+test:
+  mongodb:
+    embedded: true
+  elasticsearch:
+    embedded: true
+  kafka:
+    embedded: true
+  redis:
+    embedded: true

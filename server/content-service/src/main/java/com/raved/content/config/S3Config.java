@@ -3,14 +3,14 @@ package com.raved.content.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-// import com.amazonaws.auth.AWSStaticCredentialsProvider;
-// import com.amazonaws.auth.BasicAWSCredentials;
-// import com.amazonaws.services.s3.AmazonS3;
-// import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * S3Config for TheRavedApp MongoDB with S3 media storage
- * Temporarily commented out due to missing AWS dependencies
+ * Updated to use AWS SDK v2
  */
 @Configuration
 public class S3Config {
@@ -27,19 +27,15 @@ public class S3Config {
     @Value("${aws.s3.bucket.name:raved-content-media}")
     private String bucketName;
 
-    // TODO: Uncomment when AWS SDK dependencies are added
-    /*
-     * @Bean
-     * public AmazonS3 amazonS3Client() {
-     * BasicAWSCredentials credentials = new BasicAWSCredentials(accessKeyId,
-     * secretAccessKey);
-     * 
-     * return AmazonS3ClientBuilder.standard()
-     * .withRegion(region)
-     * .withCredentials(new AWSStaticCredentialsProvider(credentials))
-     * .build();
-     * }
-     */
+    @Bean
+    public S3Client s3Client() {
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+
+        return S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build();
+    }
 
     @Bean
     public String s3BucketName() {

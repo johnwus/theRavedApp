@@ -11,6 +11,8 @@ import com.raved.social.util.MongoIdConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class LikeServiceImpl implements LikeService {
     private LikeMapper likeMapper;
 
     @Override
+    @CacheEvict(value = "likeCount", key = "#request.targetId + '_' + #request.targetType")
     public LikeResponse likeTarget(LikeRequest request) {
         logger.info("User {} liking target {} of type {}", request.getUserId(), request.getTargetId(), request.getTargetType());
         
@@ -61,6 +64,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
     @Override
+    @CacheEvict(value = "likeCount", key = "#targetId + '_' + #targetType")
     public void unlikeTarget(Long userId, Long targetId, String targetType) {
         logger.info("User {} unliking target {} of type {}", userId, targetId, targetType);
         
@@ -102,6 +106,7 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "likeCount", key = "#targetId + '_' + #targetType")
     public long getLikeCount(Long targetId, String targetType) {
         Like.TargetType targetTypeEnum = Like.TargetType.valueOf(targetType.toUpperCase());
         return likeRepository.countByTargetIdAndTargetType(MongoIdConverter.toStringId(targetId), targetTypeEnum);
