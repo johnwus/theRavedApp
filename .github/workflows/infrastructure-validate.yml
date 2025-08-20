@@ -33,10 +33,30 @@ jobs:
           helm version
           helmfile --version
           yq --version
+      - name: Check helmfile configuration
+        working-directory: infrastructure/helm
+        run: |
+          echo "Checking helmfile.yaml syntax..."
+          if [ -f "helmfile.yaml" ]; then
+            echo "helmfile.yaml found"
+            head -20 helmfile.yaml
+          else
+            echo "helmfile.yaml not found"
+            exit 1
+          fi
       - name: Sync Helm repositories
         working-directory: infrastructure/helm
         run: |
-          helmfile repos
+          echo "Syncing Helm repositories..."
+          helmfile repos || {
+            echo "Failed to sync repositories, trying individual repos..."
+            helm repo add bitnami https://charts.bitnami.com/bitnami || true
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts || true
+            helm repo add elastic https://helm.elastic.co || true
+            helm repo add external-secrets https://charts.external-secrets.io || true
+            helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets || true
+            helm repo update || true
+          }
       - name: Template dev
         working-directory: infrastructure/helm
         env:

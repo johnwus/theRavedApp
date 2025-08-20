@@ -28,6 +28,31 @@ on:
 jobs:
   test-services:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: raved_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      mongodb:
+        image: mongo:6-jammy
+        env:
+          MONGO_INITDB_DATABASE: raved_test
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
@@ -35,19 +60,56 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-      - name: Build and test social-service
-        working-directory: server/social-service
-        run: mvn -B -q -DskipTests=false test
-      - name: Build and test realtime-service
-        working-directory: server/realtime-service
-        run: mvn -B -q -DskipTests=false test
-      - name: Build and test content-service
-        working-directory: server/content-service
-        run: mvn -B -q -DskipTests=false test
-      - name: Build and test analytics-service
-        working-directory: server/analytics-service
-        run: mvn -B -q -DskipTests=false test
-      - name: Build and test notification-service
-        working-directory: server/notification-service
-        run: mvn -B -q -DskipTests=false test
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Test social-service
+        run: |
+          if [ -d "server/social-service" ] && [ -f "server/social-service/pom.xml" ]; then
+            echo "Testing social-service..."
+            cd server/social-service
+            mvn -B -q clean test -Dspring.profiles.active=test
+          else
+            echo "social-service not found or no pom.xml, skipping"
+          fi
+      - name: Test realtime-service
+        run: |
+          if [ -d "server/realtime-service" ] && [ -f "server/realtime-service/pom.xml" ]; then
+            echo "Testing realtime-service..."
+            cd server/realtime-service
+            mvn -B -q clean test -Dspring.profiles.active=test
+          else
+            echo "realtime-service not found or no pom.xml, skipping"
+          fi
+      - name: Test content-service
+        run: |
+          if [ -d "server/content-service" ] && [ -f "server/content-service/pom.xml" ]; then
+            echo "Testing content-service..."
+            cd server/content-service
+            mvn -B -q clean test -Dspring.profiles.active=test
+          else
+            echo "content-service not found or no pom.xml, skipping"
+          fi
+      - name: Test analytics-service
+        run: |
+          if [ -d "server/analytics-service" ] && [ -f "server/analytics-service/pom.xml" ]; then
+            echo "Testing analytics-service..."
+            cd server/analytics-service
+            mvn -B -q clean test -Dspring.profiles.active=test
+          else
+            echo "analytics-service not found or no pom.xml, skipping"
+          fi
+      - name: Test notification-service
+        run: |
+          if [ -d "server/notification-service" ] && [ -f "server/notification-service/pom.xml" ]; then
+            echo "Testing notification-service..."
+            cd server/notification-service
+            mvn -B -q clean test -Dspring.profiles.active=test
+          else
+            echo "notification-service not found or no pom.xml, skipping"
+          fi
 

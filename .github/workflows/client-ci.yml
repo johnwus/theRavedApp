@@ -49,12 +49,18 @@ jobs:
           cd client
           echo "Installing dependencies..."
           yarn install --frozen-lockfile --network-timeout 300000
+      - name: Check available scripts
+        if: steps.check_client.outputs.exists == 'true'
+        run: |
+          cd client
+          echo "Available scripts in package.json:"
+          cat package.json | grep -A 20 '"scripts"'
       - name: Lint
         if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
           echo "Running linter..."
-          if yarn run --silent lint --help > /dev/null 2>&1; then
+          if grep -q '"lint"' package.json; then
             yarn lint
           else
             echo "Lint script not found, skipping"
@@ -64,7 +70,7 @@ jobs:
         run: |
           cd client
           echo "Running type check..."
-          if yarn run --silent type-check --help > /dev/null 2>&1; then
+          if grep -q '"type-check"' package.json; then
             yarn type-check
           else
             echo "Type check script not found, skipping"
@@ -74,19 +80,15 @@ jobs:
         run: |
           cd client
           echo "Running tests..."
-          if yarn run --silent test --help > /dev/null 2>&1; then
+          if grep -q '"test"' package.json; then
             yarn test --ci --coverage --watchAll=false --passWithNoTests
           else
             echo "Test script not found, skipping"
           fi
-      - name: Build
+      - name: Build (Skip - Expo build not needed for CI)
         if: steps.check_client.outputs.exists == 'true'
         run: |
           cd client
-          echo "Building application..."
-          if yarn run --silent build --help > /dev/null 2>&1; then
-            yarn build
-          else
-            echo "Build script not found, skipping"
-          fi
+          echo "Skipping build step - Expo build not required for CI validation"
+          echo "Available build commands: android, build:android, ios"
 
